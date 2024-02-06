@@ -9,6 +9,7 @@ PYMET_ME_VERSIONS = {
 }
 
 PYMET_PRODUCT_CODES = {
+    '102',
     '51'
 }
 

@@ -41,7 +41,7 @@ def terminal_create_directory(cip: pycomm3.CIPDriver, dir: str) -> bool:
 
     # Response format
     #
-    # Byte 0->3 response code (183 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (183 -> function ran, otherwise failed)
     # Byte 4 null footer
     resp = msg_run_function(cip, req_data)
     if not resp: raise Exception('Failed to create directory on terminal.')
@@ -56,9 +56,9 @@ def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEF
     #
     # Byte 0 Transfer Type (always 1 for *.MER download?)
     # Byte 1 Overwrite (0 = New File, 1 = Overwrite Existing)
-    # Byte 2->3 Chunk size in bytes
-    # Byte 4->7 File size in bytes
-    # Byte 8->N-1 File name
+    # Byte 2 to 3 Chunk size in bytes
+    # Byte 4 to 7 File size in bytes
+    # Byte 8 to N-1 File name
     # Byte N null footer
     req_header = struct.pack('<BBHI', 0x01, int(file.overwrite_required), PYMET_CHUNK_SIZE, file.get_size())
     req_args = [f'\Application Data\Rockwell Software\RSViewME\Runtime\{file.name}']
@@ -66,10 +66,10 @@ def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEF
 
     # Response format
     #
-    # Byte 0->1 message instance (should match request -> 0x00)
-    # Byte 2->3 unknown purpose
-    # Byte 4->5 file instance (use this instance for file transfer)
-    # Byte 6->7 chunk size in bytes
+    # Byte 0 to 1 message instance (should match request -> 0x00)
+    # Byte 2 to 3 unknown purpose
+    # Byte 4 to 5 file instance (use this instance for file transfer)
+    # Byte 6 to 7 chunk size in bytes
     resp = msg_create_file_exchange(cip, req_data)
     if not resp: raise Exception('Failed to create file exchange on terminal')
     resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size = struct.unpack('<HHHH', resp.value)
@@ -84,8 +84,8 @@ def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, file: MEFil
     #
     # Byte 0 Transfer Type (always 0 for file upload?)
     # Byte 1 unknown purpose (used for overwrite in download... maybe no purpose here?)
-    # Byte 2->3 Chunk size in bytes
-    # Byte 4->N-1 File name
+    # Byte 2 to 3 Chunk size in bytes
+    # Byte 4 to N-1 File name
     # Byte N null footer
     req_header = struct.pack('<BBH', 0x00, 0x00, PYMET_CHUNK_SIZE)
     req_args = [f'\Application Data\Rockwell Software\RSViewME\Runtime\{file.name}']
@@ -93,11 +93,11 @@ def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, file: MEFil
 
     # Response format
     #
-    # Byte 0->1 message instance (should match request -> 0x00)
-    # Byte 2->3 unknown purpose
-    # Byte 4->5 file instance (use this instance for file transfer -> increases with each subsequent transfer until Delete is run)
-    # Byte 6->7 chunk size in bytes
-    # Byte 8->11 file size in bytes
+    # Byte 0 to 1 message instance (should match request -> 0x00)
+    # Byte 2 to 3 unknown purpose
+    # Byte 4 to 5 file instance (use this instance for file transfer -> increases with each subsequent transfer until Delete is run)
+    # Byte 6 to 7 chunk size in bytes
+    # Byte 8 to 11 file size in bytes
     resp = msg_create_file_exchange(cip, req_data)
     if not resp: raise Exception('Failed to create file exchange on terminal')
     resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size, resp_file_size = struct.unpack('<HHHHI', resp.value)
@@ -139,9 +139,9 @@ def terminal_file_download(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
         while True:
             # Request format
             #
-            # Byte 0->3 chunk number
-            # Byte 4->5 chunk size in bytes
-            # Byte 6->N chunk data
+            # Byte 0 to 3 chunk number
+            # Byte 4 to 5 chunk size in bytes
+            # Byte 6 to N chunk data
             req_chunk = source_file.read(PYMET_CHUNK_SIZE)
             req_header = struct.pack('<IH', req_chunk_number, len(req_chunk))
             req_next_chunk_number = req_chunk_number + 1
@@ -152,9 +152,9 @@ def terminal_file_download(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
 
             # Response format
             #
-            # Byte 0->3 unknown purpose
-            # Byte 4->7 req chunk number echo
-            # Byte 8->11 next chunk number
+            # Byte 0 to 3 unknown purpose
+            # Byte 4 to 7 req chunk number echo
+            # Byte 8 to 11 next chunk number
             resp = msg_write_file_chunk(cip, instance, req_data)
             if not resp: raise Exception(f'Failed to write chunk {req_chunk_number} to terminal.')
             resp_unk1, resp_chunk_number, resp_next_chunk_number = struct.unpack('<III', resp.value)
@@ -171,15 +171,15 @@ def terminal_file_upload(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
         while True:
             # Request format
             #
-            # Byte 0->3 chunk number
+            # Byte 0 to 3 chunk number
             req_data = struct.pack('<I', req_chunk_number)
 
             # Response format
             #
-            # Byte 0->3 unknown purpose
-            # Byte 4->7 req chunk number echo
-            # Byte 8->9 chunk size in bytes
-            # Byte 10->N chunk data
+            # Byte 0 to 3 unknown purpose
+            # Byte 4 to 7 req chunk number echo
+            # Byte 8 to 9 chunk size in bytes
+            # Byte 10 to N chunk data
             resp = msg_read_file_chunk(cip, instance, req_data)
             if not resp: raise Exception(f'Failed to read chunk {req_chunk_number} to terminal.')
             resp_unk1 = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
@@ -207,7 +207,7 @@ def terminal_get_file_exists(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
 
     # Response format
     #
-    # Byte 0->3 response code (0 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
     # Byte 4 file exists (1 -> file exists)
     # Byte 5 null footer
     resp = msg_run_function(cip, req_data)
@@ -228,8 +228,8 @@ def terminal_get_file_size(cip: pycomm3.CIPDriver, file: MEFile) -> int:
 
     # Response format 
     #
-    # Byte 0->3 response code (0 -> function ran, otherwise failed)
-    # Byte 4->N-1 file size
+    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 4 to N-1 file size
     # Byte N null footer
     resp = msg_run_function(cip, req_data)
     if not resp: raise Exception('Failed to get file size of {file.name} on terminal.')
@@ -246,7 +246,7 @@ def terminal_get_folder_exists(cip: pycomm3.CIPDriver) -> bool:
 
     # Response format
     #
-    # Byte 0->3 response code (0 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
     # Byte 4 storage exists (1 -> folder exists)
     # Byte 5 null footer
     resp = msg_run_function(cip, req_data)
@@ -265,8 +265,8 @@ def terminal_get_free_space(cip: pycomm3.CIPDriver) -> int:
 
     # Response format 
     #
-    # Byte 0->3 response code (0 -> function ran, otherwise failed)
-    # Byte 4->N-1 free space
+    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 4 to N-1 free space
     # Byte N null footer
     resp = msg_run_function(cip, req_data)
     if not resp: raise Exception('Failed to get terminal free space.')
@@ -283,8 +283,8 @@ def terminal_get_helper_version(cip: pycomm3.CIPDriver) -> str:
 
     # Response format
     #
-    # Byte 0->3 response code (0 -> function ran, otherwise failed)
-    # Byte 4->N-1 terminal version string
+    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 4 to N-1 terminal version string
     # Byte N null footer
     resp = msg_run_function(cip, req_data)
     if not resp: raise Exception('Failed to get terminal helper version.')
@@ -301,9 +301,9 @@ def terminal_get_me_version(cip: pycomm3.CIPDriver) -> str:
 
     # Response format
     #
-    # Byte 0->3 response code (0 -> function ran, otherwise failed)
-    # Byte 4->7 unknown purpose
-    # Byte 8->N-1 ME version string
+    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 4 to 7 unknown purpose
+    # Byte 8 to N-1 ME version string
     # Byte N null footer
     resp = msg_read_registry(cip, req_data)
     if not resp: raise Exception('Failed to get terminal ME version.')
@@ -321,9 +321,9 @@ def terminal_get_product_code(cip: pycomm3.CIPDriver) -> str:
 
     # Response format
     #
-    # Byte 0->3 response code (0 -> function ran, otherwise failed)
-    # Byte 4->7 unknown purpose
-    # Byte 8->N-1 product code string
+    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 4 to 7 unknown purpose
+    # Byte 8 to N-1 product code string
     # Byte N null footer
     resp = msg_read_registry(cip, req_data)
     if not resp: raise Exception('Failed to get terminal product code.')
@@ -341,9 +341,9 @@ def terminal_get_product_type(cip: pycomm3.CIPDriver) -> str:
 
     # Response format
     #
-    # Byte 0->3 response code (0 -> function ran, otherwise failed)
-    # Byte 4->7 unknown purpose
-    # Byte 8->N-1 product type string
+    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 4 to 7 unknown purpose
+    # Byte 8 to N-1 product type string
     # Byte N null footer
     resp = msg_read_registry(cip, req_data)
     if not resp: raise Exception('Failed to get terminal product type.')
@@ -380,7 +380,7 @@ def terminal_set_startup_file(cip: pycomm3.CIPDriver, file: MEFile, replace_comm
 
     # Response format
     #
-    # Byte 0->3 response code (0 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
     # Byte 4 null footer
     resp = msg_run_function(cip, req_data)
     if not resp: raise Exception('Failed to set terminal startup shortcut.')
