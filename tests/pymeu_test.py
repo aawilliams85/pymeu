@@ -19,7 +19,7 @@ class pymeu_fast_tests(unittest.TestCase):
             self.meu.download('C:\\git\\pymeu\\tests\\TestA.xyz')
 
     def test_upload(self):
-        self.meu.upload('C:\\git\\pymeu\\tests\\upload\\TestA.mer')
+        self.meu.upload('C:\\git\\pymeu\\tests\\upload\\TestA.mer', overwrite=True)
 
     def tearDown(self):
         pass

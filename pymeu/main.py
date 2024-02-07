@@ -194,8 +194,15 @@ class MEUtility(object):
     def upload(self, file_path: str, **kwargs):
         file = MEFile(os.path.basename(file_path), False, False, file_path)
         self.remote_file_name = kwargs.get('remote_file_name', file.name)
+        self.overwrite = kwargs.get('overwrite', False)
 
         fileRem = MEFile(self.remote_file_name,False,False,file_path)
+
+        # Create upload folder if it doesn't exist yet
+        if not(os.path.exists(os.path.dirname(file.path))): os.makedirs(os.path.dirname(file.path))
+
+        # Check for existing *.MER
+        if not(self.overwrite) and (os.path.exists(file.path)): raise Exception(f'File {file.name} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
 
         with pycomm3.CIPDriver(self.comms_path) as cip:
             file_instance = terminal_create_file_exchange_for_upload(cip, fileRem)
