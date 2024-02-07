@@ -30,7 +30,7 @@ class MEUtility(object):
         if not(terminal_is_set_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
 
         # Transfer *.MER chunk by chunk
-        terminal_file_download(cip, file_instance, file)
+        terminal_file_download_mer(cip, file_instance, file)
 
         # Mark file exchange as completed on the terminal
         terminal_end_file_write(cip, file_instance)
@@ -39,6 +39,20 @@ class MEUtility(object):
         terminal_delete_file_exchange(cip, file_instance)
 
         return True
+
+    def __get_mer_list(self, cip: pycomm3.CIPDriver):
+        # Create *.MER list
+        terminal_create_mer_list(cip)
+
+        file_instance = terminal_create_file_exchange_for_mer_list(cip)
+
+        # Transfer *.MER list chunk by chunk
+        file_list = terminal_file_upload_mer_list(cip, file_instance)
+
+        # Delete file exchange on the terminal
+        terminal_delete_file_exchange(cip, file_instance)
+
+        return file_list
 
     def __is_download_valid(self, cip: pycomm3.CIPDriver, file:MEFile) -> bool:
         # Check that file is correct extension
@@ -116,6 +130,17 @@ class MEUtility(object):
             print(f'Valid product type: {resp}')
 
         return True
+    
+    def __upload_from_terminal(self, cip: pycomm3.CIPDriver, file: MEFile, rem_file: MEFile) -> bool:
+        file_instance = terminal_create_file_exchange_for_upload(cip, rem_file)
+
+        # Transfer *.MER chunk by chunk
+        terminal_file_upload_mer(cip, file_instance, file)
+
+        # Delete file exchange on the terminal
+        terminal_delete_file_exchange(cip, file_instance)
+
+        return True
 
     #
     # Used to download a *.MER file from this system to the remote Panelview terminal.
@@ -163,9 +188,7 @@ class MEUtility(object):
             if self.run_at_startup:
                 terminal_set_startup_file(cip, file, self.replace_comms, self.delete_logs)
                 terminal_reboot(cip)
-        
-        return True
-    
+
     # 
     # Used to print some info about the remote PanelView terminal.
     #
@@ -174,7 +197,7 @@ class MEUtility(object):
             self.__is_terminal_valid(cip)
             print(f'Terminal storage exists: {terminal_get_folder_exists(cip)}.')
             print(f'Terminal has {terminal_get_free_space(cip)} free bytes')
-        return True
+            print(f'Terminal has files: {self.__get_mer_list(cip)}')
 
     #
     # Used to reboot the remote PanelView terminal.
@@ -188,6 +211,7 @@ class MEUtility(object):
     # File Path: Path to upload to on the local system (ex: C:\MyFolder\MyHMI.MER)
     # 
     # Optional Keyword Arguments:
+    # Overwrite: If the file already exists on the local system, replace it.
     # Remote File Name: Use this to specify a different remote filename on the
     #       terminal than where the local file will end up.
     #
@@ -195,8 +219,7 @@ class MEUtility(object):
         file = MEFile(os.path.basename(file_path), False, False, file_path)
         self.remote_file_name = kwargs.get('remote_file_name', file.name)
         self.overwrite = kwargs.get('overwrite', False)
-
-        fileRem = MEFile(self.remote_file_name,False,False,file_path)
+        rem_file = MEFile(self.remote_file_name,False,False,file_path)
 
         # Create upload folder if it doesn't exist yet
         if not(os.path.exists(os.path.dirname(file.path))): os.makedirs(os.path.dirname(file.path))
@@ -205,10 +228,51 @@ class MEUtility(object):
         if not(self.overwrite) and (os.path.exists(file.path)): raise Exception(f'File {file.name} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
 
         with pycomm3.CIPDriver(self.comms_path) as cip:
-            file_instance = terminal_create_file_exchange_for_upload(cip, fileRem)
+            # Validate device at this communications path
+            # is a terminal of known version.
+            #
+            # TODO: Test on more hardware to expand validated list
+            if not(self.__is_terminal_valid(cip)):
+                if self.ignore_terminal_valid:
+                    warn('Invalid device selected, but terminal validation is set to IGNORE.')
+                else:
+                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True to proceed at your own risk.')
 
-            # Transfer *.MER chunk by chunk
-            terminal_file_upload(cip, file_instance, file)
+            # Perform *.MER upload from terminal
+            if not(self.__upload_from_terminal(cip, file, rem_file)): raise Exception('Upload from terminal failed.')
 
-            # Delete file exchange on the terminal
-            terminal_delete_file_exchange(cip, file_instance)
+    #
+    # Used to upload all *.MER files from the remote PanelView terminal to this system.
+    #
+    # File Path: Path to upload to on the local system (ex: C:\MyFolder)
+    # 
+    # Optional Keyword Arguments:
+    # Overwrite: If the file already exists on the local system, replace it.
+    #
+    def upload_all(self, file_path: str, **kwargs):
+        self.overwrite = kwargs.get('overwrite', False)
+
+        # Create upload folder if it doesn't exist yet
+        if not(os.path.exists(file_path)): os.makedirs(os.path.dirname(file_path))
+
+        with pycomm3.CIPDriver(self.comms_path) as cip:
+            # Validate device at this communications path
+            # is a terminal of known version.
+            #
+            # TODO: Test on more hardware to expand validated list
+            if not(self.__is_terminal_valid(cip)):
+                if self.ignore_terminal_valid:
+                    warn('Invalid device selected, but terminal validation is set to IGNORE.')
+                else:
+                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True to proceed at your own risk.')
+
+            mer_list = self.__get_mer_list(cip)
+            for mer in mer_list:
+                mer_path = os.path.join(file_path, mer)
+                file = MEFile(os.path.basename(mer_path), self.overwrite, False, mer_path)
+
+                # Check for existing *.MER
+                if not(self.overwrite) and (os.path.exists(mer_path)): raise Exception(f'File {mer_path} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
+
+                # Perform *.MER upload from terminal
+                if not(self.__upload_from_terminal(cip, file, file)): raise Exception('Upload from terminal failed.')

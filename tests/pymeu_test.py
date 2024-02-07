@@ -21,6 +21,9 @@ class pymeu_fast_tests(unittest.TestCase):
     def test_upload(self):
         self.meu.upload('C:\\git\\pymeu\\tests\\upload\\TestA.mer', overwrite=True)
 
+    def test_upload_all(self):
+        self.meu.upload_all('C:\\git\\pymeu\\tests\\upload', overwrite=True)
+
     def tearDown(self):
         pass
 
@@ -33,7 +36,7 @@ class pymeu_slow_tests(unittest.TestCase):
         self.meu.reboot()
         
     def test_download(self):
-        self.meu.download('C:\\git\\pymeu\\tests\\TestA.mer', overwrite=True)
+        self.meu.download('C:\\git\\pymeu\\tests\\TestB.mer', overwrite=True)
 
     def tearDown(self):
         time.sleep(60)

@@ -25,7 +25,7 @@ def terminal_create_directory(cip: pycomm3.CIPDriver, dir: str) -> bool:
 def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEFile) -> int:
     # Request format
     #
-    # Byte 0 Transfer Type (always 1 for *.MER download?)
+    # Byte 0 Transfer Type (always 1 for file download?)
     # Byte 1 Overwrite (0 = New File, 1 = Overwrite Existing)
     # Byte 2 to 3 Chunk size in bytes
     # Byte 4 to 7 File size in bytes
@@ -46,7 +46,35 @@ def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEF
     resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size = struct.unpack('<HHHH', resp.value)
     if (resp_msg_instance != 0): raise Exception(f'Response message instance {resp_msg_instance} is not zero.  Most likely there was an incomplete transfer.  Reboot terminal and try again.')
     if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-    if (resp_file_instance != 1): raise Exception(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
+    #if (resp_file_instance != 1): raise Exception(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
+    if (resp_chunk_size != PYMEU_CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {PYMEU_CHUNK_SIZE}')
+    return resp_file_instance
+
+def terminal_create_file_exchange_for_mer_list(cip: pycomm3.CIPDriver) -> int:
+    # Request format
+    #
+    # Byte 0 Transfer Type (always 0 for file upload?)
+    # Byte 1 unknown purpose (used for overwrite in download... maybe no purpose here?)
+    # Byte 2 to 3 Chunk size in bytes
+    # Byte 4 to N-1 File name
+    # Byte N null footer
+    req_header = struct.pack('<BBH', 0x00, 0x00, PYMEU_CHUNK_SIZE)
+    req_args = ['\Application Data\Rockwell Software\RSViewME\Runtime\Results.txt']
+    req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
+
+    # Response format
+    #
+    # Byte 0 to 1 message instance (should match request, 0x00)
+    # Byte 2 to 3 unknown purpose
+    # Byte 4 to 5 file instance (use this instance for file transfer, increases with each subsequent transfer until Delete is run)
+    # Byte 6 to 7 chunk size in bytes
+    # Byte 8 to 11 file size in bytes
+    resp = msg_create_file_exchange(cip, req_data)
+    if not resp: raise Exception('Failed to create file exchange on terminal')
+    resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size, resp_file_size = struct.unpack('<HHHHI', resp.value)
+    if (resp_msg_instance != 0): raise Exception(f'Response message instance {resp_msg_instance} is not zero.  Most likely there was an incomplete transfer.  Reboot terminal and try again.')
+    if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
+    #if (resp_file_instance != 1): raise Exception(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
     if (resp_chunk_size != PYMEU_CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {PYMEU_CHUNK_SIZE}')
     return resp_file_instance
 
@@ -104,7 +132,7 @@ def terminal_end_file_write(cip: pycomm3.CIPDriver, instance: int):
     req_data = b'\x00\x00\x00\x00\x02\x00\xff\xff'
     return msg_write_file_chunk(cip, instance, req_data)
 
-def terminal_file_download(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
+def terminal_file_download_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
     req_chunk_number = 1
     with open(file.path, 'rb') as source_file:
         while True:
@@ -119,7 +147,9 @@ def terminal_file_download(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
             req_data = req_header + req_chunk
 
             # End of file
-            if not req_chunk: break
+            if not req_chunk:
+                print(f'File downloaded from: {file.path}')
+                break
 
             # Response format
             #
@@ -136,7 +166,7 @@ def terminal_file_download(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
             # Continue to next chunk
             req_chunk_number += 1
 
-def terminal_file_upload(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
+def terminal_file_upload_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
     req_chunk_number = 1
     with open(file.path, 'wb') as dest_file:
         while True:
@@ -163,7 +193,7 @@ def terminal_file_upload(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
 
             # End of file
             if (resp_chunk_number == 0) and (resp_chunk_size == 2) and (resp_data == b'\xff\xff'):
-                print('End of file')
+                print(f'File uploaded to: {file.path}')
                 break
 
             # Write to file
@@ -171,6 +201,50 @@ def terminal_file_upload(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
 
             # Continue to next chunk
             req_chunk_number += 1
+
+def terminal_file_upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
+    req_chunk_number = 1
+    resp_binary = bytearray()
+    while True:
+        # Request format
+        #
+        # Byte 0 to 3 chunk number
+        req_data = struct.pack('<I', req_chunk_number)
+
+        # Response format
+        #
+        # Byte 0 to 3 unknown purpose
+        # Byte 4 to 7 req chunk number echo
+        # Byte 8 to 9 chunk size in bytes
+        # Byte 10 to N chunk data
+        resp = msg_read_file_chunk(cip, instance, req_data)
+        if not resp: raise Exception(f'Failed to read chunk {req_chunk_number} to terminal.')
+        resp_unk1 = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
+        resp_chunk_number = int.from_bytes(resp.value[4:8], byteorder='little', signed=False)
+        resp_chunk_size = int.from_bytes(resp.value[8:9], byteorder='little', signed=False)
+        resp_data = bytes(resp.value[10:])
+
+        if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
+        if (resp_chunk_number != req_chunk_number) and (resp_chunk_number != 0): raise Exception(f'Response chunk number {resp_chunk_number} did not match request chunk number {req_chunk_number}.')
+
+        # End of file
+        if (resp_chunk_number == 0) and (resp_chunk_size == 2) and (resp_data == b'\xff\xff'):
+            #print('End of file')
+            break
+
+        # Write to mer list
+        resp_binary += resp_data
+
+        # Continue to next chunk
+        req_chunk_number += 1
+
+    # In the returned list, each file name character is separated
+    # by a null character.
+    #
+    # Each each is separate by a colon.
+    resp_str = "".join([chr(b) for b in resp_binary if b != 0])
+    resp_list = resp_str.split(':')
+    return resp_list
 
 def terminal_get_file_exists(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
     req_args = ['\Windows\RemoteHelper.DLL', 'FileExists', f'\Application Data\Rockwell Software\RSViewME\Runtime\{file.name}']
