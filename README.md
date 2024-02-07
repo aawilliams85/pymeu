@@ -9,7 +9,7 @@ The current release has only been tested on a very limited selection of hardware
 Use the download function to transfer a *.MER file to the remote terminal:
 
 ```python
-from pymeu.main import *
+from pymeu import MEUtility
 meu = MEUtility('192.168.1.20')
 meu.download('C:\\YourFolder\\YourProgram.mer')
 ```
@@ -17,7 +17,7 @@ meu.download('C:\\YourFolder\\YourProgram.mer')
 Use the reboot function to restart the remote terminal:
 
 ```python
-from pymeu.main import *
+from pymeu import MEUtility
 meu = MEUtility('192.168.1.20')
 meu.reboot()
 ```
