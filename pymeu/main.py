@@ -132,6 +132,10 @@ class MEUtility(object):
         return True
     
     def __upload_from_terminal(self, cip: pycomm3.CIPDriver, file: MEFile, rem_file: MEFile) -> bool:
+        # Verify file exists on terminal
+        if not(terminal_get_file_exists(cip, rem_file)): raise Exception(f'File {rem_file.name} does not exist on terminal.')
+
+        # Create file exchange
         file_instance = terminal_create_file_exchange_for_upload(cip, rem_file)
 
         # Transfer *.MER chunk by chunk
@@ -267,12 +271,14 @@ class MEUtility(object):
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True to proceed at your own risk.')
 
             mer_list = self.__get_mer_list(cip)
+            
             for mer in mer_list:
-                mer_path = os.path.join(file_path, mer)
-                file = MEFile(os.path.basename(mer_path), self.overwrite, False, mer_path)
+                if len(mer) > 0:
+                    mer_path = os.path.join(file_path, mer)
+                    file = MEFile(os.path.basename(mer_path), self.overwrite, False, mer_path)
 
-                # Check for existing *.MER
-                if not(self.overwrite) and (os.path.exists(mer_path)): raise Exception(f'File {mer_path} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
+                    # Check for existing *.MER
+                    if not(self.overwrite) and (os.path.exists(mer_path)): raise Exception(f'File {mer_path} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
 
-                # Perform *.MER upload from terminal
-                if not(self.__upload_from_terminal(cip, file, file)): raise Exception('Upload from terminal failed.')
+                    # Perform *.MER upload from terminal
+                    if not(self.__upload_from_terminal(cip, file, file)): raise Exception('Upload from terminal failed.')
