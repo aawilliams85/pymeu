@@ -4,7 +4,7 @@ import pycomm3
 from .types import *
 from .terminal import *
 
-class METransfer(object):
+class MEUtility(object):
     def __init__(self, comms_path: str):
         self.comms_path = comms_path
 
@@ -88,28 +88,28 @@ class METransfer(object):
 
     def __is_terminal_valid(self, cip: pycomm3.CIPDriver) -> bool:
         resp = terminal_get_helper_version(cip)
-        if resp not in PYMET_HELPER_VERSIONS:
+        if resp not in PYMEU_HELPER_VERSIONS:
             print(f'Invalid helper version: {resp}')
             return False
         else:
             print(f'Valid helper version: {resp}')
 
         resp = terminal_get_me_version(cip)
-        if resp not in PYMET_ME_VERSIONS:
+        if resp not in PYMEU_ME_VERSIONS:
             print(f'Invalid ME version: {resp}')
             return False
         else:
             print(f'Valid ME version: {resp}')
 
         resp = terminal_get_product_code(cip)
-        if resp not in PYMET_PRODUCT_CODES: 
+        if resp not in PYMEU_PRODUCT_CODES: 
             print(f'Invalid product code: {resp}')
             return False
         else:
             print(f'Valid product code: {resp}')
 
         resp = terminal_get_product_type(cip)
-        if resp not in PYMET_PRODUCT_TYPES:
+        if resp not in PYMEU_PRODUCT_TYPES:
             print(f'Invalid product type: {resp}')
             return False
         else:

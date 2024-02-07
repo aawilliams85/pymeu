@@ -1,39 +1,39 @@
 import time
 import unittest
 
-from pymetransfer import METransfer
+from pymeu import MEUtility
 
 # Turn off sort so that tests run in line order
 unittest.TestLoader.sortTestMethodsUsing = None
 
-class pymetransfer_fast_tests(unittest.TestCase):
+class pymeu_fast_tests(unittest.TestCase):
     def setUp(self):
-        self.met = METransfer('192.168.40.123')
+        self.meu = MEUtility('192.168.40.123')
         print('')
 
     def test_get_terminal_info(self):
-        self.met.get_terminal_info()
+        self.meu.get_terminal_info()
 
     def test_download_invalid_ext(self):
         with self.assertRaises(Exception):
-            self.met.download('C:\\git\\pymetransfer\\tests\\TestA.xyz')
+            self.meu.download('C:\\git\\pymeu\\tests\\TestA.xyz')
 
     def test_upload(self):
-        self.met.upload('C:\\git\\pymetransfer\\tests\\upload\\TestA.mer')
+        self.meu.upload('C:\\git\\pymeu\\tests\\upload\\TestA.mer')
 
     def tearDown(self):
         pass
 
-class pymetransfer_slow_tests(unittest.TestCase):
+class pymeu_slow_tests(unittest.TestCase):
     def setUp(self):
-        self.met = METransfer('192.168.40.123')
+        self.meu = MEUtility('192.168.40.123')
         print('')
 
     def test_reboot(self):
-        self.met.reboot()
+        self.meu.reboot()
         
     def test_download(self):
-        self.met.download('C:\\git\\pymetransfer\\tests\\TestA.mer', overwrite_requested=True)
+        self.meu.download('C:\\git\\pymeu\\tests\\TestA.mer', overwrite=True)
 
     def tearDown(self):
         time.sleep(60)
