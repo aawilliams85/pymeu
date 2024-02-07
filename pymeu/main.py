@@ -142,23 +142,23 @@ class MEUtility(object):
 
         return True
 
-    #
-    # Used to download a *.MER file from this system to the remote Panelview terminal.
-    #
-    # File path: *.MER path on local system (ex: C:\MyFolder\MyHMI.MER)
-    # 
-    # Optional Keyword Arguments:
-    # Delete Logs: Configures terminal to delete logs at startup
-    # Ignore Terminal Valid: Attempt to proceed with download, even if target
-    #       product ID or version does not match tested whitelist.
-    #       Proceed with caution...
-    # Overwrite: If file exists already on remote terminal, replace it.
-    # Replace Comms: Configures terminal to replace communications
-    #       from *.MER at startup.
-    # Run At Startup: Configures terminal to run downloaded *.MER at startup.
-    #       Note that this option must be selected to use Delete Logs or Replace Comms.
-    #
     def download(self, file_path: str, **kwargs):
+        #
+        # Used to download a *.MER file from this system to the remote Panelview terminal.
+        #
+        # File path: *.MER path on local system (ex: C:\MyFolder\MyHMI.MER)
+        # 
+        # Optional Keyword Arguments:
+        # Delete Logs: Configures terminal to delete logs at startup
+        # Ignore Terminal Valid: Attempt to proceed with download, even if target
+        #       product ID or version does not match tested whitelist.
+        #       Proceed with caution...
+        # Overwrite: If file exists already on remote terminal, replace it.
+        # Replace Comms: Configures terminal to replace communications
+        #       from *.MER at startup.
+        # Run At Startup: Configures terminal to run downloaded *.MER at startup.
+        #       Note that this option must be selected to use Delete Logs or Replace Comms.
+        #
         self.delete_logs = kwargs.get('delete_logs', False)
         self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
         self.overwrite = kwargs.get('overwrite', False)
@@ -189,33 +189,33 @@ class MEUtility(object):
                 terminal_set_startup_file(cip, file, self.replace_comms, self.delete_logs)
                 terminal_reboot(cip)
 
-    # 
-    # Used to print some info about the remote PanelView terminal.
-    #
     def get_terminal_info(self):
+        # 
+        # Used to print some info about the remote PanelView terminal.
+        #
         with pycomm3.CIPDriver(self.comms_path) as cip:
             self.__is_terminal_valid(cip)
             print(f'Terminal storage exists: {terminal_get_folder_exists(cip)}.')
             print(f'Terminal has {terminal_get_free_space(cip)} free bytes')
             print(f'Terminal has files: {self.__get_mer_list(cip)}')
 
-    #
-    # Used to reboot the remote PanelView terminal.
-    #
     def reboot(self):
+        #
+        # Used to reboot the remote PanelView terminal.
+        #
         self.__reboot(self.comms_path)
 
-    #
-    # Used to upload a *.MER file from the remote PanelView terminal to this system.
-    #
-    # File Path: Path to upload to on the local system (ex: C:\MyFolder\MyHMI.MER)
-    # 
-    # Optional Keyword Arguments:
-    # Overwrite: If the file already exists on the local system, replace it.
-    # Remote File Name: Use this to specify a different remote filename on the
-    #       terminal than where the local file will end up.
-    #
     def upload(self, file_path: str, **kwargs):
+        #
+        # Used to upload a *.MER file from the remote PanelView terminal to this system.
+        #
+        # File Path: Path to upload to on the local system (ex: C:\MyFolder\MyHMI.MER)
+        # 
+        # Optional Keyword Arguments:
+        # Overwrite: If the file already exists on the local system, replace it.
+        # Remote File Name: Use this to specify a different remote filename on the
+        #       terminal than where the local file will end up.
+        #
         file = MEFile(os.path.basename(file_path), False, False, file_path)
         self.remote_file_name = kwargs.get('remote_file_name', file.name)
         self.overwrite = kwargs.get('overwrite', False)
@@ -241,15 +241,15 @@ class MEUtility(object):
             # Perform *.MER upload from terminal
             if not(self.__upload_from_terminal(cip, file, rem_file)): raise Exception('Upload from terminal failed.')
 
-    #
-    # Used to upload all *.MER files from the remote PanelView terminal to this system.
-    #
-    # File Path: Path to upload to on the local system (ex: C:\MyFolder)
-    # 
-    # Optional Keyword Arguments:
-    # Overwrite: If the file already exists on the local system, replace it.
-    #
     def upload_all(self, file_path: str, **kwargs):
+        #
+        # Used to upload all *.MER files from the remote PanelView terminal to this system.
+        #
+        # File Path: Path to upload to on the local system (ex: C:\MyFolder)
+        # 
+        # Optional Keyword Arguments:
+        # Overwrite: If the file already exists on the local system, replace it.
+        #
         self.overwrite = kwargs.get('overwrite', False)
 
         # Create upload folder if it doesn't exist yet
