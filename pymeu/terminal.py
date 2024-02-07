@@ -6,42 +6,13 @@ from .constants import *
 from .messages import *
 from .types import *
 
-def terminal_is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
-    # I don't know what any of these three attributes are for yet.
-    resp = msg_get_attr_unk(cip, b'\x30\x01')
-    if not resp: return False
-    if resp.value not in PYMEU_GET_UNK1_VALUES:
-        print(f'Invalid UNK1 value.  Examine packets.')
-        return False
-
-    resp = msg_get_attr_unk(cip, b'\x30\x08')
-    if not resp: return False
-    if resp.value not in PYMEU_GET_UNK2_VALUES:
-        print(f'Invalid UNK2 value.  Examine packets.')
-        return False
-
-    resp = msg_get_attr_unk(cip, b'\x30\x09')
-    if not resp: return False
-    if resp.value not in PYMEU_GET_UNK3_VALUES:
-        print(f'Invalid UNK3 value.  Examine packets.')
-        return False
-
-    return True
-
-def terminal_is_set_unk_valid(cip: pycomm3.CIPDriver) -> bool:
-    # I don't know what setting this attribute does yet.
-    resp = msg_set_attr_unk(cip, b'\x30\x01\xff\xff')
-    if not resp: return False
-
-    return True
-
 def terminal_create_directory(cip: pycomm3.CIPDriver, dir: str) -> bool:
     req_args = ['\Windows\RemoteHelper.DLL', 'CreateRemDirectory', dir]
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
     #
-    # Byte 0 to 3 response code (183 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (183 = function ran, otherwise failed)
     # Byte 4 null footer
     resp = msg_run_function(cip, req_data)
     if not resp: raise Exception('Failed to create directory on terminal.')
@@ -66,7 +37,7 @@ def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEF
 
     # Response format
     #
-    # Byte 0 to 1 message instance (should match request -> 0x00)
+    # Byte 0 to 1 message instance (should match request, 0x00)
     # Byte 2 to 3 unknown purpose
     # Byte 4 to 5 file instance (use this instance for file transfer)
     # Byte 6 to 7 chunk size in bytes
@@ -93,9 +64,9 @@ def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, file: MEFil
 
     # Response format
     #
-    # Byte 0 to 1 message instance (should match request -> 0x00)
+    # Byte 0 to 1 message instance (should match request, 0x00)
     # Byte 2 to 3 unknown purpose
-    # Byte 4 to 5 file instance (use this instance for file transfer -> increases with each subsequent transfer until Delete is run)
+    # Byte 4 to 5 file instance (use this instance for file transfer, increases with each subsequent transfer until Delete is run)
     # Byte 6 to 7 chunk size in bytes
     # Byte 8 to 11 file size in bytes
     resp = msg_create_file_exchange(cip, req_data)
@@ -207,8 +178,8 @@ def terminal_get_file_exists(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
 
     # Response format
     #
-    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
-    # Byte 4 file exists (1 -> file exists)
+    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
+    # Byte 4 file exists (1 = file exists)
     # Byte 5 null footer
     resp = msg_run_function(cip, req_data)
     if not resp: raise Exception('Failed to get whether file exists.')
@@ -228,7 +199,7 @@ def terminal_get_file_size(cip: pycomm3.CIPDriver, file: MEFile) -> int:
 
     # Response format 
     #
-    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
     # Byte 4 to N-1 file size
     # Byte N null footer
     resp = msg_run_function(cip, req_data)
@@ -246,7 +217,7 @@ def terminal_get_folder_exists(cip: pycomm3.CIPDriver) -> bool:
 
     # Response format
     #
-    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
     # Byte 4 storage exists (1 -> folder exists)
     # Byte 5 null footer
     resp = msg_run_function(cip, req_data)
@@ -265,7 +236,7 @@ def terminal_get_free_space(cip: pycomm3.CIPDriver) -> int:
 
     # Response format 
     #
-    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
     # Byte 4 to N-1 free space
     # Byte N null footer
     resp = msg_run_function(cip, req_data)
@@ -283,7 +254,7 @@ def terminal_get_helper_version(cip: pycomm3.CIPDriver) -> str:
 
     # Response format
     #
-    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
     # Byte 4 to N-1 terminal version string
     # Byte N null footer
     resp = msg_run_function(cip, req_data)
@@ -301,7 +272,7 @@ def terminal_get_me_version(cip: pycomm3.CIPDriver) -> str:
 
     # Response format
     #
-    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
     # Byte 4 to 7 unknown purpose
     # Byte 8 to N-1 ME version string
     # Byte N null footer
@@ -321,7 +292,7 @@ def terminal_get_product_code(cip: pycomm3.CIPDriver) -> str:
 
     # Response format
     #
-    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
     # Byte 4 to 7 unknown purpose
     # Byte 8 to N-1 product code string
     # Byte N null footer
@@ -341,7 +312,7 @@ def terminal_get_product_type(cip: pycomm3.CIPDriver) -> str:
 
     # Response format
     #
-    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
     # Byte 4 to 7 unknown purpose
     # Byte 8 to N-1 product type string
     # Byte N null footer
@@ -354,6 +325,38 @@ def terminal_get_product_type(cip: pycomm3.CIPDriver) -> str:
     resp_unk1 = int.from_bytes(resp.value[4:8], byteorder='little', signed=False)
     resp_product_type = str(resp.value[8:].decode('utf-8').strip('\x00'))
     return resp_product_type
+
+def terminal_is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
+    # I don't know what any of these three attributes are for yet.
+    # It may be checking that the file exchange is available.
+    resp = msg_get_attr_unk(cip, b'\x30\x01')
+    if not resp: return False
+    if resp.value not in PYMEU_GET_UNK1_VALUES:
+        print(f'Invalid UNK1 value.  Examine packets.')
+        return False
+
+    resp = msg_get_attr_unk(cip, b'\x30\x08')
+    if not resp: return False
+    if resp.value not in PYMEU_GET_UNK2_VALUES:
+        print(f'Invalid UNK2 value.  Examine packets.')
+        return False
+
+    resp = msg_get_attr_unk(cip, b'\x30\x09')
+    if not resp: return False
+    if resp.value not in PYMEU_GET_UNK3_VALUES:
+        print(f'Invalid UNK3 value.  Examine packets.')
+        return False
+
+    return True
+
+def terminal_is_set_unk_valid(cip: pycomm3.CIPDriver) -> bool:
+    # I don't know what setting this attribute does yet.
+    # It may be marking the file exchange as in use.
+    #
+    resp = msg_set_attr_unk(cip, b'\x30\x01\xff\xff')
+    if not resp: return False
+
+    return True
 
 def terminal_reboot(cip: pycomm3.CIPDriver):
     # For some reason this one has an extra trailing byte.
@@ -368,7 +371,7 @@ def terminal_reboot(cip: pycomm3.CIPDriver):
         raise Exception(resp)
     except pycomm3.exceptions.CommError as e:
         # Unlike most CIP messages, this one is always expected to
-        # create an exception.  When it is received by the PanelView,
+        # create an exception.  When it is received by the terminal,
         # the device reboots and breaks the socket.
         if (str(e) != 'failed to receive reply'): raise e
 
@@ -380,7 +383,7 @@ def terminal_set_startup_file(cip: pycomm3.CIPDriver, file: MEFile, replace_comm
 
     # Response format
     #
-    # Byte 0 to 3 response code (0 -> function ran, otherwise failed)
+    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
     # Byte 4 null footer
     resp = msg_run_function(cip, req_data)
     if not resp: raise Exception('Failed to set terminal startup shortcut.')
