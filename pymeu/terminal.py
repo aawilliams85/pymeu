@@ -7,7 +7,7 @@ from .messages import *
 from .types import *
 
 def terminal_create_directory(cip: pycomm3.CIPDriver, dir: str) -> bool:
-    req_args = ['\Windows\RemoteHelper.DLL', 'CreateRemDirectory', dir]
+    req_args = ['\\Windows\\RemoteHelper.DLL', 'CreateRemDirectory', dir]
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -32,7 +32,7 @@ def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEF
     # Byte 8 to N-1 File name
     # Byte N null footer
     req_header = struct.pack('<BBHI', 0x01, int(file.overwrite_required), PYMEU_CHUNK_SIZE, file.get_size())
-    req_args = [f'\Application Data\Rockwell Software\RSViewME\Runtime\{file.name}']
+    req_args = [f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -59,7 +59,7 @@ def terminal_create_file_exchange_for_mer_list(cip: pycomm3.CIPDriver) -> int:
     # Byte 4 to N-1 File name
     # Byte N null footer
     req_header = struct.pack('<BBH', 0x00, 0x00, PYMEU_CHUNK_SIZE)
-    req_args = ['\Application Data\Rockwell Software\RSViewME\Runtime\Results.txt']
+    req_args = ['\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\Results.txt']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -87,7 +87,7 @@ def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, file: MEFil
     # Byte 4 to N-1 File name
     # Byte N null footer
     req_header = struct.pack('<BBH', 0x00, 0x00, PYMEU_CHUNK_SIZE)
-    req_args = [f'\Application Data\Rockwell Software\RSViewME\Runtime\{file.name}']
+    req_args = [f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -107,24 +107,24 @@ def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, file: MEFil
     return resp_file_instance
 
 def terminal_create_mer_list(cip: pycomm3.CIPDriver):
-    req_args = ['\Windows\RemoteHelper.DLL','FileBrowse','\Application Data\Rockwell Software\RSViewME\Runtime\*.mer::\Application Data\Rockwell Software\RSViewME\Runtime\Results.txt']
+    req_args = ['\\Windows\\RemoteHelper.DLL','FileBrowse','\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\*.mer::\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\Results.txt']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
     return msg_run_function(cip, req_data)
 
 def terminal_create_runtime_directory(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
     # Create paths
-    if not(terminal_create_directory(cip, '\Application Data')): return False
-    if not(terminal_create_directory(cip, '\Application Data\Rockwell Software')): return False
-    if not(terminal_create_directory(cip, '\Application Data\Rockwell Software\RSViewME')): return False
-    if not(terminal_create_directory(cip, '\Application Data\Rockwell Software\RSViewME\Runtime')): return False
-    if not(terminal_create_directory(cip, '\Application Data\Rockwell Software\RSViewME\Runtime\\')): return False
+    if not(terminal_create_directory(cip, '\\Application Data')): return False
+    if not(terminal_create_directory(cip, '\\Application Data\\Rockwell Software')): return False
+    if not(terminal_create_directory(cip, '\\Application Data\\Rockwell Software\\RSViewME')): return False
+    if not(terminal_create_directory(cip, '\\Application Data\\Rockwell Software\\RSViewME\\Runtime')): return False
+    if not(terminal_create_directory(cip, '\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\')): return False
     return True
 
 def terminal_delete_file_exchange(cip: pycomm3.CIPDriver, instance: int):
     return msg_delete_file_exchange(cip, instance)
 
 def terminal_delete_mer_list(cip: pycomm3.CIPDriver):
-    req_args = ['\Windows\RemoteHelper.DLL','DeleteRemFile','\Application Data\Rockwell Software\RSViewME\Runtime\Results.txt']
+    req_args = ['\\Windows\\RemoteHelper.DLL','DeleteRemFile','\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\Results.txt']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
     return msg_run_function(cip, req_data)
 
@@ -247,7 +247,7 @@ def terminal_file_upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
     return resp_list
 
 def terminal_get_file_exists(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
-    req_args = ['\Windows\RemoteHelper.DLL', 'FileExists', f'\Application Data\Rockwell Software\RSViewME\Runtime\{file.name}']
+    req_args = ['\\Windows\\RemoteHelper.DLL', 'FileExists', f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -268,7 +268,7 @@ def terminal_get_file_exists(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
     return resp_file_exists
 
 def terminal_get_file_size(cip: pycomm3.CIPDriver, file: MEFile) -> int:
-    req_args = ['\Windows\RemoteHelper.DLL', 'FileSize', f'\Application Data\Rockwell Software\RSViewME\Runtime\{file.name}']
+    req_args = ['\\Windows\\RemoteHelper.DLL', 'FileSize', f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format 
@@ -286,7 +286,7 @@ def terminal_get_file_size(cip: pycomm3.CIPDriver, file: MEFile) -> int:
     return resp_file_size
 
 def terminal_get_folder_exists(cip: pycomm3.CIPDriver) -> bool:
-    req_args = ['\Windows\RemoteHelper.DLL', 'StorageExists', '\Application Data']
+    req_args = ['\\Windows\\RemoteHelper.DLL', 'StorageExists', '\\Application Data']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -305,7 +305,7 @@ def terminal_get_folder_exists(cip: pycomm3.CIPDriver) -> bool:
     return resp_storage_exists
 
 def terminal_get_free_space(cip: pycomm3.CIPDriver) -> int:
-    req_args = ['\Windows\RemoteHelper.DLL', 'FreeSpace', '\Application Data\Rockwell Software\RSViewME\Runtime\\']
+    req_args = ['\\Windows\\RemoteHelper.DLL', 'FreeSpace', '\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format 
@@ -323,7 +323,7 @@ def terminal_get_free_space(cip: pycomm3.CIPDriver) -> int:
     return resp_free_space
 
 def terminal_get_helper_version(cip: pycomm3.CIPDriver) -> str:
-    req_args = ['\Windows\RemoteHelper.DLL', 'GetVersion', '\Windows\RemoteHelper.DLL']
+    req_args = ['\\Windows\\RemoteHelper.DLL', 'GetVersion', '\\Windows\\RemoteHelper.DLL']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -341,7 +341,7 @@ def terminal_get_helper_version(cip: pycomm3.CIPDriver) -> str:
     return resp_helper_version
 
 def terminal_get_me_version(cip: pycomm3.CIPDriver) -> str:
-    req_args = ['HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSView Enterprise\MEVersion']
+    req_args = ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSView Enterprise\\MEVersion']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -361,7 +361,7 @@ def terminal_get_me_version(cip: pycomm3.CIPDriver) -> str:
     return resp_version
 
 def terminal_get_product_code(cip: pycomm3.CIPDriver) -> str:
-    req_args = ['HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\ProductCode']
+    req_args = ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSLinxNG\\CIP Identity\\ProductCode']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -381,7 +381,7 @@ def terminal_get_product_code(cip: pycomm3.CIPDriver) -> str:
     return resp_product_code
 
 def terminal_get_product_type(cip: pycomm3.CIPDriver) -> str:
-    req_args = ['HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\ProductType']
+    req_args = ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSLinxNG\\CIP Identity\\ProductType']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -435,7 +435,7 @@ def terminal_is_set_unk_valid(cip: pycomm3.CIPDriver) -> bool:
 def terminal_reboot(cip: pycomm3.CIPDriver):
     # For some reason this one has an extra trailing byte.
     # Not sure if it has some other purpose yet
-    req_args = ['\Windows\RemoteHelper.DLL', 'BootTerminal']
+    req_args = ['\\Windows\\RemoteHelper.DLL', 'BootTerminal']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args) + b'\x00'
 
     try:
@@ -450,7 +450,7 @@ def terminal_reboot(cip: pycomm3.CIPDriver):
         if (str(e) != 'failed to receive reply'): raise e
 
 def terminal_set_startup_file(cip: pycomm3.CIPDriver, file: MEFile, replace_comms: bool, delete_logs: bool) -> bool:
-    req_args = ['\Windows\RemoteHelper.DLL', 'CreateRemMEStartupShortcut', f'\Application Data:{file.name}: /r /delay']
+    req_args = ['\\Windows\\RemoteHelper.DLL', 'CreateRemMEStartupShortcut', f'\\Application Data:{file.name}: /r /delay']
     if replace_comms: req_args = [req_args[1], req_args[2], req_args[3] + ' /o']
     if delete_logs: req_args = [req_args[1], req_args[2], req_args[3] + ' /d']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
