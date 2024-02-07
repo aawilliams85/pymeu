@@ -14,7 +14,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     license="MIT License",
     url="https://github.com/aawilliams85/pymeu",
-    packages=setuptools.find_packages(),
+    packages=['pymeu'],
     install_requires=[
         'pycomm3',
     ],
