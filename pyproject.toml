@@ -1,6 +1,7 @@
 [project]
 name = "pymeu"
 description = "Python ME Utility"
+readme = "README.md"
 version = "0.0.1"
 authors = [
     { name = "aawilliams85", email = "adair.williams85@gmail.com" }
