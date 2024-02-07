@@ -16,7 +16,7 @@ setuptools.setup(
     url="https://github.com/aawilliams85/pymeu",
     packages=setuptools.find_packages(),
     install_requires=[
-        'markdown',
+        'pycomm3',
     ],
     classifiers=[
         "Programming Language :: Python :: 3.12"
