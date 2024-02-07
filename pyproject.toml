@@ -1,0 +1,10 @@
+[project]
+name = "pymeu"
+description = ""
+version = "0.0.1"
+authors = [
+    { name = "aawilliams85", email = "" }
+]
+dependencies = [
+    "pycomm3"
+]
