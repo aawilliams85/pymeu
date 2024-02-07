@@ -1,4 +1,5 @@
-import os.path
+import os
+import pycomm3
 
 from .types import *
 from .terminal import *

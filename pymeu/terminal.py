@@ -1,3 +1,4 @@
+import pycomm3
 import struct
 from warnings import warn
 
