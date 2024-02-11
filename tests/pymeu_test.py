@@ -12,17 +12,17 @@ class pymeu_fast_tests(unittest.TestCase):
         print('')
 
     def test_get_terminal_info(self):
-        self.meu.get_terminal_info()
+        print(self.meu.get_terminal_info())
 
     def test_download_invalid_ext(self):
         with self.assertRaises(Exception):
             self.meu.download('C:\\git\\pymeu\\tests\\TestA.xyz')
 
     def test_upload(self):
-        self.meu.upload('C:\\git\\pymeu\\tests\\upload\\TestA.mer', overwrite=True)
+        print(self.meu.upload('C:\\git\\pymeu\\tests\\upload\\TestA.mer', overwrite=True))
 
     def test_upload_all(self):
-        self.meu.upload_all('C:\\git\\pymeu\\tests\\upload', overwrite=True)
+        print(self.meu.upload_all('C:\\git\\pymeu\\tests\\upload', overwrite=True))
 
     def tearDown(self):
         pass
@@ -33,13 +33,14 @@ class pymeu_slow_tests(unittest.TestCase):
         print('')
 
     def test_reboot(self):
-        self.meu.reboot()
+        print(self.meu.reboot())
         
     def test_download(self):
-        self.meu.download('C:\\git\\pymeu\\tests\\TestA.mer', overwrite=True)
-
+        print(self.meu.download('C:\\git\\pymeu\\tests\\TestB.mer', overwrite=True))
+        
     def tearDown(self):
-        time.sleep(60)
+        pass
+        #time.sleep(60)
 
 if __name__ == '__main__':
     unittest.main()

@@ -17,7 +17,7 @@ def terminal_create_directory(cip: pycomm3.CIPDriver, dir: str) -> bool:
     resp = msg_run_function(cip, req_data)
     if not resp: raise Exception('Failed to create directory on terminal.')
     resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
-    if (resp_code != PYMEU_CREATE_DIR_SUCCESS):
+    if (resp_code != CREATE_DIR_SUCCESS):
         raise Exception('Failed to create directory on terminal.')
     
     return True
@@ -31,7 +31,7 @@ def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEF
     # Byte 4 to 7 File size in bytes
     # Byte 8 to N-1 File name
     # Byte N null footer
-    req_header = struct.pack('<BBHI', 0x01, int(file.overwrite_required), PYMEU_CHUNK_SIZE, file.get_size())
+    req_header = struct.pack('<BBHI', 0x01, int(file.overwrite_required), CHUNK_SIZE, file.get_size())
     req_args = [f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
@@ -46,8 +46,8 @@ def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEF
     resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size = struct.unpack('<HHHH', resp.value)
     if (resp_msg_instance != 0): raise Exception(f'Response message instance {resp_msg_instance} is not zero.  Most likely there was an incomplete transfer.  Reboot terminal and try again.')
     if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-    #if (resp_file_instance != 1): raise Exception(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
-    if (resp_chunk_size != PYMEU_CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {PYMEU_CHUNK_SIZE}')
+    if (resp_file_instance != 1): warn(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
+    if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
     return resp_file_instance
 
 def terminal_create_file_exchange_for_mer_list(cip: pycomm3.CIPDriver) -> int:
@@ -58,7 +58,7 @@ def terminal_create_file_exchange_for_mer_list(cip: pycomm3.CIPDriver) -> int:
     # Byte 2 to 3 Chunk size in bytes
     # Byte 4 to N-1 File name
     # Byte N null footer
-    req_header = struct.pack('<BBH', 0x00, 0x00, PYMEU_CHUNK_SIZE)
+    req_header = struct.pack('<BBH', 0x00, 0x00, CHUNK_SIZE)
     req_args = ['\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\Results.txt']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
@@ -74,8 +74,8 @@ def terminal_create_file_exchange_for_mer_list(cip: pycomm3.CIPDriver) -> int:
     resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size, resp_file_size = struct.unpack('<HHHHI', resp.value)
     if (resp_msg_instance != 0): raise Exception(f'Response message instance {resp_msg_instance} is not zero.  Most likely there was an incomplete transfer.  Reboot terminal and try again.')
     if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-    #if (resp_file_instance != 1): raise Exception(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
-    if (resp_chunk_size != PYMEU_CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {PYMEU_CHUNK_SIZE}')
+    if (resp_file_instance != 1): warn(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
+    if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
     return resp_file_instance
 
 def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, file: MEFile) -> int:
@@ -86,7 +86,7 @@ def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, file: MEFil
     # Byte 2 to 3 Chunk size in bytes
     # Byte 4 to N-1 File name
     # Byte N null footer
-    req_header = struct.pack('<BBH', 0x00, 0x00, PYMEU_CHUNK_SIZE)
+    req_header = struct.pack('<BBH', 0x00, 0x00, CHUNK_SIZE)
     req_args = [f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
@@ -102,8 +102,8 @@ def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, file: MEFil
     resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size, resp_file_size = struct.unpack('<HHHHI', resp.value)
     if (resp_msg_instance != 0): raise Exception(f'Response message instance {resp_msg_instance} is not zero.  Most likely there was an incomplete transfer.  Reboot terminal and try again.')
     if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-    #if (resp_file_instance != 1): raise Exception(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
-    if (resp_chunk_size != PYMEU_CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {PYMEU_CHUNK_SIZE}')
+    if (resp_file_instance != 1): warn(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
+    if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
     return resp_file_instance
 
 def terminal_create_mer_list(cip: pycomm3.CIPDriver):
@@ -141,14 +141,14 @@ def terminal_file_download_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFi
             # Byte 0 to 3 chunk number
             # Byte 4 to 5 chunk size in bytes
             # Byte 6 to N chunk data
-            req_chunk = source_file.read(PYMEU_CHUNK_SIZE)
+            req_chunk = source_file.read(CHUNK_SIZE)
             req_header = struct.pack('<IH', req_chunk_number, len(req_chunk))
             req_next_chunk_number = req_chunk_number + 1
             req_data = req_header + req_chunk
 
             # End of file
             if not req_chunk:
-                print(f'File downloaded from: {file.path}')
+                #print(f'File downloaded from: {file.path}')
                 break
 
             # Response format
@@ -193,7 +193,7 @@ def terminal_file_upload_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile
 
             # End of file
             if (resp_chunk_number == 0) and (resp_chunk_size == 2) and (resp_data == b'\xff\xff'):
-                print(f'File uploaded to: {file.path}')
+                #print(f'File uploaded to: {file.path}')
                 break
 
             # Write to file
@@ -405,20 +405,20 @@ def terminal_is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
     # It may be checking that the file exchange is available.
     resp = msg_get_attr_unk(cip, b'\x30\x01')
     if not resp: return False
-    if resp.value not in PYMEU_GET_UNK1_VALUES:
-        print(f'Invalid UNK1 value.  Examine packets.')
+    if resp.value not in GET_UNK1_VALUES:
+        warn(f'Invalid UNK1 value.  Examine packets.')
         return False
 
     resp = msg_get_attr_unk(cip, b'\x30\x08')
     if not resp: return False
-    if resp.value not in PYMEU_GET_UNK2_VALUES:
-        print(f'Invalid UNK2 value.  Examine packets.')
+    if resp.value not in GET_UNK2_VALUES:
+        warn(f'Invalid UNK2 value.  Examine packets.')
         return False
 
     resp = msg_get_attr_unk(cip, b'\x30\x09')
     if not resp: return False
-    if resp.value not in PYMEU_GET_UNK3_VALUES:
-        print(f'Invalid UNK3 value.  Examine packets.')
+    if resp.value not in GET_UNK3_VALUES:
+        warn(f'Invalid UNK3 value.  Examine packets.')
         return False
 
     return True

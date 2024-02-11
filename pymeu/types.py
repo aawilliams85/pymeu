@@ -14,3 +14,17 @@ class MEFile:
 
     def get_size(self) -> int:
         return os.path.getsize(self.path)
+    
+@dataclass
+class MEDeviceInfo:
+    comms_path: str
+    helper_version: str
+    me_version: str
+    product_code: str
+    product_type: str
+    log: list[str]
+
+@dataclass
+class MEResponse(object):
+    device: MEDeviceInfo
+    status: str
