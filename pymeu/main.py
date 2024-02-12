@@ -53,12 +53,22 @@ class MEUtility(object):
         # Transfer *.MER list chunk by chunk
         file_list = terminal_file_upload_mer_list(cip, file_instance)
         self.device.log.append(f'Uploaded *.MER file list using file exchange {file_instance}.')
+        self.device.files = file_list
 
         # Delete file exchange on the terminal
         terminal_delete_file_exchange(cip, file_instance)
         self.device.log.append(f'Deleted file exchange {file_instance}.')
 
         return file_list
+    
+    def __get_terminal_info(self, cip: pycomm3.CIPDriver) -> MEDeviceInfo:
+        return MEDeviceInfo(self.comms_path, 
+                            terminal_get_helper_version(cip), 
+                            terminal_get_me_version(cip), 
+                            terminal_get_product_code(cip), 
+                            terminal_get_product_type(cip),
+                            [],
+                            [])
 
     def __is_download_valid(self, cip: pycomm3.CIPDriver, file: MEFile) -> bool:
         # Check that file is correct extension
@@ -99,21 +109,6 @@ class MEUtility(object):
 
         return True
 
-    def __reboot(self, comms_path: str):
-        cip = pycomm3.CIPDriver(comms_path)
-        cip._cfg['socket_timeout'] = 0.25
-        cip.open()
-        terminal_reboot(cip)
-        cip.close()
-
-    def __get_terminal_info(self, cip: pycomm3.CIPDriver) -> MEDeviceInfo:
-        return MEDeviceInfo(self.comms_path, 
-                            terminal_get_helper_version(cip), 
-                            terminal_get_me_version(cip), 
-                            terminal_get_product_code(cip), 
-                            terminal_get_product_type(cip),
-                            [])
-    
     def __is_terminal_valid(self, device: MEDeviceInfo) -> bool:
         if device.helper_version not in HELPER_VERSIONS: return False
         if device.me_version not in ME_VERSIONS: return False
@@ -121,6 +116,13 @@ class MEUtility(object):
         if device.product_type not in PRODUCT_TYPES: return False
         return True
     
+    def __reboot(self, comms_path: str):
+        cip = pycomm3.CIPDriver(comms_path)
+        cip._cfg['socket_timeout'] = 0.25
+        cip.open()
+        terminal_reboot(cip)
+        cip.close()
+        
     def __upload_from_terminal(self, cip: pycomm3.CIPDriver, file: MEFile, rem_file: MEFile) -> bool:
         # Verify file exists on terminal
         if not(terminal_get_file_exists(cip, rem_file)): raise Exception(f'File {rem_file.name} does not exist on terminal.')

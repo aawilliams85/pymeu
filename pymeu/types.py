@@ -23,6 +23,7 @@ class MEDeviceInfo:
     product_code: str
     product_type: str
     log: list[str]
+    files: list[str]
 
 @dataclass
 class MEResponse(object):
