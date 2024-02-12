@@ -14,6 +14,22 @@ meu = MEUtility('192.168.1.20')
 meu.download('C:\\YourFolder\\YourProgram.mer')
 ```
 
+Use the upload function to transfer a *.MER file from the remote terminal:
+
+```python
+from pymeu import MEUtility
+meu = MEUtility('192.168.1.20')
+meu.upload('C:\\YourFolder\\YourProgram.mer')
+```
+
+Use the upload all function to transfer all *.MER files from the remote terminal:
+
+```python
+from pymeu import MEUtility
+meu = MEUtility('192.168.1.20')
+meu.upload_all('C:\\YourFolder')
+```
+
 Use the reboot function to restart the remote terminal:
 
 ```python

@@ -51,3 +51,6 @@ docs/_build/
 
 # Uploads from tests
 /tests/upload/*.mer
+
+# pypi config
+*.pypirc
