@@ -225,6 +225,7 @@ class MEUtility(object):
         #       terminal than where the local file will end up.
         #
         file = MEFile(os.path.basename(file_path), False, False, file_path)
+        self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
         self.remote_file_name = kwargs.get('remote_file_name', file.name)
         self.overwrite = kwargs.get('overwrite', False)
         rem_file = MEFile(self.remote_file_name,False,False,file_path)
@@ -261,6 +262,7 @@ class MEUtility(object):
         # Optional Keyword Arguments:
         # Overwrite: If the file already exists on the local system, replace it.
         #
+        self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
         self.overwrite = kwargs.get('overwrite', False)
 
         # Create upload folder if it doesn't exist yet

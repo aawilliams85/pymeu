@@ -1,11 +1,15 @@
 [project]
 name = "pymeu"
 description = "Python ME Utility"
+version = "0.0.3"
 readme = "README.md"
-version = "0.0.1"
+license = {file = "LICENSE"}
 authors = [
     { name = "aawilliams85", email = "adair.williams85@gmail.com" }
 ]
 dependencies = [
     "pycomm3"
 ]
+
+[project.urls]
+Repository = "https://github.com/aawilliams85/pymeu.git"
