@@ -400,6 +400,26 @@ def terminal_get_product_type(cip: pycomm3.CIPDriver) -> str:
     resp_product_type = str(resp.value[8:].decode('utf-8').strip('\x00'))
     return resp_product_type
 
+def terminal_get_startup_file(cip: pycomm3.CIPDriver) -> str:
+    req_args = ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSViewME\\Startup Options\\CurrentApp']
+    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
+
+    # Response format
+    #
+    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
+    # Byte 4 to 7 unknown purpose
+    # Byte 8 to N-1 result string
+    # Byte N null footer
+    resp = msg_read_registry(cip, req_data)
+    if not resp: raise Exception('Failed to get terminal startup filename.')
+    resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
+    if (resp_code != 0):
+        raise Exception(f'Response code was not zero.  Examine packets.')
+
+    resp_unk1 = int.from_bytes(resp.value[4:8], byteorder='little', signed=False)
+    resp_result = str(resp.value[8:].decode('utf-8').strip('\x00'))
+    return resp_result
+
 def terminal_is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
     # I don't know what any of these three attributes are for yet.
     # It may be checking that the file exchange is available.
