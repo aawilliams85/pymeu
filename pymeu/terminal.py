@@ -341,48 +341,16 @@ def terminal_get_helper_version(cip: pycomm3.CIPDriver) -> str:
     return resp_helper_version
 
 def terminal_get_me_version(cip: pycomm3.CIPDriver) -> str:
-    req_args = ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSView Enterprise\\MEVersion']
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
-
-    # Response format
-    #
-    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
-    # Byte 4 to 7 unknown purpose
-    # Byte 8 to N-1 ME version string
-    # Byte N null footer
-    resp = msg_read_registry(cip, req_data)
-    if not resp: raise Exception('Failed to get terminal ME version.')
-    resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
-    if (resp_code != 0):
-        raise Exception(f'Response code was not zero.  Examine packets.')
-
-    resp_unk1 = int.from_bytes(resp.value[4:8], byteorder='little', signed=False)
-    resp_version = str(resp.value[8:].decode('utf-8').strip('\x00'))
-    return resp_version
+    return terminal_get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSView Enterprise\\MEVersion'])
 
 def terminal_get_product_code(cip: pycomm3.CIPDriver) -> str:
-    req_args = ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSLinxNG\\CIP Identity\\ProductCode']
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
-
-    # Response format
-    #
-    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
-    # Byte 4 to 7 unknown purpose
-    # Byte 8 to N-1 product code string
-    # Byte N null footer
-    resp = msg_read_registry(cip, req_data)
-    if not resp: raise Exception('Failed to get terminal product code.')
-    resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
-    if (resp_code != 0):
-        raise Exception(f'Response code was not zero.  Examine packets.')
-
-    resp_unk1 = int.from_bytes(resp.value[4:8], byteorder='little', signed=False)
-    resp_product_code = str(resp.value[8:].decode('utf-8').strip('\x00'))
-    return resp_product_code
+    return terminal_get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSLinxNG\\CIP Identity\\ProductCode'])
 
 def terminal_get_product_type(cip: pycomm3.CIPDriver) -> str:
-    req_args = ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSLinxNG\\CIP Identity\\ProductType']
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
+    return terminal_get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSLinxNG\\CIP Identity\\ProductType'])
+
+def terminal_get_registry_value(cip: pycomm3.CIPDriver, key: str) -> str:
+    req_data = b''.join(arg.encode() + b'\x00' for arg in key)
 
     # Response format
     #
@@ -391,34 +359,17 @@ def terminal_get_product_type(cip: pycomm3.CIPDriver) -> str:
     # Byte 8 to N-1 product type string
     # Byte N null footer
     resp = msg_read_registry(cip, req_data)
-    if not resp: raise Exception('Failed to get terminal product type.')
+    if not resp: raise Exception(f'Failed to read registry key: {key}')
     resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
     if (resp_code != 0):
-        raise Exception(f'Response code was not zero.  Examine packets.')
+        raise Exception(f'Read registry response code was not zero.  Examine packets.')
 
     resp_unk1 = int.from_bytes(resp.value[4:8], byteorder='little', signed=False)
-    resp_product_type = str(resp.value[8:].decode('utf-8').strip('\x00'))
-    return resp_product_type
+    resp_value = str(resp.value[8:].decode('utf-8').strip('\x00'))
+    return resp_value
 
 def terminal_get_startup_file(cip: pycomm3.CIPDriver) -> str:
-    req_args = ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSViewME\\Startup Options\\CurrentApp']
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
-
-    # Response format
-    #
-    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
-    # Byte 4 to 7 unknown purpose
-    # Byte 8 to N-1 result string
-    # Byte N null footer
-    resp = msg_read_registry(cip, req_data)
-    if not resp: raise Exception('Failed to get terminal startup filename.')
-    resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
-    if (resp_code != 0):
-        raise Exception(f'Response code was not zero.  Examine packets.')
-
-    resp_unk1 = int.from_bytes(resp.value[4:8], byteorder='little', signed=False)
-    resp_result = str(resp.value[8:].decode('utf-8').strip('\x00'))
-    return resp_result
+    return terminal_get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSViewME\\Startup Options\\CurrentApp'])
 
 def terminal_is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
     # I don't know what any of these three attributes are for yet.

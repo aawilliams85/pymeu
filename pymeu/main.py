@@ -201,7 +201,7 @@ class MEUtility(object):
                 self.device.log.append(f'Terminal storage exists: {terminal_get_folder_exists(cip)}.')
                 self.device.log.append(f'Terminal has {terminal_get_free_space(cip)} free bytes')
                 self.device.log.append(f'Terminal has files: {self.__get_mer_list(cip)}')
-                self.device.log.append(f'Terminal starup file: {terminal_get_startup_file(cip)}.')
+                self.device.log.append(f'Terminal startup file: {terminal_get_startup_file(cip)}.')
 
         return MEResponse(self.device, 'Success')
 
