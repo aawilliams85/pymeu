@@ -36,7 +36,7 @@ class pymeu_slow_tests(unittest.TestCase):
         print(self.meu.reboot())
         
     def test_download(self):
-        print(self.meu.download('C:\\git\\pymeu\\tests\\TestB.mer', overwrite=True))
+        print(self.meu.download('C:\\git\\pymeu\\tests\\TestA.mer', overwrite=True))
         
     def tearDown(self):
         pass

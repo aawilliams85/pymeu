@@ -8,18 +8,8 @@ from .types import *
 
 def terminal_create_directory(cip: pycomm3.CIPDriver, dir: str) -> bool:
     req_args = ['\\Windows\\RemoteHelper.DLL', 'CreateRemDirectory', dir]
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
-
-    # Response format
-    #
-    # Byte 0 to 3 response code (183 = function ran, otherwise failed)
-    # Byte 4 null footer
-    resp = msg_run_function(cip, req_data)
-    if not resp: raise Exception('Failed to create directory on terminal.')
-    resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
-    if (resp_code != CREATE_DIR_SUCCESS):
-        raise Exception('Failed to create directory on terminal.')
-    
+    resp_code, resp_data = terminal_run_function(cip, req_args)
+    if (resp_code != CREATE_DIR_SUCCESS): raise Exception('Failed to create directory on terminal.')    
     return True
 
 def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEFile) -> int:
@@ -108,8 +98,9 @@ def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, file: MEFil
 
 def terminal_create_mer_list(cip: pycomm3.CIPDriver):
     req_args = ['\\Windows\\RemoteHelper.DLL','FileBrowse','\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\*.mer::\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\Results.txt']
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
-    return msg_run_function(cip, req_data)
+    resp_code, resp_data = terminal_run_function(cip, req_args)
+    if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
+    return True
 
 def terminal_create_runtime_directory(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
     # Create paths
@@ -122,11 +113,6 @@ def terminal_create_runtime_directory(cip: pycomm3.CIPDriver, file: MEFile) -> b
 
 def terminal_delete_file_exchange(cip: pycomm3.CIPDriver, instance: int):
     return msg_delete_file_exchange(cip, instance)
-
-def terminal_delete_mer_list(cip: pycomm3.CIPDriver):
-    req_args = ['\\Windows\\RemoteHelper.DLL','DeleteRemFile','\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\Results.txt']
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
-    return msg_run_function(cip, req_data)
 
 def terminal_end_file_write(cip: pycomm3.CIPDriver, instance: int):
     req_data = b'\x00\x00\x00\x00\x02\x00\xff\xff'
@@ -248,97 +234,41 @@ def terminal_file_upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
 
 def terminal_get_file_exists(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
     req_args = ['\\Windows\\RemoteHelper.DLL', 'FileExists', f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
+    resp_code, resp_data = terminal_run_function(cip, req_args)
 
-    # Response format
-    #
-    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
-    # Byte 4 file exists (1 = file exists)
-    # Byte 5 null footer
-    resp = msg_run_function(cip, req_data)
-    if not resp: raise Exception('Failed to get whether file exists.')
-    resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
     if (resp_code != 0):
         #This one can return false without warning since the outer function will set the overwrite bit accordingly.
         #
         #warn(f'Response code was not zero.  Examine packets.')
         return False
     
-    resp_file_exists = bool(int(resp.value[4:].decode('utf-8').strip('\x00')))
-    return resp_file_exists
+    return bool(int(resp_data))
 
 def terminal_get_file_size(cip: pycomm3.CIPDriver, file: MEFile) -> int:
     req_args = ['\\Windows\\RemoteHelper.DLL', 'FileSize', f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
-
-    # Response format 
-    #
-    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
-    # Byte 4 to N-1 file size
-    # Byte N null footer
-    resp = msg_run_function(cip, req_data)
-    if not resp: raise Exception('Failed to get file size of {file.name} on terminal.')
-    resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
-    if (resp_code != 0):
-        raise Exception(f'Response code was not zero.  Examine packets.')
-
-    resp_file_size = int(resp.value[4:].decode('utf-8').strip('\x00'))
-    return resp_file_size
+    resp_code, resp_data = terminal_run_function(cip, req_args)
+    if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
+    return int(resp_data)
 
 def terminal_get_folder_exists(cip: pycomm3.CIPDriver) -> bool:
     req_args = ['\\Windows\\RemoteHelper.DLL', 'StorageExists', '\\Application Data']
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
-
-    # Response format
-    #
-    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
-    # Byte 4 storage exists (1 -> folder exists)
-    # Byte 5 null footer
-    resp = msg_run_function(cip, req_data)
-    if not resp: raise Exception('Failed to get whether storage exists.')
-    resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
+    resp_code, resp_data = terminal_run_function(cip, req_args)
     if (resp_code != 0):
         warn(f'Response code was not zero.  Examine packets.')
         return False
-
-    resp_storage_exists = bool(int(resp.value[4:].decode('utf-8').strip('\x00')))
-    return resp_storage_exists
+    return bool(int(resp_data))
 
 def terminal_get_free_space(cip: pycomm3.CIPDriver) -> int:
     req_args = ['\\Windows\\RemoteHelper.DLL', 'FreeSpace', '\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\']
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
-
-    # Response format 
-    #
-    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
-    # Byte 4 to N-1 free space
-    # Byte N null footer
-    resp = msg_run_function(cip, req_data)
-    if not resp: raise Exception('Failed to get terminal free space.')
-    resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
-    if (resp_code != 0):
-        raise Exception(f'Response code was not zero.  Examine packets.')
-
-    resp_free_space = int(resp.value[4:].decode('utf-8').strip('\x00'))
-    return resp_free_space
+    resp_code, resp_data = terminal_run_function(cip, req_args)
+    if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
+    return int(resp_data)
 
 def terminal_get_helper_version(cip: pycomm3.CIPDriver) -> str:
     req_args = ['\\Windows\\RemoteHelper.DLL', 'GetVersion', '\\Windows\\RemoteHelper.DLL']
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
-
-    # Response format
-    #
-    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
-    # Byte 4 to N-1 terminal version string
-    # Byte N null footer
-    resp = msg_run_function(cip, req_data)
-    if not resp: raise Exception('Failed to get terminal helper version.')
-    resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
-    if (resp_code != 0):
-        raise Exception(f'Response code was not zero.  Examine packets.')
-
-    resp_helper_version = str(resp.value[4:].decode('utf-8').strip('\x00'))
-    return resp_helper_version
+    resp_code, resp_data = terminal_run_function(cip, req_args)
+    if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
+    return str(resp_data)
 
 def terminal_get_me_version(cip: pycomm3.CIPDriver) -> str:
     return terminal_get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSView Enterprise\\MEVersion'])
@@ -406,8 +336,8 @@ def terminal_is_set_unk_valid(cip: pycomm3.CIPDriver) -> bool:
 def terminal_reboot(cip: pycomm3.CIPDriver):
     # For some reason this one has an extra trailing byte.
     # Not sure if it has some other purpose yet
-    req_args = ['\\Windows\\RemoteHelper.DLL', 'BootTerminal']
-    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args) + b'\x00'
+    req_args = ['\\Windows\\RemoteHelper.DLL', 'BootTerminal','']
+    req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     try:
         resp = msg_run_function(cip, req_data)
@@ -420,20 +350,24 @@ def terminal_reboot(cip: pycomm3.CIPDriver):
         # the device reboots and breaks the socket.
         if (str(e) != 'failed to receive reply'): raise e
 
-def terminal_set_startup_file(cip: pycomm3.CIPDriver, file: MEFile, replace_comms: bool, delete_logs: bool) -> bool:
-    req_args = ['\\Windows\\RemoteHelper.DLL', 'CreateRemMEStartupShortcut', f'\\Application Data:{file.name}: /r /delay']
-    if replace_comms: req_args = [req_args[1], req_args[2], req_args[3] + ' /o']
-    if delete_logs: req_args = [req_args[1], req_args[2], req_args[3] + ' /d']
+def terminal_run_function(cip: pycomm3.CIPDriver, req_args):
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
     #
-    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
-    # Byte 4 null footer
+    # Byte 0 to 3 response code (typically 0 = function ran, otherwise failed, not all functions follow this)
+    # Byte 4 to N-1 response data
+    # Byte N null footer
     resp = msg_run_function(cip, req_data)
-    if not resp: raise Exception('Failed to set terminal startup shortcut.')
+    if not resp: raise Exception(f'Failed to run function: {req_args}.')
     resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
-    if (resp_code != 0):
-        raise Exception(f'Response code was not zero.  Examine packets.')
+    resp_data = resp.value[4:].decode('utf-8').strip('\x00')
+    return resp_code, resp_data
 
+def terminal_set_startup_file(cip: pycomm3.CIPDriver, file: MEFile, replace_comms: bool, delete_logs: bool) -> bool:
+    req_args = ['\\Windows\\RemoteHelper.DLL', 'CreateRemMEStartupShortcut', f'\\Application Data:{file.name}: /r /delay']
+    if replace_comms: req_args = [req_args[1], req_args[2], req_args[3] + ' /o']
+    if delete_logs: req_args = [req_args[1], req_args[2], req_args[3] + ' /d']
+    resp_code, resp_data = terminal_run_function(cip, req_args)
+    if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return True
