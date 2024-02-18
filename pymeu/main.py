@@ -22,7 +22,7 @@ class MEUtility(object):
         if not(terminal_is_get_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
 
         # Create a file exchange on the terminal
-        file_instance = terminal_create_file_exchange_for_download(cip, file)
+        file_instance = terminal_create_file_exchange_for_download_mer(cip, file)
         self.device.log.append(f'Create file exchange {file_instance} for download.')
 
         # Set attributes
@@ -47,7 +47,7 @@ class MEUtility(object):
         # Create *.MER list
         terminal_create_mer_list(cip)
 
-        file_instance = terminal_create_file_exchange_for_mer_list(cip)
+        file_instance = terminal_create_file_exchange_for_upload_mer_list(cip)
         self.device.log.append(f'Create file exchange {file_instance} for upload.')
 
         # Transfer *.MER list chunk by chunk
@@ -128,7 +128,7 @@ class MEUtility(object):
         if not(terminal_get_file_exists(cip, rem_file)): raise Exception(f'File {rem_file.name} does not exist on terminal.')
 
         # Create file exchange
-        file_instance = terminal_create_file_exchange_for_upload(cip, rem_file)
+        file_instance = terminal_create_file_exchange_for_upload_mer(cip, rem_file)
         self.device.log.append(f'Create file exchange {file_instance} for upload.')
 
         # Transfer *.MER chunk by chunk

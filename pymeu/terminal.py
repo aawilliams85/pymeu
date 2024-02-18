@@ -12,7 +12,7 @@ def terminal_create_directory(cip: pycomm3.CIPDriver, dir: str) -> bool:
     if (resp_code != CREATE_DIR_SUCCESS): raise Exception('Failed to create directory on terminal.')    
     return True
 
-def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEFile) -> int:
+def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: str) -> int:
     # Request format
     #
     # Byte 0 Transfer Type (always 1 for file download?)
@@ -22,7 +22,7 @@ def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEF
     # Byte 8 to N-1 File name
     # Byte N null footer
     req_header = struct.pack('<BBHI', 0x01, int(file.overwrite_required), CHUNK_SIZE, file.get_size())
-    req_args = [f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
+    req_args = [f'{remote_path}\\{file.name}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -40,7 +40,10 @@ def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEF
     if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
     return resp_file_instance
 
-def terminal_create_file_exchange_for_mer_list(cip: pycomm3.CIPDriver) -> int:
+def terminal_create_file_exchange_for_download_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
+    return terminal_create_file_exchange_for_download(cip, file, '\\Application Data\\Rockwell Software\\RSViewME\\Runtime')
+
+def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
     # Request format
     #
     # Byte 0 Transfer Type (always 0 for file upload?)
@@ -49,7 +52,7 @@ def terminal_create_file_exchange_for_mer_list(cip: pycomm3.CIPDriver) -> int:
     # Byte 4 to N-1 File name
     # Byte N null footer
     req_header = struct.pack('<BBH', 0x00, 0x00, CHUNK_SIZE)
-    req_args = ['\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\Results.txt']
+    req_args = [f'{remote_path}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -68,33 +71,11 @@ def terminal_create_file_exchange_for_mer_list(cip: pycomm3.CIPDriver) -> int:
     if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
     return resp_file_instance
 
-def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, file: MEFile) -> int:
-    # Request format
-    #
-    # Byte 0 Transfer Type (always 0 for file upload?)
-    # Byte 1 unknown purpose (used for overwrite in download... maybe no purpose here?)
-    # Byte 2 to 3 Chunk size in bytes
-    # Byte 4 to N-1 File name
-    # Byte N null footer
-    req_header = struct.pack('<BBH', 0x00, 0x00, CHUNK_SIZE)
-    req_args = [f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
-    req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
+def terminal_create_file_exchange_for_upload_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
+    return terminal_create_file_exchange_for_upload(cip, f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}')
 
-    # Response format
-    #
-    # Byte 0 to 1 message instance (should match request, 0x00)
-    # Byte 2 to 3 unknown purpose
-    # Byte 4 to 5 file instance (use this instance for file transfer, increases with each subsequent transfer until Delete is run)
-    # Byte 6 to 7 chunk size in bytes
-    # Byte 8 to 11 file size in bytes
-    resp = msg_create_file_exchange(cip, req_data)
-    if not resp: raise Exception('Failed to create file exchange on terminal')
-    resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size, resp_file_size = struct.unpack('<HHHHI', resp.value)
-    if (resp_msg_instance != 0): raise Exception(f'Response message instance {resp_msg_instance} is not zero.  Most likely there was an incomplete transfer.  Reboot terminal and try again.')
-    if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-    if (resp_file_instance != 1): warn(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
-    if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
-    return resp_file_instance
+def terminal_create_file_exchange_for_upload_mer_list(cip: pycomm3.CIPDriver) -> int:
+    return terminal_create_file_exchange_for_upload(cip, '\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\Results.txt')
 
 def terminal_create_mer_list(cip: pycomm3.CIPDriver):
     req_args = ['\\Windows\\RemoteHelper.DLL','FileBrowse','\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\*.mer::\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\Results.txt']
