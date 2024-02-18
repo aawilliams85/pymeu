@@ -99,9 +99,9 @@ def terminal_end_file_write(cip: pycomm3.CIPDriver, instance: int):
     req_data = b'\x00\x00\x00\x00\x02\x00\xff\xff'
     return msg_write_file_chunk(cip, instance, req_data)
 
-def terminal_file_download_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
+def terminal_file_download(cip: pycomm3.CIPDriver, instance: int, file: str):
     req_chunk_number = 1
-    with open(file.path, 'rb') as source_file:
+    with open(file, 'rb') as source_file:
         while True:
             # Request format
             #
@@ -133,43 +133,10 @@ def terminal_file_download_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFi
             # Continue to next chunk
             req_chunk_number += 1
 
-def terminal_file_upload_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
-    req_chunk_number = 1
-    with open(file.path, 'wb') as dest_file:
-        while True:
-            # Request format
-            #
-            # Byte 0 to 3 chunk number
-            req_data = struct.pack('<I', req_chunk_number)
+def terminal_file_download_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
+    terminal_file_download(cip, instance, file.path)
 
-            # Response format
-            #
-            # Byte 0 to 3 unknown purpose
-            # Byte 4 to 7 req chunk number echo
-            # Byte 8 to 9 chunk size in bytes
-            # Byte 10 to N chunk data
-            resp = msg_read_file_chunk(cip, instance, req_data)
-            if not resp: raise Exception(f'Failed to read chunk {req_chunk_number} to terminal.')
-            resp_unk1 = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
-            resp_chunk_number = int.from_bytes(resp.value[4:8], byteorder='little', signed=False)
-            resp_chunk_size = int.from_bytes(resp.value[8:9], byteorder='little', signed=False)
-            resp_data = bytes(resp.value[10:])
-
-            if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-            if (resp_chunk_number != req_chunk_number) and (resp_chunk_number != 0): raise Exception(f'Response chunk number {resp_chunk_number} did not match request chunk number {req_chunk_number}.')
-
-            # End of file
-            if (resp_chunk_number == 0) and (resp_chunk_size == 2) and (resp_data == b'\xff\xff'):
-                #print(f'File uploaded to: {file.path}')
-                break
-
-            # Write to file
-            dest_file.write(resp_data)
-
-            # Continue to next chunk
-            req_chunk_number += 1
-
-def terminal_file_upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
+def terminal_file_upload(cip: pycomm3.CIPDriver, instance: int):
     req_chunk_number = 1
     resp_binary = bytearray()
     while True:
@@ -205,10 +172,15 @@ def terminal_file_upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
         # Continue to next chunk
         req_chunk_number += 1
 
-    # In the returned list, each file name character is separated
-    # by a null character.
-    #
-    # Each each is separate by a colon.
+    return resp_binary
+
+def terminal_file_upload_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
+    resp_binary = terminal_file_upload(cip, instance)
+    with open(file.path, 'wb') as dest_file:
+        dest_file.write(resp_binary)
+
+def terminal_file_upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
+    resp_binary = terminal_file_upload(cip, instance)
     resp_str = "".join([chr(b) for b in resp_binary if b != 0])
     resp_list = resp_str.split(':')
     return resp_list
@@ -216,13 +188,7 @@ def terminal_file_upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
 def terminal_get_file_exists(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
     req_args = ['\\Windows\\RemoteHelper.DLL', 'FileExists', f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     resp_code, resp_data = terminal_run_function(cip, req_args)
-
-    if (resp_code != 0):
-        #This one can return false without warning since the outer function will set the overwrite bit accordingly.
-        #
-        #warn(f'Response code was not zero.  Examine packets.')
-        return False
-    
+    if (resp_code != 0): return False    
     return bool(int(resp_data))
 
 def terminal_get_file_size(cip: pycomm3.CIPDriver, file: MEFile) -> int:
@@ -272,14 +238,13 @@ def terminal_get_registry_value(cip: pycomm3.CIPDriver, key: str) -> str:
     resp = msg_read_registry(cip, req_data)
     if not resp: raise Exception(f'Failed to read registry key: {key}')
     resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
-    if (resp_code != 0):
-        raise Exception(f'Read registry response code was not zero.  Examine packets.')
+    if (resp_code != 0): raise Exception(f'Read registry response code was not zero.  Examine packets.')
 
     resp_unk1 = int.from_bytes(resp.value[4:8], byteorder='little', signed=False)
     resp_value = str(resp.value[8:].decode('utf-8').strip('\x00'))
     return resp_value
 
-def terminal_get_startup_file(cip: pycomm3.CIPDriver) -> str:
+def terminal_get_startup_mer(cip: pycomm3.CIPDriver) -> str:
     return terminal_get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSViewME\\Startup Options\\CurrentApp'])
 
 def terminal_is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
@@ -345,7 +310,7 @@ def terminal_run_function(cip: pycomm3.CIPDriver, req_args):
     resp_data = resp.value[4:].decode('utf-8').strip('\x00')
     return resp_code, resp_data
 
-def terminal_set_startup_file(cip: pycomm3.CIPDriver, file: MEFile, replace_comms: bool, delete_logs: bool) -> bool:
+def terminal_set_startup_mer(cip: pycomm3.CIPDriver, file: MEFile, replace_comms: bool, delete_logs: bool) -> bool:
     req_args = ['\\Windows\\RemoteHelper.DLL', 'CreateRemMEStartupShortcut', f'\\Application Data:{file.name}: /r /delay']
     if replace_comms: req_args = [req_args[1], req_args[2], req_args[3] + ' /o']
     if delete_logs: req_args = [req_args[1], req_args[2], req_args[3] + ' /d']

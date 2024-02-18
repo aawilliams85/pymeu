@@ -186,7 +186,7 @@ class MEUtility(object):
 
             # Set *.MER to run at startup and then reboot
             if self.run_at_startup:
-                terminal_set_startup_file(cip, file, self.replace_comms, self.delete_logs)
+                terminal_set_startup_mer(cip, file, self.replace_comms, self.delete_logs)
                 terminal_reboot(cip)
 
         return MEResponse(self.device, 'Success')
@@ -201,7 +201,7 @@ class MEUtility(object):
                 self.device.log.append(f'Terminal storage exists: {terminal_get_folder_exists(cip)}.')
                 self.device.log.append(f'Terminal has {terminal_get_free_space(cip)} free bytes')
                 self.device.log.append(f'Terminal has files: {self.__get_mer_list(cip)}')
-                self.device.log.append(f'Terminal startup file: {terminal_get_startup_file(cip)}.')
+                self.device.log.append(f'Terminal startup file: {terminal_get_startup_mer(cip)}.')
 
         return MEResponse(self.device, 'Success')
 
