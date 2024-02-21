@@ -1,6 +1,7 @@
 CHUNK_SIZE = 1984
 
 HELPER_VERSIONS = {
+    '5.10.00',
     '7.00.00',
     '8.00.00',
     '8.10.00',
@@ -14,6 +15,7 @@ HELPER_VERSIONS = {
 }
 
 ME_VERSIONS = {
+    '5.10.16.09',
     '7.00.20.13',
     '7.00.55.13',
     '8.00.67.12',
@@ -30,6 +32,7 @@ ME_VERSIONS = {
 }
 
 PRODUCT_CODES = {
+    '17',   #PanelView Plus
     '47',   #PanelView Plus 6 1000
     '48',   #PanelView Plus 6
     '51',   #PanelView Plus 6
@@ -51,7 +54,8 @@ GET_UNK1_VALUES = {
 }
 
 GET_UNK2_VALUES = {
-    b'\x01\x60'
+    b'\x01\x60',
+    b'\x03\x41'
 }
 
 GET_UNK3_VALUES = {
