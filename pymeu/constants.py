@@ -1,4 +1,5 @@
-CHUNK_SIZE = 1984
+CHUNK_SIZE = 1984 # Number of bytes to transfer per messsage.
+                  # Appeared to work up to 2000 but not tested extensively.
 
 HELPER_VERSIONS = {
     '11.00.00',
