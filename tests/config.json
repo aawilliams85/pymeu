@@ -1,0 +1,17 @@
+{
+    "comms_path": {
+        "good": "192.168.40.123",
+        "bad": "192.168.254.254"
+    },
+    "file": {
+        "download": {
+            "good": "TestA.mer",
+            "bad_extension": "TestA.xyz",
+            "bad_missing": "Test1.mer"
+        },
+        "upload": {
+            "good": "TestA.mer",
+            "bad_missing": "Test1.mer"
+        }
+    }
+}
