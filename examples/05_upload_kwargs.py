@@ -1,12 +1,5 @@
 from pymeu import MEUtility
 
-        # Optional Keyword Arguments:
-        # Overwrite: If the file already exists on the local system, replace it.
-        # Remote File Name: Use this to specify a different remote filename on the
-        #       terminal than where the local file will end up.
-        #
-
-
 '''
 optional keyword arguments
 
