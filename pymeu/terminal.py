@@ -6,13 +6,18 @@ from .constants import *
 from .messages import *
 from .types import *
 
-def terminal_create_directory(cip: pycomm3.CIPDriver, dir: str) -> bool:
-    req_args = ['\\Windows\\RemoteHelper.DLL', 'CreateRemDirectory', dir]
-    resp_code, resp_data = terminal_run_function(cip, req_args)
+
+helper_path = '\\Windows'
+storage_path = '\\Application Data'
+
+
+def create_directory(cip: pycomm3.CIPDriver, dir: str) -> bool:
+    req_args = [helper_path + '\\RemoteHelper.DLL', 'CreateRemDirectory', dir]
+    resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != CREATE_DIR_SUCCESS): raise Exception('Failed to create directory on terminal.')    
     return True
 
-def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: str) -> int:
+def create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: str) -> int:
     # Request format
     #
     # Byte 0 Transfer Type (always 1 for file download?)
@@ -40,10 +45,10 @@ def terminal_create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEF
     if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
     return resp_file_instance
 
-def terminal_create_file_exchange_for_download_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
-    return terminal_create_file_exchange_for_download(cip, file, '\\Application Data\\Rockwell Software\\RSViewME\\Runtime')
+def create_file_exchange_for_download_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
+    return create_file_exchange_for_download(cip, file, storage_path + '\\Rockwell Software\\RSViewME\\Runtime')
 
-def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
+def create_file_exchange_for_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
     # Request format
     #
     # Byte 0 Transfer Type (always 0 for file upload?)
@@ -71,35 +76,36 @@ def terminal_create_file_exchange_for_upload(cip: pycomm3.CIPDriver, remote_path
     if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
     return resp_file_instance
 
-def terminal_create_file_exchange_for_upload_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
-    return terminal_create_file_exchange_for_upload(cip, f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}')
+def create_file_exchange_for_upload_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
+    file_path = storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}'
+    return create_file_exchange_for_upload(cip, file_path)
 
-def terminal_create_file_exchange_for_upload_mer_list(cip: pycomm3.CIPDriver) -> int:
-    return terminal_create_file_exchange_for_upload(cip, '\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\Results.txt')
+def create_file_exchange_for_upload_mer_list(cip: pycomm3.CIPDriver) -> int:
+    result_path = storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\Results.txt'
+    return create_file_exchange_for_upload(cip, result_path)
 
-def terminal_create_mer_list(cip: pycomm3.CIPDriver):
-    req_args = ['\\Windows\\RemoteHelper.DLL','FileBrowse','\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\*.mer::\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\Results.txt']
-    resp_code, resp_data = terminal_run_function(cip, req_args)
+def create_mer_list(cip: pycomm3.CIPDriver):
+    req_args = [helper_path + '\\RemoteHelper.DLL','FileBrowse',storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\*.mer::' + storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\Results.txt']
+    resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return True
 
-def terminal_create_runtime_directory(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
+def create_runtime_directory(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
     # Create paths
-    if not(terminal_create_directory(cip, '\\Application Data')): return False
-    if not(terminal_create_directory(cip, '\\Application Data\\Rockwell Software')): return False
-    if not(terminal_create_directory(cip, '\\Application Data\\Rockwell Software\\RSViewME')): return False
-    if not(terminal_create_directory(cip, '\\Application Data\\Rockwell Software\\RSViewME\\Runtime')): return False
-    if not(terminal_create_directory(cip, '\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\')): return False
+    if not(create_directory(cip, storage_path)): return False
+    if not(create_directory(cip, storage_path + '\\Rockwell Software')): return False
+    if not(create_directory(cip, storage_path + '\\Rockwell Software\\RSViewME')): return False
+    if not(create_directory(cip, storage_path + '\\Rockwell Software\\RSViewME\\Runtime')): return False
     return True
 
-def terminal_delete_file_exchange(cip: pycomm3.CIPDriver, instance: int):
+def delete_file_exchange(cip: pycomm3.CIPDriver, instance: int):
     return msg_delete_file_exchange(cip, instance)
 
-def terminal_end_file_write(cip: pycomm3.CIPDriver, instance: int):
+def end_file_write(cip: pycomm3.CIPDriver, instance: int):
     req_data = b'\x00\x00\x00\x00\x02\x00\xff\xff'
     return msg_write_file_chunk(cip, instance, req_data)
 
-def terminal_file_download(cip: pycomm3.CIPDriver, instance: int, file: str):
+def file_download(cip: pycomm3.CIPDriver, instance: int, file: str):
     req_chunk_number = 1
     with open(file, 'rb') as source_file:
         while True:
@@ -133,10 +139,10 @@ def terminal_file_download(cip: pycomm3.CIPDriver, instance: int, file: str):
             # Continue to next chunk
             req_chunk_number += 1
 
-def terminal_file_download_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
-    terminal_file_download(cip, instance, file.path)
+def file_download_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
+    file_download(cip, instance, file.path)
 
-def terminal_file_upload(cip: pycomm3.CIPDriver, instance: int):
+def file_upload(cip: pycomm3.CIPDriver, instance: int):
     req_chunk_number = 1
     resp_binary = bytearray()
     while True:
@@ -174,59 +180,59 @@ def terminal_file_upload(cip: pycomm3.CIPDriver, instance: int):
 
     return resp_binary
 
-def terminal_file_upload_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
-    resp_binary = terminal_file_upload(cip, instance)
+def file_upload_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
+    resp_binary = file_upload(cip, instance)
     with open(file.path, 'wb') as dest_file:
         dest_file.write(resp_binary)
 
-def terminal_file_upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
-    resp_binary = terminal_file_upload(cip, instance)
+def file_upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
+    resp_binary = file_upload(cip, instance)
     resp_str = "".join([chr(b) for b in resp_binary if b != 0])
     resp_list = resp_str.split(':')
     return resp_list
 
-def terminal_get_file_exists(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
-    req_args = ['\\Windows\\RemoteHelper.DLL', 'FileExists', f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
-    resp_code, resp_data = terminal_run_function(cip, req_args)
+def get_file_exists(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
+    req_args = [helper_path + '\\RemoteHelper.DLL', 'FileExists', storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
+    resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): return False    
     return bool(int(resp_data))
 
-def terminal_get_file_size(cip: pycomm3.CIPDriver, file: MEFile) -> int:
-    req_args = ['\\Windows\\RemoteHelper.DLL', 'FileSize', f'\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
-    resp_code, resp_data = terminal_run_function(cip, req_args)
+def get_file_size(cip: pycomm3.CIPDriver, file: MEFile) -> int:
+    req_args = [helper_path + '\\RemoteHelper.DLL', 'FileSize', storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
+    resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return int(resp_data)
 
-def terminal_get_folder_exists(cip: pycomm3.CIPDriver) -> bool:
-    req_args = ['\\Windows\\RemoteHelper.DLL', 'StorageExists', '\\Application Data']
-    resp_code, resp_data = terminal_run_function(cip, req_args)
+def get_folder_exists(cip: pycomm3.CIPDriver) -> bool:
+    req_args = [helper_path + '\\RemoteHelper.DLL', 'StorageExists', storage_path]
+    resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0):
         warn(f'Response code was not zero.  Examine packets.')
         return False
     return bool(int(resp_data))
 
-def terminal_get_free_space(cip: pycomm3.CIPDriver) -> int:
-    req_args = ['\\Windows\\RemoteHelper.DLL', 'FreeSpace', '\\Application Data\\Rockwell Software\\RSViewME\\Runtime\\']
-    resp_code, resp_data = terminal_run_function(cip, req_args)
+def get_free_space(cip: pycomm3.CIPDriver) -> int:
+    req_args = [helper_path + '\\RemoteHelper.DLL', 'FreeSpace', storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\']
+    resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return int(resp_data)
 
-def terminal_get_helper_version(cip: pycomm3.CIPDriver) -> str:
-    req_args = ['\\Windows\\RemoteHelper.DLL', 'GetVersion', '\\Windows\\RemoteHelper.DLL']
-    resp_code, resp_data = terminal_run_function(cip, req_args)
+def get_helper_version(cip: pycomm3.CIPDriver) -> str:
+    req_args = [helper_path + '\\RemoteHelper.DLL', 'GetVersion', helper_path +'\\RemoteHelper.DLL']
+    resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return str(resp_data)
 
-def terminal_get_me_version(cip: pycomm3.CIPDriver) -> str:
-    return terminal_get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSView Enterprise\\MEVersion'])
+def get_me_version(cip: pycomm3.CIPDriver) -> str:
+    return get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSView Enterprise\\MEVersion'])
 
-def terminal_get_product_code(cip: pycomm3.CIPDriver) -> str:
-    return terminal_get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSLinxNG\\CIP Identity\\ProductCode'])
+def get_product_code(cip: pycomm3.CIPDriver) -> str:
+    return get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSLinxNG\\CIP Identity\\ProductCode'])
 
-def terminal_get_product_type(cip: pycomm3.CIPDriver) -> str:
-    return terminal_get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSLinxNG\\CIP Identity\\ProductType'])
+def get_product_type(cip: pycomm3.CIPDriver) -> str:
+    return get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSLinxNG\\CIP Identity\\ProductType'])
 
-def terminal_get_registry_value(cip: pycomm3.CIPDriver, key: str) -> str:
+def get_registry_value(cip: pycomm3.CIPDriver, key: str) -> str:
     req_data = b''.join(arg.encode() + b'\x00' for arg in key)
 
     # Response format
@@ -244,10 +250,10 @@ def terminal_get_registry_value(cip: pycomm3.CIPDriver, key: str) -> str:
     resp_value = str(resp.value[8:].decode('utf-8').strip('\x00'))
     return resp_value
 
-def terminal_get_startup_mer(cip: pycomm3.CIPDriver) -> str:
-    return terminal_get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSViewME\\Startup Options\\CurrentApp'])
+def get_startup_mer(cip: pycomm3.CIPDriver) -> str:
+    return get_registry_value(cip, ['HKEY_LOCAL_MACHINE\\SOFTWARE\\Rockwell Software\\RSViewME\\Startup Options\\CurrentApp'])
 
-def terminal_is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
+def is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
     # I don't know what any of these three attributes are for yet.
     # It may be checking that the file exchange is available.
     resp = msg_get_attr_unk(cip, b'\x30\x01')
@@ -270,7 +276,7 @@ def terminal_is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
 
     return True
 
-def terminal_is_set_unk_valid(cip: pycomm3.CIPDriver) -> bool:
+def is_set_unk_valid(cip: pycomm3.CIPDriver) -> bool:
     # I don't know what setting this attribute does yet.
     # It may be marking the file exchange as in use.
     #
@@ -279,10 +285,10 @@ def terminal_is_set_unk_valid(cip: pycomm3.CIPDriver) -> bool:
 
     return True
 
-def terminal_reboot(cip: pycomm3.CIPDriver):
+def reboot(cip: pycomm3.CIPDriver):
     # For some reason this one has an extra trailing byte.
     # Not sure if it has some other purpose yet
-    req_args = ['\\Windows\\RemoteHelper.DLL', 'BootTerminal','']
+    req_args = [helper_path + '\\RemoteHelper.DLL', 'BootTerminal','']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     try:
@@ -296,7 +302,7 @@ def terminal_reboot(cip: pycomm3.CIPDriver):
         # the device reboots and breaks the socket.
         if (str(e) != 'failed to receive reply'): raise e
 
-def terminal_run_function(cip: pycomm3.CIPDriver, req_args):
+def run_function(cip: pycomm3.CIPDriver, req_args):
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     # Response format
@@ -310,10 +316,10 @@ def terminal_run_function(cip: pycomm3.CIPDriver, req_args):
     resp_data = resp.value[4:].decode('utf-8').strip('\x00')
     return resp_code, resp_data
 
-def terminal_set_startup_mer(cip: pycomm3.CIPDriver, file: MEFile, replace_comms: bool, delete_logs: bool) -> bool:
-    req_args = ['\\Windows\\RemoteHelper.DLL', 'CreateRemMEStartupShortcut', f'\\Application Data:{file.name}: /r /delay']
+def set_startup_mer(cip: pycomm3.CIPDriver, file: MEFile, replace_comms: bool, delete_logs: bool) -> bool:
+    req_args = [helper_path + '\\RemoteHelper.DLL', 'CreateRemMEStartupShortcut', storage_path + f':{file.name}: /r /delay']
     if replace_comms: req_args = [req_args[1], req_args[2], req_args[3] + ' /o']
     if delete_logs: req_args = [req_args[1], req_args[2], req_args[3] + ' /d']
-    resp_code, resp_data = terminal_run_function(cip, req_args)
+    resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return True

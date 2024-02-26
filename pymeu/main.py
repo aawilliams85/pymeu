@@ -1,8 +1,10 @@
 import os
 import pycomm3
 
-from .types import *
-from .terminal import *
+from . types import *
+from . import terminal
+from . import constants
+from warnings import warn
 
 class MEUtility(object):
     def __init__(self, comms_path: str):
@@ -12,61 +14,68 @@ class MEUtility(object):
         # Create runtime folder
         #
         # TODO: Can we check if this already exists and skip?
-        if not(terminal_create_runtime_directory(cip, file)): raise Exception('Failed to create runtime path on terminal.')
+        if not(terminal.create_runtime_directory(cip, file)): raise Exception('Failed to create runtime path on terminal.')
 
         # Get attributes
         #
         # Still no clue on what these are, or when/how they would change.
         # If they aren't changed by creating paths, could be moved ahead
         # to is_download_valid().
-        if not(terminal_is_get_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
+        if not(terminal.is_get_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
 
         # Create a file exchange on the terminal
-        file_instance = terminal_create_file_exchange_for_download_mer(cip, file)
+        file_instance = terminal.create_file_exchange_for_download_mer(cip, file)
         self.device.log.append(f'Create file exchange {file_instance} for download.')
 
         # Set attributes
         #
         # Still no clue what this is.  Might be setting file up for write?
-        if not(terminal_is_set_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
+        if not(terminal.is_set_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
 
         # Transfer *.MER chunk by chunk
-        terminal_file_download_mer(cip, file_instance, file)
+        terminal.file_download_mer(cip, file_instance, file)
 
         # Mark file exchange as completed on the terminal
-        terminal_end_file_write(cip, file_instance)
+        terminal.end_file_write(cip, file_instance)
         self.device.log.append(f'Downloaded {file.path} to {file.name} using file exchange {file_instance}.')
 
         # Delete file exchange on the terminal
-        terminal_delete_file_exchange(cip, file_instance)
+        terminal.delete_file_exchange(cip, file_instance)
         self.device.log.append(f'Deleted file exchange {file_instance}.')
 
         return True
 
     def __get_mer_list(self, cip: pycomm3.CIPDriver):
         # Create *.MER list
-        terminal_create_mer_list(cip)
+        terminal.create_mer_list(cip)
 
-        file_instance = terminal_create_file_exchange_for_upload_mer_list(cip)
+        file_instance = terminal.create_file_exchange_for_upload_mer_list(cip)
         self.device.log.append(f'Create file exchange {file_instance} for upload.')
 
         # Transfer *.MER list chunk by chunk
-        file_list = terminal_file_upload_mer_list(cip, file_instance)
+        file_list = terminal.file_upload_mer_list(cip, file_instance)
         self.device.log.append(f'Uploaded *.MER file list using file exchange {file_instance}.')
         self.device.files = file_list
 
         # Delete file exchange on the terminal
-        terminal_delete_file_exchange(cip, file_instance)
+        terminal.delete_file_exchange(cip, file_instance)
         self.device.log.append(f'Deleted file exchange {file_instance}.')
 
         return file_list
     
     def __get_terminal_info(self, cip: pycomm3.CIPDriver) -> MEDeviceInfo:
+        me_version = terminal.get_me_version(cip)
+        major_rev = int(me_version.split(".")[0])
+
+        if major_rev <= 5:
+            terminal.helper_path = '\\Storage Card\\Rockwell Software\\RSViewME'
+            terminal.storage_path = '\\Storage Card'
+
         return MEDeviceInfo(self.comms_path, 
-                            terminal_get_helper_version(cip), 
-                            terminal_get_me_version(cip), 
-                            terminal_get_product_code(cip), 
-                            terminal_get_product_type(cip),
+                            terminal.get_helper_version(cip),
+                            me_version,
+                            terminal.get_product_code(cip),
+                            terminal.get_product_type(cip),
                             [],
                             [])
 
@@ -77,13 +86,13 @@ class MEUtility(object):
             return False
 
         # Check that storage folder exists
-        resp_storage_exists = terminal_get_folder_exists(cip)
+        resp_storage_exists = terminal.get_folder_exists(cip)
         if not(resp_storage_exists):
             self.device.log.append(f'Storage folder does not exist on terminal')
             return False
 
         # Check free space
-        resp_free_space = terminal_get_free_space(cip)
+        resp_free_space = terminal.get_free_space(cip)
         if (resp_free_space > file.get_size()):
             self.device.log.append(f'File {file.name} requires {file.get_size()} byes.  Free space on terminal {resp_free_space} bytes.')
         else:
@@ -91,7 +100,7 @@ class MEUtility(object):
             return False
 
         # Check if file name already exists
-        resp_file_exists = terminal_get_file_exists(cip, file)
+        resp_file_exists = terminal.get_file_exists(cip, file)
         file.overwrite_required = False
         if (resp_file_exists and file.overwrite_requested):
             self.device.log.append(f'File {file.name} already exists on terminal, and overwrite was requested.  Setting overwrite to required.')
@@ -104,39 +113,39 @@ class MEUtility(object):
 
         # Check space consumed by file if it exists
         if resp_file_exists:
-            resp_file_size = terminal_get_file_size(cip, file)
+            resp_file_size = terminal.get_file_size(cip, file)
             self.device.log.append(f'File {file.name} on terminal is {resp_file_size} bytes.')
 
         return True
 
     def __is_terminal_valid(self, device: MEDeviceInfo) -> bool:
-        if device.helper_version not in HELPER_VERSIONS: return False
-        if device.me_version not in ME_VERSIONS: return False
-        if device.product_code not in PRODUCT_CODES: return False
-        if device.product_type not in PRODUCT_TYPES: return False
+        if device.helper_version not in constants.HELPER_VERSIONS: return False
+        if device.me_version not in constants.ME_VERSIONS: return False
+        if device.product_code not in constants.PRODUCT_CODES: return False
+        if device.product_type not in constants.PRODUCT_TYPES: return False
         return True
     
     def __reboot(self, comms_path: str):
         cip = pycomm3.CIPDriver(comms_path)
         cip._cfg['socket_timeout'] = 0.25
         cip.open()
-        terminal_reboot(cip)
+        terminal.reboot(cip)
         cip.close()
         
     def __upload_from_terminal(self, cip: pycomm3.CIPDriver, file: MEFile, rem_file: MEFile) -> bool:
         # Verify file exists on terminal
-        if not(terminal_get_file_exists(cip, rem_file)): raise Exception(f'File {rem_file.name} does not exist on terminal.')
+        if not(terminal.get_file_exists(cip, rem_file)): raise Exception(f'File {rem_file.name} does not exist on terminal.')
 
         # Create file exchange
-        file_instance = terminal_create_file_exchange_for_upload_mer(cip, rem_file)
+        file_instance = terminal.create_file_exchange_for_upload_mer(cip, rem_file)
         self.device.log.append(f'Create file exchange {file_instance} for upload.')
 
         # Transfer *.MER chunk by chunk
-        terminal_file_upload_mer(cip, file_instance, file)
+        terminal.file_upload_mer(cip, file_instance, file)
         self.device.log.append(f'Uploaded {rem_file.name} to {file.path} using file exchange {file_instance}.')
 
         # Delete file exchange on the terminal
-        terminal_delete_file_exchange(cip, file_instance)
+        terminal.delete_file_exchange(cip, file_instance)
         self.device.log.append(f'Deleted file exchange {file_instance}.')
 
         return True
@@ -186,8 +195,8 @@ class MEUtility(object):
 
             # Set *.MER to run at startup and then reboot
             if self.run_at_startup:
-                terminal_set_startup_mer(cip, file, self.replace_comms, self.delete_logs)
-                terminal_reboot(cip)
+                terminal.set_startup_mer(cip, file, self.replace_comms, self.delete_logs)
+                terminal.reboot(cip)
 
         return MEResponse(self.device, 'Success')
 
@@ -198,10 +207,10 @@ class MEUtility(object):
         with pycomm3.CIPDriver(self.comms_path) as cip:
             self.device = self.__get_terminal_info(cip)
             if (self.__is_terminal_valid(self.device)):
-                self.device.log.append(f'Terminal storage exists: {terminal_get_folder_exists(cip)}.')
-                self.device.log.append(f'Terminal has {terminal_get_free_space(cip)} free bytes')
+                self.device.log.append(f'Terminal storage exists: {terminal.get_folder_exists(cip)}.')
+                self.device.log.append(f'Terminal has {terminal.get_free_space(cip)} free bytes')
                 self.device.log.append(f'Terminal has files: {self.__get_mer_list(cip)}')
-                self.device.log.append(f'Terminal startup file: {terminal_get_startup_mer(cip)}.')
+                self.device.log.append(f'Terminal startup file: {terminal.get_startup_mer(cip)}.')
 
         return MEResponse(self.device, 'Success')
 
