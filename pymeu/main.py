@@ -67,13 +67,6 @@ class MEUtility(object):
         self.device.log.append(f'Delete *.MER list on terminal.')
 
         return file_list
-    
-    def __reboot(self, comms_path: str):
-        cip = pycomm3.CIPDriver(comms_path)
-        cip._cfg['socket_timeout'] = 0.25
-        cip.open()
-        terminal.helper.reboot(cip)
-        cip.close()
         
     def __upload_from_terminal(self, cip: pycomm3.CIPDriver, file: MEFile, rem_file: MEFile) -> bool:
         # Verify file exists on terminal
@@ -174,7 +167,7 @@ class MEUtility(object):
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True to proceed at your own risk.')
 
-            self.__reboot(self.comms_path)
+            terminal.actions.reboot(cip, self.comms_path)
 
         return MEResponse(self.device, 'Success')
 
