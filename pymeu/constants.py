@@ -2,23 +2,6 @@
 # used per message.  Quick tests up to 2000 bytes did succeed, >2000 bytes failed.
 CHUNK_SIZE = 1984
 
-# Known CIP class codes that aren't previously defined by pycomm3.
-# Further investigation needed.
-CIP_CLASSES = {
-    b'\x04\xFD',    # Function
-    b'\x04\xFE',    # Registry
-    b'\x04\xFF'     # File
-}
-
-# Known CIP service codes that aren't previously defined by pycomm3.
-# Further investigation needed.
-CIP_SERVICES = {
-    b'\x50',        # Execute
-    b'\x51',        # Read Registry
-    b'\x52',        # Write File
-    b'\x53',        # Read File
-}
-
 # Known RemoteHelper file version numbers, used to help check that device is a valid terminal.
 HELPER_VERSIONS = {
     '5.10.00',
