@@ -1,3 +1,4 @@
+from enum import Enum
 import pycomm3
 import struct
 from warnings import warn
@@ -29,6 +30,11 @@ GET_UNK3_VALUES = {
     b'\x64\x00'
 }
 
+class TransferType(Enum):
+    DOWNLOAD = int.from_bytes(b'\x01', byteorder='big')
+    UPLOAD = int.from_bytes(b'\x00', byteorder='big')
+
+
 def create_exchange_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: str) -> int:
     # Request format
     #
@@ -38,7 +44,7 @@ def create_exchange_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: 
     # Byte 4 to 7 File size in bytes
     # Byte 8 to N-1 File name
     # Byte N null footer
-    req_header = struct.pack('<BBHI', 0x01, int(file.overwrite_required), CHUNK_SIZE, file.get_size())
+    req_header = struct.pack('<BBHI', TransferType.DOWNLOAD.value, int(file.overwrite_required), CHUNK_SIZE, file.get_size())
     req_args = [f'{remote_path}\\{file.name}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
@@ -68,7 +74,7 @@ def create_exchange_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
     # Byte 2 to 3 Chunk size in bytes
     # Byte 4 to N-1 File name
     # Byte N null footer
-    req_header = struct.pack('<BBH', 0x00, 0x00, CHUNK_SIZE)
+    req_header = struct.pack('<BBH', TransferType.UPLOAD.value, 0x00, CHUNK_SIZE)
     req_args = [f'{remote_path}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
