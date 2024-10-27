@@ -54,12 +54,16 @@ class MEUtility(object):
 
         # Transfer *.MER list chunk by chunk
         file_list = terminal.file_upload_mer_list(cip, file_instance)
-        self.device.log.append(f'Uploaded *.MER file list using file exchange {file_instance}.')
+        self.device.log.append(f'Uploaded *.MER list using file exchange {file_instance}.')
         self.device.files = file_list
 
         # Delete file exchange on the terminal
         terminal.delete_file_exchange(cip, file_instance)
         self.device.log.append(f'Deleted file exchange {file_instance}.')
+
+        # Delete *.MER list on the terminal
+        terminal.delete_file_mer_list(cip)
+        self.device.log.append(f'Delete *.MER list on terminal.')
 
         return file_list
     
