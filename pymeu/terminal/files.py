@@ -75,8 +75,7 @@ def create_exchange_upload_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
     return create_exchange_upload(cip, file_path)
 
 def create_exchange_upload_mer_list(cip: pycomm3.CIPDriver) -> int:
-    file_path = storage_path + UPLOAD_LIST_PATH
-    return create_exchange_upload(cip, file_path)
+    return create_exchange_upload(cip, upload_list_path)
 
 def delete_exchange(cip: pycomm3.CIPDriver, instance: int):
     return messages.delete_file_exchange(cip, instance)

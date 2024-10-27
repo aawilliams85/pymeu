@@ -79,7 +79,7 @@ def create_directory(cip: pycomm3.CIPDriver, dir: str) -> bool:
     return True
 
 def create_mer_list(cip: pycomm3.CIPDriver):
-    req_args = [helper_file_path,HelperFunctions.CREATE_FILE_LIST.value,storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\*.mer::' + storage_path + UPLOAD_LIST_PATH]
+    req_args = [helper_file_path,HelperFunctions.CREATE_FILE_LIST.value,storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\*.mer::' + upload_list_path]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return True
@@ -99,7 +99,7 @@ def delete_file(cip: pycomm3.CIPDriver, file: str) -> bool:
     return True
 
 def delete_file_mer_list(cip: pycomm3.CIPDriver) -> bool:
-    return delete_file(cip, storage_path + UPLOAD_LIST_PATH)
+    return delete_file(cip, upload_list_path)
 
 def get_file_exists(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
     req_args = [helper_file_path, HelperFunctions.GET_FILE_EXISTS.value, storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
