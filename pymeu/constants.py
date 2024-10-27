@@ -49,37 +49,6 @@ PRODUCT_TYPES = {
     '24'
 }
 
-# Known functions available from RemoteHelper.
-REMOTE_HELPER_FUNCIONS = {
-    'BootTerminal',                 # ex: 'BootTerminal',''
-                                    #       Returns a comms error since upon successful execution, terminal is reset.
-    'CreateRemDirectory',           # ex: 'CreateRemDirectory','{Path}'
-                                    #       Returns a static value if successful, further investigation needed.
-    'CreateRemShortcut',
-    'CreateRemMEStartupShortcut',   # ex: 'CreateRemMEStartupShortcut','{Folder Path}:{Filename.MER}: /r /delay'
-                                    #       Can also specify /o to replace comms and /d to delete logs at startup
-                                    #       Returns 1 if shortcut created successfully, 0 otherwise.
-    'DeleteRemDirectory',
-    'DeleteRemFile',
-    'FileBrowse',                   # ex: 'FileBrowse','{Search Path}\\*.{Search Extension}::{Results File Path}
-                                    #       Returns 1 if results file generated successfully, 0 otherwise.
-    'FileExists',                   # ex: 'FileExists','{File Path}'
-                                    #       Returns 1 if file exists, 0 otherwise.
-    'FileSize',                     # ex: 'FileSize','{File Path}'
-                                    #       Returns the number of bytes.
-    'FolderBrowse',
-    'FreeSpace',                    # ex: 'FreeSpace','{Path}'
-                                    #       Returns the number of bytes.
-    'GetFileVersion',
-    'GetVersion',                   # ex: 'GetVersion','{File Path}'
-                                    #       Returns the a version string.
-    'InvokeEXE',
-    'IsExeRunning',
-    'StorageExists',                # ex: 'StorageExists'.'{Path}'
-                                    #       Returns 1 if folder exists, 0 otherwise.
-    'TerminateEXE'
-}
-
 UPLOAD_LIST_PATH = f'\\Rockwell Software\\RSViewME\\Runtime\\Results.txt'
 
 # Known static value for successful creation of a folder.
