@@ -118,6 +118,8 @@ REMOTE_HELPER_FUNCIONS = {
     'TerminateEXE'
 }
 
+UPLOAD_LIST_PATH = f'\\Rockwell Software\\RSViewME\\Runtime\\Results.txt'
+
 # Known static value for successful creation of a folder.
 # Further investigation needed.
 CREATE_DIR_SUCCESS = 183 # 'b\xb7'

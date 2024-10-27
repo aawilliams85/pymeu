@@ -85,7 +85,7 @@ def create_file_exchange_for_upload_mer_list(cip: pycomm3.CIPDriver) -> int:
     return create_file_exchange_for_upload(cip, result_path)
 
 def create_mer_list(cip: pycomm3.CIPDriver):
-    req_args = [helper_path + '\\RemoteHelper.DLL','FileBrowse',storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\*.mer::' + storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\Results.txt']
+    req_args = [helper_path + '\\RemoteHelper.DLL','FileBrowse',storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\*.mer::' + storage_path + UPLOAD_LIST_PATH]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return True
@@ -97,6 +97,15 @@ def create_runtime_directory(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
     if not(create_directory(cip, storage_path + '\\Rockwell Software\\RSViewME')): return False
     if not(create_directory(cip, storage_path + '\\Rockwell Software\\RSViewME\\Runtime')): return False
     return True
+
+def delete_file(cip: pycomm3.CIPDriver, file: str) -> bool:
+    req_args = [helper_path + '\\RemoteHelper.DLL','DeleteRemFile',file]
+    resp_code, resp_data = run_function(cip, req_args)
+    if (resp_code != 0): raise Exception(f'Failed to delete file on remote terminal {file}')
+    return True
+
+def delete_file_mer_list(cip: pycomm3.CIPDriver) -> bool:
+    return delete_file(cip, storage_path + UPLOAD_LIST_PATH)
 
 def delete_file_exchange(cip: pycomm3.CIPDriver, instance: int):
     return msg_delete_file_exchange(cip, instance)
