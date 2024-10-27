@@ -11,24 +11,6 @@ class MEUtility(object):
         self.comms_path = comms_path
         self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
 
-    def __upload_from_terminal(self, cip: pycomm3.CIPDriver, file: MEFile, rem_file: MEFile) -> bool:
-        # Verify file exists on terminal
-        if not(terminal.helper.get_file_exists(cip, rem_file)): raise Exception(f'File {rem_file.name} does not exist on terminal.')
-
-        # Create file exchange
-        file_instance = terminal.files.create_exchange_upload_mer(cip, rem_file)
-        self.device.log.append(f'Create file exchange {file_instance} for upload.')
-
-        # Transfer *.MER chunk by chunk
-        terminal.files.upload_mer(cip, file_instance, file)
-        self.device.log.append(f'Uploaded {rem_file.name} to {file.path} using file exchange {file_instance}.')
-
-        # Delete file exchange on the terminal
-        terminal.files.delete_exchange(cip, file_instance)
-        self.device.log.append(f'Deleted file exchange {file_instance}.')
-
-        return True
-
     def download(self, file_path: str, **kwargs) -> MEResponse:
         #
         # Used to download a *.MER file from this system to the remote Panelview terminal.
@@ -147,7 +129,7 @@ class MEUtility(object):
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True to proceed at your own risk.')
 
             # Perform *.MER upload from terminal
-            if not(self.__upload_from_terminal(cip, file, rem_file)): raise Exception('Upload from terminal failed.')
+            if not(terminal.actions.upload_mer_file(cip, self.device, file, rem_file)): raise Exception('Upload from terminal failed.')
         
         return MEResponse(self.device, 'Success')
 
@@ -188,6 +170,6 @@ class MEUtility(object):
                     if not(self.overwrite) and (os.path.exists(mer_path)): raise Exception(f'File {mer_path} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
 
                     # Perform *.MER upload from terminal
-                    if not(self.__upload_from_terminal(cip, file, file)): raise Exception('Upload from terminal failed.')
+                    if not(terminal.actions.upload_mer_file(cip, self.device, file, file)): raise Exception('Upload from terminal failed.')
 
         return MEResponse(self.device, 'Success')

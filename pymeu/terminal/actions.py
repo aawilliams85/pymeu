@@ -39,6 +39,25 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile
 
     return True
 
+def upload_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile, rem_file: MEFile) -> bool:
+    # Verify file exists on terminal
+    if not(helper.get_file_exists(cip, rem_file)): raise Exception(f'File {rem_file.name} does not exist on terminal.')
+
+    # Create file exchange
+    file_instance = files.create_exchange_upload_mer(cip, rem_file)
+    device.log.append(f'Create file exchange {file_instance} for upload.')
+
+    # Transfer *.MER chunk by chunk
+    files.upload_mer(cip, file_instance, file)
+    device.log.append(f'Uploaded {rem_file.name} to {file.path} using file exchange {file_instance}.')
+
+    # Delete file exchange on the terminal
+    files.delete_exchange(cip, file_instance)
+    device.log.append(f'Deleted file exchange {file_instance}.')
+
+    return True
+
+
 def upload_mer_list(cip: pycomm3.CIPDriver, device: MEDeviceInfo):
     # Create *.MER list
     helper.create_mer_list(cip)
