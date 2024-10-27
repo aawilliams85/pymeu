@@ -67,69 +67,6 @@ class MEUtility(object):
 
         return file_list
     
-    def __get_terminal_info(self, cip: pycomm3.CIPDriver) -> MEDeviceInfo:
-        me_version = terminal.registry.get_me_version(cip)
-        major_rev = int(me_version.split(".")[0])
-
-        if major_rev <= 5:
-            terminal.paths.helper_path = '\\Storage Card\\Rockwell Software\\RSViewME'
-            terminal.paths.helper_file_path = terminal.paths.helper_path + '\\' + terminal.paths.helper_file_name
-            terminal.paths.storage_path = '\\Storage Card'
-
-        return MEDeviceInfo(self.comms_path, 
-                            terminal.helper.get_helper_version(cip),
-                            me_version,
-                            terminal.registry.get_product_code(cip),
-                            terminal.registry.get_product_type(cip),
-                            [],
-                            [])
-
-    def __is_download_valid(self, cip: pycomm3.CIPDriver, file: MEFile) -> bool:
-        # Check that file is correct extension
-        if (file.get_ext() != '.mer'):
-            self.device.log.append(f'File {file.name} is not a *.mer file')
-            return False
-
-        # Check that storage folder exists
-        resp_storage_exists = terminal.helper.get_folder_exists(cip)
-        if not(resp_storage_exists):
-            self.device.log.append(f'Storage folder does not exist on terminal')
-            return False
-
-        # Check free space
-        resp_free_space = terminal.helper.get_free_space(cip)
-        if (resp_free_space > file.get_size()):
-            self.device.log.append(f'File {file.name} requires {file.get_size()} byes.  Free space on terminal {resp_free_space} bytes.')
-        else:
-            self.device.log.append(f'File {file.name} requires {file.get_size()} bytes.  Free space on terminal {resp_free_space} bytes is insufficient.')
-            return False
-
-        # Check if file name already exists
-        resp_file_exists = terminal.helper.get_file_exists(cip, file)
-        file.overwrite_required = False
-        if (resp_file_exists and file.overwrite_requested):
-            self.device.log.append(f'File {file.name} already exists on terminal, and overwrite was requested.  Setting overwrite to required.')
-            file.overwrite_required = True
-        if (resp_file_exists and not(file.overwrite_requested)):
-            self.device.log.append(f'File {file.name} already exists on terminal, and overwrite was NOT requested.  Use kwarg overwrite_requested=True to overwrite existing.')
-            return False
-        if not(resp_file_exists):
-            self.device.log.append(f'File {file.name} does not exist on terminal.  Setting overwrite to not required.')
-
-        # Check space consumed by file if it exists
-        if resp_file_exists:
-            resp_file_size = terminal.helper.get_file_size(cip, file)
-            self.device.log.append(f'File {file.name} on terminal is {resp_file_size} bytes.')
-
-        return True
-
-    def __is_terminal_valid(self, device: MEDeviceInfo) -> bool:
-        if device.helper_version not in constants.HELPER_VERSIONS: return False
-        if device.me_version not in constants.ME_VERSIONS: return False
-        if device.product_code not in constants.PRODUCT_CODES: return False
-        if device.product_type not in constants.PRODUCT_TYPES: return False
-        return True
-    
     def __reboot(self, comms_path: str):
         cip = pycomm3.CIPDriver(comms_path)
         cip._cfg['socket_timeout'] = 0.25
@@ -185,15 +122,15 @@ class MEUtility(object):
             # is a terminal of known version.
             #
             # TODO: Test on more hardware to expand validated list
-            self.device = self.__get_terminal_info(cip)
-            if not(self.__is_terminal_valid(self.device)):
+            self.device = terminal.validation.get_terminal_info(cip)
+            if not(terminal.validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True to proceed at your own risk.')
                 
             # Validate that all starting conditions for downnload to terminal are as expected
-            if not(self.__is_download_valid(cip, file)): raise Exception('Download to terminal is invalid.')
+            if not(terminal.validation.is_download_valid(cip, self.device, file)): raise Exception('Download to terminal is invalid.')
 
             # Perform *.MER download to terminal
             if not(self.__download_to_terminal(cip, file)): raise Exception('Download to terminal failed.')
@@ -210,8 +147,8 @@ class MEUtility(object):
         # Used to print some info about the remote PanelView terminal.
         #
         with pycomm3.CIPDriver(self.comms_path) as cip:
-            self.device = self.__get_terminal_info(cip)
-            if (self.__is_terminal_valid(self.device)):
+            self.device = terminal.validation.get_terminal_info(cip)
+            if (terminal.validation.is_terminal_valid(self.device)):
                 self.device.log.append(f'Terminal storage exists: {terminal.helper.get_folder_exists(cip)}.')
                 self.device.log.append(f'Terminal has {terminal.helper.get_free_space(cip)} free bytes')
                 self.device.log.append(f'Terminal has files: {self.__get_mer_list(cip)}')
@@ -224,8 +161,8 @@ class MEUtility(object):
         # Used to reboot the remote PanelView terminal.
         #
         with pycomm3.CIPDriver(self.comms_path) as cip:
-            self.device = self.__get_terminal_info(cip)
-            if (self.__is_terminal_valid(self.device)):
+            self.device = terminal.validation.get_terminal_info(cip)
+            if (terminal.validation.is_terminal_valid(self.device)):
                 self.__reboot(self.comms_path)
 
         return MEResponse(self.device, 'Success')
@@ -258,8 +195,8 @@ class MEUtility(object):
             # is a terminal of known version.
             #
             # TODO: Test on more hardware to expand validated list
-            self.device = self.__get_terminal_info(cip)
-            if not(self.__is_terminal_valid(self.device)):
+            self.device = terminal.validation.get_terminal_info(cip)
+            if not(terminal.validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
@@ -290,8 +227,8 @@ class MEUtility(object):
             # is a terminal of known version.
             #
             # TODO: Test on more hardware to expand validated list
-            self.device = self.__get_terminal_info(cip)
-            if not(self.__is_terminal_valid(self.device)):
+            self.device = terminal.validation.get_terminal_info(cip)
+            if not(terminal.validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:

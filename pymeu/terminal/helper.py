@@ -3,11 +3,10 @@ import pycomm3
 import struct
 from warnings import warn
 
-from .paths import *
-
 from ..constants import *
 from .. import messages
 from ..types import *
+from .paths import *
 
 # Known functions available from RemoteHelper.
 class HelperFunctions(Enum):

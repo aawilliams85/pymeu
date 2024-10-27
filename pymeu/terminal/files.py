@@ -2,11 +2,10 @@ import pycomm3
 import struct
 from warnings import warn
 
-from .paths import *
-
 from ..constants import *
 from .. import messages
 from ..types import *
+from .paths import *
 
 # When files are transferred, this is the maximum number of bytes
 # used per message.  Quick tests up to 2000 bytes did succeed, >2000 bytes failed.
