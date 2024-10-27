@@ -53,23 +53,6 @@ PRODUCT_TYPES = {
     '24'
 }
 
-# Known registry keys on the terminal that should be whitelisted for read access through RemoteHelper.
-REG_KEYS = {
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\MajorRevision,',           # ex: 11
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\MinorRevision',            # ex: 1
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\ProductCode',              # ex: 51
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\ProductName',              # ex: PanelView Plus_6 1500
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\ProductType',              # ex: 24
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\SerialNumber',             # ex: 1234567
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\Vendor',                   # ex: 1
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSView Enterprise\MEVersion',                    # ex: 11.00.25.230
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSViewME\Startup Options\CurrentApp',            # ex: \Application Data\Rockwell Software\RSViewME\Runtime\{FileName}.mer
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSViewME\Startup Options\DeleteLogFiles',        # ex: 0
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSViewME\Startup Options\LoadCurrentApp',        # ex: 1
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSViewME\Startup Options\ReplaceCommSettings',   # ex: 0
-    'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSViewME\Startup Options\StartupOptionsConfig'   # ex: 1
-}
-
 # Known functions available from RemoteHelper.
 REMOTE_HELPER_FUNCIONS = {
     'BootTerminal',                 # ex: 'BootTerminal',''
