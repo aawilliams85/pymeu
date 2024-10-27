@@ -11,41 +11,6 @@ class MEUtility(object):
         self.comms_path = comms_path
         self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
 
-    def __download_to_terminal(self, cip: pycomm3.CIPDriver, file: MEFile) -> bool:
-        # Create runtime folder
-        #
-        # TODO: Can we check if this already exists and skip?
-        if not(terminal.helper.create_runtime_directory(cip, file)): raise Exception('Failed to create runtime path on terminal.')
-
-        # Get attributes
-        #
-        # Still no clue on what these are, or when/how they would change.
-        # If they aren't changed by creating paths, could be moved ahead
-        # to is_download_valid().
-        if not(terminal.files.is_get_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
-
-        # Create a file exchange on the terminal
-        file_instance = terminal.files.create_exchange_download_mer(cip, file)
-        self.device.log.append(f'Create file exchange {file_instance} for download.')
-
-        # Set attributes
-        #
-        # Still no clue what this is.  Might be setting file up for write?
-        if not(terminal.files.is_set_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
-
-        # Transfer *.MER chunk by chunk
-        terminal.files.download_mer(cip, file_instance, file)
-
-        # Mark file exchange as completed on the terminal
-        terminal.files.end_write(cip, file_instance)
-        self.device.log.append(f'Downloaded {file.path} to {file.name} using file exchange {file_instance}.')
-
-        # Delete file exchange on the terminal
-        terminal.files.delete_exchange(cip, file_instance)
-        self.device.log.append(f'Deleted file exchange {file_instance}.')
-
-        return True
-
     def __upload_from_terminal(self, cip: pycomm3.CIPDriver, file: MEFile, rem_file: MEFile) -> bool:
         # Verify file exists on terminal
         if not(terminal.helper.get_file_exists(cip, rem_file)): raise Exception(f'File {rem_file.name} does not exist on terminal.')
@@ -104,7 +69,7 @@ class MEUtility(object):
             if not(terminal.validation.is_download_valid(cip, self.device, file)): raise Exception('Download to terminal is invalid.')
 
             # Perform *.MER download to terminal
-            if not(self.__download_to_terminal(cip, file)): raise Exception('Download to terminal failed.')
+            if not(terminal.actions.download_mer_file(cip, self.device, file)): raise Exception('Download to terminal failed.')
 
             # Set *.MER to run at startup and then reboot
             if self.run_at_startup:
@@ -127,7 +92,7 @@ class MEUtility(object):
 
             self.device.log.append(f'Terminal storage exists: {terminal.helper.get_folder_exists(cip)}.')
             self.device.log.append(f'Terminal has {terminal.helper.get_free_space(cip)} free bytes')
-            self.device.log.append(f'Terminal has files: {terminal.actions.get_mer_list(cip, self.device)}')
+            self.device.log.append(f'Terminal has files: {terminal.actions.upload_mer_list(cip, self.device)}')
             self.device.log.append(f'Terminal startup file: {terminal.registry.get_startup_mer(cip)}.')
 
         return MEResponse(self.device, 'Success')
@@ -212,7 +177,7 @@ class MEUtility(object):
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True to proceed at your own risk.')
 
-            mer_list = terminal.actions.get_mer_list(cip, self.device)
+            mer_list = terminal.actions.upload_mer_list(cip, self.device)
             
             for mer in mer_list:
                 if len(mer) > 0:
