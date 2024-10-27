@@ -23,13 +23,13 @@ def run_function(cip: pycomm3.CIPDriver, req_args):
     return resp_code, resp_data
 
 def create_directory(cip: pycomm3.CIPDriver, dir: str) -> bool:
-    req_args = [helper_path + '\\RemoteHelper.DLL', 'CreateRemDirectory', dir]
+    req_args = [helper_file_path, 'CreateRemDirectory', dir]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != CREATE_DIR_SUCCESS): raise Exception('Failed to create directory on terminal.')    
     return True
 
 def create_mer_list(cip: pycomm3.CIPDriver):
-    req_args = [helper_path + '\\RemoteHelper.DLL','FileBrowse',storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\*.mer::' + storage_path + UPLOAD_LIST_PATH]
+    req_args = [helper_file_path,'FileBrowse',storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\*.mer::' + storage_path + UPLOAD_LIST_PATH]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return True
@@ -43,7 +43,7 @@ def create_runtime_directory(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
     return True
 
 def delete_file(cip: pycomm3.CIPDriver, file: str) -> bool:
-    req_args = [helper_path + '\\RemoteHelper.DLL','DeleteRemFile',file]
+    req_args = [helper_file_path,'DeleteRemFile',file]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Failed to delete file on remote terminal {file}')
     return True
@@ -52,19 +52,19 @@ def delete_file_mer_list(cip: pycomm3.CIPDriver) -> bool:
     return delete_file(cip, storage_path + UPLOAD_LIST_PATH)
 
 def get_file_exists(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
-    req_args = [helper_path + '\\RemoteHelper.DLL', 'FileExists', storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
+    req_args = [helper_file_path, 'FileExists', storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): return False    
     return bool(int(resp_data))
 
 def get_file_size(cip: pycomm3.CIPDriver, file: MEFile) -> int:
-    req_args = [helper_path + '\\RemoteHelper.DLL', 'FileSize', storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
+    req_args = [helper_file_path, 'FileSize', storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return int(resp_data)
 
 def get_folder_exists(cip: pycomm3.CIPDriver) -> bool:
-    req_args = [helper_path + '\\RemoteHelper.DLL', 'StorageExists', storage_path]
+    req_args = [helper_file_path, 'StorageExists', storage_path]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0):
         warn(f'Response code was not zero.  Examine packets.')
@@ -72,13 +72,13 @@ def get_folder_exists(cip: pycomm3.CIPDriver) -> bool:
     return bool(int(resp_data))
 
 def get_free_space(cip: pycomm3.CIPDriver) -> int:
-    req_args = [helper_path + '\\RemoteHelper.DLL', 'FreeSpace', storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\']
+    req_args = [helper_file_path, 'FreeSpace', storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return int(resp_data)
 
 def get_helper_version(cip: pycomm3.CIPDriver) -> str:
-    req_args = [helper_path + '\\RemoteHelper.DLL', 'GetVersion', helper_path +'\\RemoteHelper.DLL']
+    req_args = [helper_file_path, 'GetVersion', helper_file_path]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return str(resp_data)
@@ -86,7 +86,7 @@ def get_helper_version(cip: pycomm3.CIPDriver) -> str:
 def reboot(cip: pycomm3.CIPDriver):
     # For some reason this one has an extra trailing byte.
     # Not sure if it has some other purpose yet
-    req_args = [helper_path + '\\RemoteHelper.DLL', 'BootTerminal','']
+    req_args = [helper_file_path, 'BootTerminal','']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     try:
@@ -101,7 +101,7 @@ def reboot(cip: pycomm3.CIPDriver):
         if (str(e) != 'failed to receive reply'): raise e
 
 def set_startup_mer(cip: pycomm3.CIPDriver, file: MEFile, replace_comms: bool, delete_logs: bool) -> bool:
-    req_args = [helper_path + '\\RemoteHelper.DLL', 'CreateRemMEStartupShortcut', storage_path + f':{file.name}: /r /delay']
+    req_args = [helper_file_path, 'CreateRemMEStartupShortcut', storage_path + f':{file.name}: /r /delay']
     if replace_comms: req_args = [req_args[1], req_args[2], req_args[3] + ' /o']
     if delete_logs: req_args = [req_args[1], req_args[2], req_args[3] + ' /d']
     resp_code, resp_data = run_function(cip, req_args)

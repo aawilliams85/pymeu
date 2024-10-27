@@ -73,6 +73,7 @@ class MEUtility(object):
 
         if major_rev <= 5:
             terminal.paths.helper_path = '\\Storage Card\\Rockwell Software\\RSViewME'
+            terminal.paths.helper_file_path = terminal.paths.helper_path + '\\' + terminal.paths.helper_file_name
             terminal.paths.storage_path = '\\Storage Card'
 
         return MEDeviceInfo(self.comms_path, 
