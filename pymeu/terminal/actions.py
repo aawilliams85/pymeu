@@ -41,7 +41,7 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile
     if run_at_startup:
         helper.set_startup_mer(cip, file, replace_comms, delete_logs)
         device.log.append(f'Setting file to run at startup.')
-        helper.reboot(cip)
+        reboot(cip)
         device.log.append(f'Rebooting terminal.')
 
     return True
@@ -88,8 +88,8 @@ def upload_mer_list(cip: pycomm3.CIPDriver, device: MEDeviceInfo):
 
     return file_list
 
-def reboot(cip: pycomm3.CIPDriver, comms_path: str):
-    cip = pycomm3.CIPDriver(comms_path)
+def reboot(cip: pycomm3.CIPDriver):
+    cip = pycomm3.CIPDriver(cip._cip_path)
     cip._cfg['socket_timeout'] = 0.25
     cip.open()
     helper.reboot(cip)

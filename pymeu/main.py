@@ -83,7 +83,7 @@ class MEUtility(object):
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True to proceed at your own risk.')
 
-            terminal.actions.reboot(cip, self.comms_path)
+            terminal.actions.reboot(cip)
 
         return MEResponse(self.device, 'Success')
 
