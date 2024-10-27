@@ -3,10 +3,13 @@ import pycomm3
 import struct
 from warnings import warn
 
-from ..constants import *
 from .. import messages
 from ..types import *
 from .paths import *
+
+# Known static value for successful creation of a folder.
+# Further investigation needed.
+CREATE_DIR_SUCCESS = 183 # 'b\xb7'
 
 # Known functions available from RemoteHelper.
 class HelperFunctions(Enum):

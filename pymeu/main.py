@@ -3,7 +3,6 @@ import pycomm3
 
 from .types import *
 from . import terminal
-from . import constants
 from warnings import warn
 
 class MEUtility(object):

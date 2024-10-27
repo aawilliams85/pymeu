@@ -2,7 +2,6 @@ import pycomm3
 import struct
 from warnings import warn
 
-from ..constants import *
 from .. import messages
 from ..types import *
 from .paths import *
@@ -10,6 +9,25 @@ from .paths import *
 # When files are transferred, this is the maximum number of bytes
 # used per message.  Quick tests up to 2000 bytes did succeed, >2000 bytes failed.
 CHUNK_SIZE = 1984
+
+# Known values associated with some file services, with unclear purpose or meaning.
+# Further investigation needed.
+GET_UNK1_VALUES = {
+    b'\x02\x00'
+}
+
+# Known values associated with some file services, with unclear purpose or meaning.
+# Further investigation needed.
+GET_UNK2_VALUES = {
+    b'\x01\x60',
+    b'\x03\x41'
+}
+
+# Known values associated with some file services, with unclear purpose or meaning.
+# Further investigation needed.
+GET_UNK3_VALUES = {
+    b'\x64\x00'
+}
 
 def create_exchange_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: str) -> int:
     # Request format
