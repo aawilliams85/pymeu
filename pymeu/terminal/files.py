@@ -5,7 +5,7 @@ from warnings import warn
 from .paths import *
 
 from ..constants import *
-from ..messages import *
+from .. import messages
 from ..types import *
 
 # When files are transferred, this is the maximum number of bytes
@@ -31,7 +31,7 @@ def create_exchange_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: 
     # Byte 2 to 3 unknown purpose
     # Byte 4 to 5 file instance (use this instance for file transfer)
     # Byte 6 to 7 chunk size in bytes
-    resp = msg_create_file_exchange(cip, req_data)
+    resp = messages.create_file_exchange(cip, req_data)
     if not resp: raise Exception('Failed to create file exchange on terminal')
     resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size = struct.unpack('<HHHH', resp.value)
     if (resp_msg_instance != 0): raise Exception(f'Response message instance {resp_msg_instance} is not zero.  Most likely there was an incomplete transfer.  Reboot terminal and try again.')
@@ -62,7 +62,7 @@ def create_exchange_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
     # Byte 4 to 5 file instance (use this instance for file transfer, increases with each subsequent transfer until Delete is run)
     # Byte 6 to 7 chunk size in bytes
     # Byte 8 to 11 file size in bytes
-    resp = msg_create_file_exchange(cip, req_data)
+    resp = messages.create_file_exchange(cip, req_data)
     if not resp: raise Exception('Failed to create file exchange on terminal')
     resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size, resp_file_size = struct.unpack('<HHHHI', resp.value)
     if (resp_msg_instance != 0): raise Exception(f'Response message instance {resp_msg_instance} is not zero.  Most likely there was an incomplete transfer.  Reboot terminal and try again.')
@@ -80,11 +80,11 @@ def create_exchange_upload_mer_list(cip: pycomm3.CIPDriver) -> int:
     return create_exchange_upload(cip, result_path)
 
 def delete_exchange(cip: pycomm3.CIPDriver, instance: int):
-    return msg_delete_file_exchange(cip, instance)
+    return messages.delete_file_exchange(cip, instance)
 
 def end_write(cip: pycomm3.CIPDriver, instance: int):
     req_data = b'\x00\x00\x00\x00\x02\x00\xff\xff'
-    return msg_write_file_chunk(cip, instance, req_data)
+    return messages.write_file_chunk(cip, instance, req_data)
 
 def download(cip: pycomm3.CIPDriver, instance: int, file: str):
     req_chunk_number = 1
@@ -110,7 +110,7 @@ def download(cip: pycomm3.CIPDriver, instance: int, file: str):
             # Byte 0 to 3 unknown purpose
             # Byte 4 to 7 req chunk number echo
             # Byte 8 to 11 next chunk number
-            resp = msg_write_file_chunk(cip, instance, req_data)
+            resp = messages.write_file_chunk(cip, instance, req_data)
             if not resp: raise Exception(f'Failed to write chunk {req_chunk_number} to terminal.')
             resp_unk1, resp_chunk_number, resp_next_chunk_number = struct.unpack('<III', resp.value)
             if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
@@ -138,7 +138,7 @@ def upload(cip: pycomm3.CIPDriver, instance: int):
         # Byte 4 to 7 req chunk number echo
         # Byte 8 to 9 chunk size in bytes
         # Byte 10 to N chunk data
-        resp = msg_read_file_chunk(cip, instance, req_data)
+        resp = messages.read_file_chunk(cip, instance, req_data)
         if not resp: raise Exception(f'Failed to read chunk {req_chunk_number} to terminal.')
         resp_unk1 = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
         resp_chunk_number = int.from_bytes(resp.value[4:8], byteorder='little', signed=False)
@@ -175,19 +175,19 @@ def upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
 def is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
     # I don't know what any of these three attributes are for yet.
     # It may be checking that the file exchange is available.
-    resp = msg_get_attr_unk(cip, b'\x30\x01')
+    resp = messages.get_attr_unk(cip, b'\x30\x01')
     if not resp: return False
     if resp.value not in GET_UNK1_VALUES:
         warn(f'Invalid UNK1 value.  Examine packets.')
         return False
 
-    resp = msg_get_attr_unk(cip, b'\x30\x08')
+    resp = messages.get_attr_unk(cip, b'\x30\x08')
     if not resp: return False
     if resp.value not in GET_UNK2_VALUES:
         warn(f'Invalid UNK2 value.  Examine packets.')
         return False
 
-    resp = msg_get_attr_unk(cip, b'\x30\x09')
+    resp = messages.get_attr_unk(cip, b'\x30\x09')
     if not resp: return False
     if resp.value not in GET_UNK3_VALUES:
         warn(f'Invalid UNK3 value.  Examine packets.')
@@ -199,7 +199,7 @@ def is_set_unk_valid(cip: pycomm3.CIPDriver) -> bool:
     # I don't know what setting this attribute does yet.
     # It may be marking the file exchange as in use.
     #
-    resp = msg_set_attr_unk(cip, b'\x30\x01\xff\xff')
+    resp = messages.set_attr_unk(cip, b'\x30\x01\xff\xff')
     if not resp: return False
 
     return True

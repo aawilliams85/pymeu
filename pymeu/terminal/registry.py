@@ -1,7 +1,7 @@
 from enum import Enum
 import pycomm3
 
-from ..messages import *
+from .. import messages
 
 # Known registry keys on the terminal that should be whitelisted for read access through RemoteHelper.
 class RegKeys(Enum):
@@ -28,7 +28,7 @@ def get_value(cip: pycomm3.CIPDriver, key: str) -> str:
     # Byte 4 to 7 unknown purpose
     # Byte 8 to N-1 product type string
     # Byte N null footer
-    resp = msg_read_registry(cip, req_data)
+    resp = messages.read_registry(cip, req_data)
     if not resp: raise Exception(f'Failed to read registry key: {key}')
     resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
     if (resp_code != 0): raise Exception(f'Read registry response code was not zero.  Examine packets.')

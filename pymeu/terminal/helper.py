@@ -6,7 +6,7 @@ from warnings import warn
 from .paths import *
 
 from ..constants import *
-from ..messages import *
+from .. import messages
 from ..types import *
 
 # Known functions available from RemoteHelper.
@@ -67,7 +67,7 @@ def run_function(cip: pycomm3.CIPDriver, req_args):
     # Byte 0 to 3 response code (typically 0 = function ran, otherwise failed, not all functions follow this)
     # Byte 4 to N-1 response data
     # Byte N null footer
-    resp = msg_run_function(cip, req_data)
+    resp = messages.run_function(cip, req_data)
     if not resp: raise Exception(f'Failed to run function: {req_args}.')
     resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
     resp_data = resp.value[4:].decode('utf-8').strip('\x00')
@@ -141,7 +141,7 @@ def reboot(cip: pycomm3.CIPDriver):
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     try:
-        resp = msg_run_function(cip, req_data)
+        resp = messages.run_function(cip, req_data)
         
         #Should never get here
         raise Exception(resp)
