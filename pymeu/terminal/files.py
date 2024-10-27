@@ -35,24 +35,55 @@ class TransferType(Enum):
     UPLOAD = int.from_bytes(b'\x00', byteorder='big')
 
 def create_exchange_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: str) -> int:
-    # Request format
-    #
-    # Byte 0 Transfer Type (always 1 for file download?)
-    # Byte 1 Overwrite (0 = New File, 1 = Overwrite Existing)
-    # Byte 2 to 3 Chunk size in bytes
-    # Byte 4 to 7 File size in bytes
-    # Byte 8 to N-1 File name
-    # Byte N null footer
+    """
+    Creates a file exchange for downloading from the local device to the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+        file (MEFile): Identifying metadata for the file to be downloaded.
+        remote_path (str): The remote path on the terminal where the file 
+        will be downloaded.
+
+    Returns:
+        int: The file exchange instance returned from the device, that can be
+        used for subsequent file transfer operations.
+
+    Raises:
+        Exception: If the file exchange creation fails or if the response 
+        contains unexpected values, indicating potential issues with the 
+        transfer.
+
+    Request Format:
+        The request consists of the following byte structure:
+
+        | Byte Range   | Description                                         |
+        |--------------|-----------------------------------------------------|
+        | Byte 0       | Transfer Type (always 1 for file download)          |
+        | Byte 1       | Overwrite flag (0 = New File, 1 = Overwrite)        |
+        | Bytes 2-3    | Chunk size in bytes                                 |
+        | Bytes 4-7    | File size in bytes                                  |
+        | Bytes 8-N-1  | File name                                           |
+        | Byte N       | Null footer                                         |
+
+    Response Format:
+        The response consists of the following byte structure:
+
+        | Byte Range   | Description                                         |
+        |--------------|-----------------------------------------------------|
+        | Bytes 0-1    | Message instance (should match request, 0x00)       |
+        | Bytes 2-3    | Unknown purpose                                     |
+        | Bytes 4-5    | File instance (use this instance for file transfer) |
+        | Bytes 6-7    | Chunk size in bytes                                 |
+
+    Note:
+        If the response message instance or unknown bytes are not zero, it 
+        may indicate an incomplete transfer happened previously. In such cases,
+        reboot the terminal and try again.
+    """
     req_header = struct.pack('<BBHI', TransferType.DOWNLOAD.value, int(file.overwrite_required), CHUNK_SIZE, file.get_size())
     req_args = [f'{remote_path}\\{file.name}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
-    # Response format
-    #
-    # Byte 0 to 1 message instance (should match request, 0x00)
-    # Byte 2 to 3 unknown purpose
-    # Byte 4 to 5 file instance (use this instance for file transfer)
-    # Byte 6 to 7 chunk size in bytes
     resp = messages.create_file_exchange(cip, req_data)
     if not resp: raise Exception('Failed to create file exchange on terminal')
     resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size = struct.unpack('<HHHH', resp.value)
