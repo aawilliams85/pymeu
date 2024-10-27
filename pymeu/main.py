@@ -46,28 +46,6 @@ class MEUtility(object):
 
         return True
 
-    def __get_mer_list(self, cip: pycomm3.CIPDriver):
-        # Create *.MER list
-        terminal.helper.create_mer_list(cip)
-
-        file_instance = terminal.files.create_exchange_upload_mer_list(cip)
-        self.device.log.append(f'Create file exchange {file_instance} for upload.')
-
-        # Transfer *.MER list chunk by chunk
-        file_list = terminal.files.upload_mer_list(cip, file_instance)
-        self.device.log.append(f'Uploaded *.MER list using file exchange {file_instance}.')
-        self.device.files = file_list
-
-        # Delete file exchange on the terminal
-        terminal.files.delete_exchange(cip, file_instance)
-        self.device.log.append(f'Deleted file exchange {file_instance}.')
-
-        # Delete *.MER list on the terminal
-        terminal.helper.delete_file_mer_list(cip)
-        self.device.log.append(f'Delete *.MER list on terminal.')
-
-        return file_list
-        
     def __upload_from_terminal(self, cip: pycomm3.CIPDriver, file: MEFile, rem_file: MEFile) -> bool:
         # Verify file exists on terminal
         if not(terminal.helper.get_file_exists(cip, rem_file)): raise Exception(f'File {rem_file.name} does not exist on terminal.')
@@ -149,7 +127,7 @@ class MEUtility(object):
 
             self.device.log.append(f'Terminal storage exists: {terminal.helper.get_folder_exists(cip)}.')
             self.device.log.append(f'Terminal has {terminal.helper.get_free_space(cip)} free bytes')
-            self.device.log.append(f'Terminal has files: {self.__get_mer_list(cip)}')
+            self.device.log.append(f'Terminal has files: {terminal.actions.get_mer_list(cip, self.device)}')
             self.device.log.append(f'Terminal startup file: {terminal.registry.get_startup_mer(cip)}.')
 
         return MEResponse(self.device, 'Success')
@@ -234,7 +212,7 @@ class MEUtility(object):
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True to proceed at your own risk.')
 
-            mer_list = self.__get_mer_list(cip)
+            mer_list = terminal.actions.get_mer_list(cip, self.device)
             
             for mer in mer_list:
                 if len(mer) > 0:
