@@ -1,8 +1,8 @@
 import os
 import pycomm3
 
-from .types import *
 from . import terminal
+from .types import *
 from warnings import warn
 
 class MEUtility(object):
@@ -63,10 +63,7 @@ class MEUtility(object):
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True to proceed at your own risk.')
 
-            self.device.log.append(f'Terminal storage exists: {terminal.helper.get_folder_exists(cip)}.')
-            self.device.log.append(f'Terminal has {terminal.helper.get_free_space(cip)} free bytes')
-            self.device.log.append(f'Terminal has files: {terminal.actions.upload_mer_list(cip, self.device)}')
-            self.device.log.append(f'Terminal startup file: {terminal.registry.get_startup_mer(cip)}.')
+            terminal.actions.create_log(cip, self.device)
 
         return MEResponse(self.device, 'Success')
 

@@ -3,6 +3,13 @@ import pycomm3
 from ..types import *
 from . import files
 from . import helper
+from . import registry
+
+def create_log(cip: pycomm3.CIPDriver, device: MEDeviceInfo):
+    device.log.append(f'Terminal storage exists: {helper.get_folder_exists(cip)}.')
+    device.log.append(f'Terminal has {helper.get_free_space(cip)} free bytes')
+    device.log.append(f'Terminal has files: {upload_mer_list(cip, device)}')
+    device.log.append(f'Terminal startup file: {registry.get_startup_mer(cip)}.')
 
 def download_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
     # Create runtime folder
@@ -63,7 +70,6 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile, 
     device.log.append(f'Deleted file exchange {file_instance}.')
 
     return True
-
 
 def upload_mer_list(cip: pycomm3.CIPDriver, device: MEDeviceInfo):
     # Create *.MER list
