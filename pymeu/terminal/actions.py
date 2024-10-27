@@ -4,7 +4,7 @@ from ..types import *
 from . import files
 from . import helper
 
-def download_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile) -> bool:
+def download_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
     # Create runtime folder
     #
     # TODO: Can we check if this already exists and skip?
@@ -36,6 +36,13 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile
     # Delete file exchange on the terminal
     files.delete_exchange(cip, file_instance)
     device.log.append(f'Deleted file exchange {file_instance}.')
+
+    # Set *.MER to run at startup and then reboot
+    if run_at_startup:
+        helper.set_startup_mer(cip, file, replace_comms, delete_logs)
+        device.log.append(f'Setting file to run at startup.')
+        helper.reboot(cip)
+        device.log.append(f'Rebooting terminal.')
 
     return True
 

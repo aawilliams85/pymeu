@@ -35,10 +35,7 @@ class MEUtility(object):
         with pycomm3.CIPDriver(self.comms_path) as cip:
             file = MEFile(os.path.basename(file_path), self.overwrite, False, file_path)
 
-            # Validate device at this communications path
-            # is a terminal of known version.
-            #
-            # TODO: Test on more hardware to expand validated list
+            # Validate device at this communications path is a terminal of known version.
             self.device = terminal.validation.get_terminal_info(cip)
             if not(terminal.validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
@@ -50,12 +47,7 @@ class MEUtility(object):
             if not(terminal.validation.is_download_valid(cip, self.device, file)): raise Exception('Download to terminal is invalid.')
 
             # Perform *.MER download to terminal
-            if not(terminal.actions.download_mer_file(cip, self.device, file)): raise Exception('Download to terminal failed.')
-
-            # Set *.MER to run at startup and then reboot
-            if self.run_at_startup:
-                terminal.helper.set_startup_mer(cip, file, self.replace_comms, self.delete_logs)
-                terminal.helper.reboot(cip)
+            if not(terminal.actions.download_mer_file(cip, self.device, file, self.run_at_startup, self.replace_comms, self.delete_logs)): raise Exception('Download to terminal failed.')
 
         return MEResponse(self.device, 'Success')
 
@@ -118,8 +110,7 @@ class MEUtility(object):
         if not(self.overwrite) and (os.path.exists(file.path)): raise Exception(f'File {file.name} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
 
         with pycomm3.CIPDriver(self.comms_path) as cip:
-            # Validate device at this communications path
-            # is a terminal of known version.
+            # Validate device at this communications path is a terminal of known version.
             self.device = terminal.validation.get_terminal_info(cip)
             if not(terminal.validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
@@ -147,10 +138,7 @@ class MEUtility(object):
         if not(os.path.exists(file_path)): os.makedirs(os.path.dirname(file_path))
 
         with pycomm3.CIPDriver(self.comms_path) as cip:
-            # Validate device at this communications path
-            # is a terminal of known version.
-            #
-            # TODO: Test on more hardware to expand validated list
+            # Validate device at this communications path is a terminal of known version.
             self.device = terminal.validation.get_terminal_info(cip)
             if not(terminal.validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
