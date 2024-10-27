@@ -8,6 +8,10 @@ from ..constants import *
 from ..messages import *
 from ..types import *
 
+# When files are transferred, this is the maximum number of bytes
+# used per message.  Quick tests up to 2000 bytes did succeed, >2000 bytes failed.
+CHUNK_SIZE = 1984
+
 def create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: str) -> int:
     # Request format
     #

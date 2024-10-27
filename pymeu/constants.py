@@ -1,7 +1,3 @@
-# When files are transferred, this is the maximum number of bytes
-# used per message.  Quick tests up to 2000 bytes did succeed, >2000 bytes failed.
-CHUNK_SIZE = 1984
-
 # Known RemoteHelper file version numbers, used to help check that device is a valid terminal.
 HELPER_VERSIONS = {
     '5.10.00',
