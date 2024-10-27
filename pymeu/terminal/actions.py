@@ -3,6 +3,7 @@ import pycomm3
 from ..types import *
 from . import files
 from . import helper
+from . import paths
 from . import registry
 
 def create_log(cip: pycomm3.CIPDriver, device: MEDeviceInfo):
@@ -25,7 +26,7 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile
     if not(files.is_get_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
 
     # Create a file exchange on the terminal
-    file_instance = files.create_exchange_download_mer(cip, file)
+    file_instance = files.create_exchange_download(cip, file, paths.storage_path + '\\Rockwell Software\\RSViewME\\Runtime')
     device.log.append(f'Create file exchange {file_instance} for download.')
 
     # Set attributes
@@ -34,7 +35,7 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile
     if not(files.is_set_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
 
     # Transfer *.MER chunk by chunk
-    files.download_mer(cip, file_instance, file)
+    files.download(cip, file_instance, file.path)
 
     # Mark file exchange as completed on the terminal
     files.end_write(cip, file_instance)
@@ -58,7 +59,7 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile, 
     if not(helper.get_file_exists(cip, rem_file)): raise Exception(f'File {rem_file.name} does not exist on terminal.')
 
     # Create file exchange
-    file_instance = files.create_exchange_upload_mer(cip, rem_file)
+    file_instance = files.create_exchange_upload(cip, paths.storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{rem_file.name}')
     device.log.append(f'Create file exchange {file_instance} for upload.')
 
     # Transfer *.MER chunk by chunk
@@ -76,7 +77,7 @@ def upload_mer_list(cip: pycomm3.CIPDriver, device: MEDeviceInfo):
     helper.create_mer_list(cip)
 
     # Create file exchange on the terminal
-    file_instance = files.create_exchange_upload_mer_list(cip)
+    file_instance = files.create_exchange_upload(cip, paths.upload_list_path)
     device.log.append(f'Create file exchange {file_instance} for upload.')
 
     # Transfer *.MER list chunk by chunk
