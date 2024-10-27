@@ -12,7 +12,7 @@ from ..types import *
 # used per message.  Quick tests up to 2000 bytes did succeed, >2000 bytes failed.
 CHUNK_SIZE = 1984
 
-def create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: str) -> int:
+def create_exchange_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: str) -> int:
     # Request format
     #
     # Byte 0 Transfer Type (always 1 for file download?)
@@ -40,10 +40,10 @@ def create_file_exchange_for_download(cip: pycomm3.CIPDriver, file: MEFile, remo
     if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
     return resp_file_instance
 
-def create_file_exchange_for_download_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
-    return create_file_exchange_for_download(cip, file, storage_path + '\\Rockwell Software\\RSViewME\\Runtime')
+def create_exchange_download_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
+    return create_exchange_download(cip, file, storage_path + '\\Rockwell Software\\RSViewME\\Runtime')
 
-def create_file_exchange_for_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
+def create_exchange_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
     # Request format
     #
     # Byte 0 Transfer Type (always 0 for file upload?)
@@ -71,22 +71,22 @@ def create_file_exchange_for_upload(cip: pycomm3.CIPDriver, remote_path: str) ->
     if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
     return resp_file_instance
 
-def create_file_exchange_for_upload_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
+def create_exchange_upload_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
     file_path = storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}'
-    return create_file_exchange_for_upload(cip, file_path)
+    return create_exchange_upload(cip, file_path)
 
-def create_file_exchange_for_upload_mer_list(cip: pycomm3.CIPDriver) -> int:
+def create_exchange_upload_mer_list(cip: pycomm3.CIPDriver) -> int:
     result_path = storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\Results.txt'
-    return create_file_exchange_for_upload(cip, result_path)
+    return create_exchange_upload(cip, result_path)
 
-def delete_file_exchange(cip: pycomm3.CIPDriver, instance: int):
+def delete_exchange(cip: pycomm3.CIPDriver, instance: int):
     return msg_delete_file_exchange(cip, instance)
 
-def end_file_write(cip: pycomm3.CIPDriver, instance: int):
+def end_write(cip: pycomm3.CIPDriver, instance: int):
     req_data = b'\x00\x00\x00\x00\x02\x00\xff\xff'
     return msg_write_file_chunk(cip, instance, req_data)
 
-def file_download(cip: pycomm3.CIPDriver, instance: int, file: str):
+def download(cip: pycomm3.CIPDriver, instance: int, file: str):
     req_chunk_number = 1
     with open(file, 'rb') as source_file:
         while True:
@@ -120,10 +120,10 @@ def file_download(cip: pycomm3.CIPDriver, instance: int, file: str):
             # Continue to next chunk
             req_chunk_number += 1
 
-def file_download_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
-    file_download(cip, instance, file.path)
+def download_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
+    download(cip, instance, file.path)
 
-def file_upload(cip: pycomm3.CIPDriver, instance: int):
+def upload(cip: pycomm3.CIPDriver, instance: int):
     req_chunk_number = 1
     resp_binary = bytearray()
     while True:
@@ -161,13 +161,13 @@ def file_upload(cip: pycomm3.CIPDriver, instance: int):
 
     return resp_binary
 
-def file_upload_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
-    resp_binary = file_upload(cip, instance)
+def upload_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
+    resp_binary = upload(cip, instance)
     with open(file.path, 'wb') as dest_file:
         dest_file.write(resp_binary)
 
-def file_upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
-    resp_binary = file_upload(cip, instance)
+def upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
+    resp_binary = upload(cip, instance)
     resp_str = "".join([chr(b) for b in resp_binary if b != 0])
     resp_list = resp_str.split(':')
     return resp_list
