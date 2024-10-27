@@ -34,7 +34,6 @@ class TransferType(Enum):
     DOWNLOAD = int.from_bytes(b'\x01', byteorder='big')
     UPLOAD = int.from_bytes(b'\x00', byteorder='big')
 
-
 def create_exchange_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: str) -> int:
     # Request format
     #
@@ -63,9 +62,6 @@ def create_exchange_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: 
     if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
     return resp_file_instance
 
-def create_exchange_download_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
-    return create_exchange_download(cip, file, storage_path + '\\Rockwell Software\\RSViewME\\Runtime')
-
 def create_exchange_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
     # Request format
     #
@@ -93,13 +89,6 @@ def create_exchange_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
     if (resp_file_instance != 1): warn(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
     if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
     return resp_file_instance
-
-def create_exchange_upload_mer(cip: pycomm3.CIPDriver, file: MEFile) -> int:
-    file_path = storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}'
-    return create_exchange_upload(cip, file_path)
-
-def create_exchange_upload_mer_list(cip: pycomm3.CIPDriver) -> int:
-    return create_exchange_upload(cip, upload_list_path)
 
 def delete_exchange(cip: pycomm3.CIPDriver, instance: int):
     return messages.delete_file_exchange(cip, instance)
@@ -141,9 +130,6 @@ def download(cip: pycomm3.CIPDriver, instance: int, file: str):
 
             # Continue to next chunk
             req_chunk_number += 1
-
-def download_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
-    download(cip, instance, file.path)
 
 def upload(cip: pycomm3.CIPDriver, instance: int):
     req_chunk_number = 1
