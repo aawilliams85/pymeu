@@ -7,8 +7,9 @@ from . import constants
 from warnings import warn
 
 class MEUtility(object):
-    def __init__(self, comms_path: str):
+    def __init__(self, comms_path: str, **kwargs):
         self.comms_path = comms_path
+        self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
 
     def __download_to_terminal(self, cip: pycomm3.CIPDriver, file: MEFile) -> bool:
         # Create runtime folder
@@ -110,7 +111,6 @@ class MEUtility(object):
         #       Note that this option must be selected to use Delete Logs or Replace Comms.
         #
         self.delete_logs = kwargs.get('delete_logs', False)
-        self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
         self.overwrite = kwargs.get('overwrite', False)
         self.replace_comms = kwargs.get('replace_comms', False)
         self.run_at_startup = kwargs.get('run_at_startup', True)
@@ -148,11 +148,16 @@ class MEUtility(object):
         #
         with pycomm3.CIPDriver(self.comms_path) as cip:
             self.device = terminal.validation.get_terminal_info(cip)
-            if (terminal.validation.is_terminal_valid(self.device)):
-                self.device.log.append(f'Terminal storage exists: {terminal.helper.get_folder_exists(cip)}.')
-                self.device.log.append(f'Terminal has {terminal.helper.get_free_space(cip)} free bytes')
-                self.device.log.append(f'Terminal has files: {self.__get_mer_list(cip)}')
-                self.device.log.append(f'Terminal startup file: {terminal.registry.get_startup_mer(cip)}.')
+            if not(terminal.validation.is_terminal_valid(self.device)):
+                if self.ignore_terminal_valid:
+                    warn('Invalid device selected, but terminal validation is set to IGNORE.')
+                else:
+                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True to proceed at your own risk.')
+
+            self.device.log.append(f'Terminal storage exists: {terminal.helper.get_folder_exists(cip)}.')
+            self.device.log.append(f'Terminal has {terminal.helper.get_free_space(cip)} free bytes')
+            self.device.log.append(f'Terminal has files: {self.__get_mer_list(cip)}')
+            self.device.log.append(f'Terminal startup file: {terminal.registry.get_startup_mer(cip)}.')
 
         return MEResponse(self.device, 'Success')
 
@@ -162,8 +167,14 @@ class MEUtility(object):
         #
         with pycomm3.CIPDriver(self.comms_path) as cip:
             self.device = terminal.validation.get_terminal_info(cip)
-            if (terminal.validation.is_terminal_valid(self.device)):
-                self.__reboot(self.comms_path)
+
+            if not(terminal.validation.is_terminal_valid(self.device)):
+                if self.ignore_terminal_valid:
+                    warn('Invalid device selected, but terminal validation is set to IGNORE.')
+                else:
+                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True to proceed at your own risk.')
+
+            self.__reboot(self.comms_path)
 
         return MEResponse(self.device, 'Success')
 
@@ -179,7 +190,6 @@ class MEUtility(object):
         #       terminal than where the local file will end up.
         #
         file = MEFile(os.path.basename(file_path), False, False, file_path)
-        self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
         self.remote_file_name = kwargs.get('remote_file_name', file.name)
         self.overwrite = kwargs.get('overwrite', False)
         rem_file = MEFile(self.remote_file_name,False,False,file_path)
@@ -193,8 +203,6 @@ class MEUtility(object):
         with pycomm3.CIPDriver(self.comms_path) as cip:
             # Validate device at this communications path
             # is a terminal of known version.
-            #
-            # TODO: Test on more hardware to expand validated list
             self.device = terminal.validation.get_terminal_info(cip)
             if not(terminal.validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
@@ -216,7 +224,6 @@ class MEUtility(object):
         # Optional Keyword Arguments:
         # Overwrite: If the file already exists on the local system, replace it.
         #
-        self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
         self.overwrite = kwargs.get('overwrite', False)
 
         # Create upload folder if it doesn't exist yet
