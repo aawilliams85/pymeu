@@ -62,13 +62,43 @@ class HelperFunctions(Enum):
     STOP_PROCESS = 'TerminateEXE'
 
 def run_function(cip: pycomm3.CIPDriver, req_args):
+    """
+    Executes a function on the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+        req_args: The request to execute.  Typically a list like ['DLL Path','Function Name','Function Args'] 
+
+    Returns:
+        resp_code (int): The message response code.
+        resp_data (str): The function response data.
+
+    Raises:
+        Exception: If the message response code is not zero, indicating an error.
+
+    Request Format:
+        The request consists of the following byte structure:
+
+        | Byte Range    | Description                                         |
+        |---------------|-----------------------------------------------------|
+        | Bytes 0->N-1  | Request Arguments                                   |
+        | Byte N        | Null footer                                         |
+
+    Response Format:
+        The response consists of the following byte structure:
+
+        | Byte Range    | Description                                         |
+        |---------------|-----------------------------------------------------|
+        | Bytes 0->3    | Response code (typically 0 = ran, other = error)    |
+        | Bytes 4->N-1  | Function response                                   |
+        | Bytes N       | Null footer                                         |
+
+    Note:
+        Only a certain subset of functions are whitelisted for access
+        by this method.  They are documented in the HelperFunctions enum.
+    """
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
 
-    # Response format
-    #
-    # Byte 0 to 3 response code (typically 0 = function ran, otherwise failed, not all functions follow this)
-    # Byte 4 to N-1 response data
-    # Byte N null footer
     resp = messages.run_function(cip, req_data)
     if not resp: raise Exception(f'Failed to run function: {req_args}.')
     resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
