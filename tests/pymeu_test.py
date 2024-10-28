@@ -8,7 +8,6 @@ from pymeu import MEUtility
 # Turn off sort so that tests run in line order
 unittest.TestLoader.sortTestMethodsUsing = None
 
-
 class pymeu_fast_tests(unittest.TestCase):
     def setUp(self):
         self.base_path = os.path.abspath(os.path.dirname(__file__))
