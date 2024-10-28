@@ -20,14 +20,43 @@ class RegKeys(Enum):
     ME_STARTUP_OPTIONS = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSViewME\Startup Options\StartupOptionsConfig'      # ex: 1
 
 def get_value(cip: pycomm3.CIPDriver, key: str) -> str:
+    """
+    Gets a registry key's value from the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+        key (str): The registry key to read.
+
+    Returns:
+        str: The registry value.
+
+    Raises:
+        Exception: If the message response code is not zero, indicating an error.
+
+    Request Format:
+        The request consists of the following byte structure:
+
+        | Byte Range    | Description                                         |
+        |---------------|-----------------------------------------------------|
+        | Bytes 0->N-1  | Registry key name                                   |
+        | Byte N        | Null footer                                         |
+
+    Response Format:
+        The response consists of the following byte structure:
+
+        | Byte Range    | Description                                         |
+        |---------------|-----------------------------------------------------|
+        | Bytes 0->3    | Response code (typically 0 = good, otherwise error) |
+        | Bytes 4->7    | Unknown purpose                                     |
+        | Bytes 8->N-1  | Registry key value                                  |
+        | Bytes N       | Null footer                                         |
+
+    Note:
+        Only a certain subset of registry keys are whitelisted for access
+        by this method.  They are documented in the RegKeys enum.
+    """
     req_data = b''.join(arg.encode() + b'\x00' for arg in key)
 
-    # Response format
-    #
-    # Byte 0 to 3 response code (0 = function ran, otherwise failed)
-    # Byte 4 to 7 unknown purpose
-    # Byte 8 to N-1 product type string
-    # Byte N null footer
     resp = messages.read_registry(cip, req_data)
     if not resp: raise Exception(f'Failed to read registry key: {key}')
     resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
