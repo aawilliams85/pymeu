@@ -114,19 +114,19 @@ def create_exchange_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
     Request Format:
         The request consists of the following byte structure:
 
-        | Byte Range   | Description                                         |
-        |--------------|-----------------------------------------------------|
-        | Byte 0       | Transfer Type (always 0 for file upload)            |
-        | Byte 1       | Unknown purpose (overwrite in download, N/A?)       |
+        | Byte Range    | Description                                         |
+        |---------------|-----------------------------------------------------|
+        | Byte 0        | Transfer Type (always 0 for file upload)            |
+        | Byte 1        | Unknown purpose (overwrite in download, N/A?)       |
         | Bytes 2->3    | Chunk size in bytes                                 |
         | Bytes 4->N-1  | File name                                           |
-        | Byte N       | Null footer                                         |
+        | Byte N        | Null footer                                         |
 
     Response Format:
         The response consists of the following byte structure:
 
-        | Byte Range   | Description                                         |
-        |--------------|-----------------------------------------------------|
+        | Byte Range    | Description                                         |
+        |---------------|-----------------------------------------------------|
         | Bytes 0->1    | Message instance (should match request, 0x00)       |
         | Bytes 2->3    | Unknown purpose                                     |
         | Bytes 4->5    | File instance (use this instance for file transfer) |
@@ -158,15 +158,52 @@ def end_write(cip: pycomm3.CIPDriver, instance: int):
     req_data = b'\x00\x00\x00\x00\x02\x00\xff\xff'
     return messages.write_file_chunk(cip, instance, req_data)
 
-def download(cip: pycomm3.CIPDriver, instance: int, file: str):
+def download(cip: pycomm3.CIPDriver, instance: int, file: str) -> bool:
+    """
+    Downloads a file from the local device to the remote terminal.
+    The transfer happens by breaking the file down into one or more
+    chunks, with each chunk being sent via a CIP message and reassembled
+    on the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+        instance (int): The previously created file transfer instance.
+        file (str): The file path on the local device.
+
+    Returns:
+        bool: True when transfer is complete.
+
+    Raises:
+        Exception: If the file transfer fails or if the response contains
+        unexpected values, indicating potential issues with the transfer.
+
+    Request Format:
+        The request consists of the following byte structure:
+
+        | Byte Range    | Description                                         |
+        |---------------|-----------------------------------------------------|
+        | Bytes 0->3    | Chunk number                                        |
+        | Bytes 4->5    | Chunk size in bytes                                 |
+        | Bytes 6->N    | Chunk data                                          |
+
+    Response Format:
+        The response consists of the following byte structure:
+
+        | Byte Range    | Description                                         |
+        |---------------|-----------------------------------------------------|
+        | Bytes 0->3    | Unknown purpose                                     |
+        | Bytes 4->7    | Chunk number echo                                   |
+        | Bytes 8->11   | Next chunk number expected                          |
+
+    Note:
+        If the response message instance or unknown bytes are not zero, it 
+        may indicate an incomplete transfer happened previously. In such cases,
+        reboot the terminal and try again.
+    """
+
     req_chunk_number = 1
     with open(file, 'rb') as source_file:
         while True:
-            # Request format
-            #
-            # Byte 0 to 3 chunk number
-            # Byte 4 to 5 chunk size in bytes
-            # Byte 6 to N chunk data
             req_chunk = source_file.read(CHUNK_SIZE)
             req_header = struct.pack('<IH', req_chunk_number, len(req_chunk))
             req_next_chunk_number = req_chunk_number + 1
@@ -174,14 +211,8 @@ def download(cip: pycomm3.CIPDriver, instance: int, file: str):
 
             # End of file
             if not req_chunk:
-                #print(f'File downloaded from: {file.path}')
-                break
+                return True
 
-            # Response format
-            #
-            # Byte 0 to 3 unknown purpose
-            # Byte 4 to 7 req chunk number echo
-            # Byte 8 to 11 next chunk number
             resp = messages.write_file_chunk(cip, instance, req_data)
             if not resp: raise Exception(f'Failed to write chunk {req_chunk_number} to terminal.')
             resp_unk1, resp_chunk_number, resp_next_chunk_number = struct.unpack('<III', resp.value)
@@ -192,21 +223,51 @@ def download(cip: pycomm3.CIPDriver, instance: int, file: str):
             # Continue to next chunk
             req_chunk_number += 1
 
-def upload(cip: pycomm3.CIPDriver, instance: int):
+def upload(cip: pycomm3.CIPDriver, instance: int) -> bytearray:
+    """
+    Uploads a file from the remote terminal to the local device.
+    The transfer happens by breaking the file down into one or more
+    chunks, with each chunk being sent via a CIP message and reassembled
+    on the local device.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+        instance (int): The previously created file transfer instance.
+
+    Returns:
+        bytearray: The raw binary data uploaded from the remote terminal.
+
+    Raises:
+        Exception: If the file transfer fails or if the response contains
+        unexpected values, indicating potential issues with the transfer.
+
+    Request Format:
+        The request consists of the following byte structure:
+
+        | Byte Range    | Description                                         |
+        |---------------|-----------------------------------------------------|
+        | Bytes 0->3    | Chunk number                                        |
+
+    Response Format:
+        The response consists of the following byte structure:
+
+        | Byte Range    | Description                                         |
+        |---------------|-----------------------------------------------------|
+        | Bytes 0->3    | Unknown purpose                                     |
+        | Bytes 4->7    | Chunk number echo                                   |
+        | Bytes 8->9    | Chunk size in bytes                                 |
+        | Bytes 10->N   | Chunk data                                          |
+
+    Note:
+        If the response message instance or unknown bytes are not zero, it 
+        may indicate an incomplete transfer happened previously. In such cases,
+        reboot the terminal and try again.
+    """
     req_chunk_number = 1
     resp_binary = bytearray()
     while True:
-        # Request format
-        #
-        # Byte 0 to 3 chunk number
         req_data = struct.pack('<I', req_chunk_number)
 
-        # Response format
-        #
-        # Byte 0 to 3 unknown purpose
-        # Byte 4 to 7 req chunk number echo
-        # Byte 8 to 9 chunk size in bytes
-        # Byte 10 to N chunk data
         resp = messages.read_file_chunk(cip, instance, req_data)
         if not resp: raise Exception(f'Failed to read chunk {req_chunk_number} to terminal.')
         resp_unk1 = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
