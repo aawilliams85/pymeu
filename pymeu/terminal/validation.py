@@ -62,9 +62,13 @@ def get_terminal_info(cip: pycomm3.CIPDriver) -> types.MEDeviceInfo:
 
     if major_rev <= 5:
         paths.helper_path = '\\Storage Card\\Rockwell Software\\RSViewME'
-        paths.helper_file_path = paths.helper_path + '\\' + paths.HELPER_FILE_NAME
         paths.storage_path = '\\Storage Card'
-        paths.upload_list_path = paths.storage_path + '\\' + paths.UPLOAD_LIST_PATH
+    else:
+        paths.helper_path = '\\Windows'
+        paths.storage_path = '\\Application Data'
+
+    paths.upload_list_path = paths.storage_path + '\\' + paths.UPLOAD_LIST_PATH
+    paths.helper_file_path = paths.helper_path + '\\' + paths.HELPER_FILE_NAME
 
     return types.MEDeviceInfo(cip._cip_path, 
                                helper.get_helper_version(cip),
