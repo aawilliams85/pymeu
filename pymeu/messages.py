@@ -1,5 +1,6 @@
-from enum import Enum
 import pycomm3
+
+from enum import Enum
 
 # Known CIP class codes that aren't previously defined by pycomm3.
 # Further investigation needed.

@@ -1,18 +1,18 @@
 import pycomm3
 
-from ..types import *
 from . import files
 from . import helper
 from . import paths
 from . import registry
+from .. import types
 
-def create_log(cip: pycomm3.CIPDriver, device: MEDeviceInfo):
+def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     device.log.append(f'Terminal storage exists: {helper.get_folder_exists(cip)}.')
     device.log.append(f'Terminal has {helper.get_free_space(cip)} free bytes')
     device.log.append(f'Terminal has files: {upload_mer_list(cip, device)}')
     device.log.append(f'Terminal startup file: {registry.get_startup_mer(cip)}.')
 
-def download_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
+def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:types. MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
     # Create runtime folder
     #
     # TODO: Can we check if this already exists and skip?
@@ -54,7 +54,7 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile
 
     return True
 
-def upload_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile, rem_file: MEFile) -> bool:
+def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: types.MEFile, rem_file: types.MEFile) -> bool:
     # Verify file exists on terminal
     if not(helper.get_file_exists(cip, rem_file)): raise Exception(f'File {rem_file.name} does not exist on terminal.')
 
@@ -72,7 +72,7 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile, 
 
     return True
 
-def upload_mer_list(cip: pycomm3.CIPDriver, device: MEDeviceInfo):
+def upload_mer_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     # Create *.MER list
     helper.create_mer_list(cip)
 

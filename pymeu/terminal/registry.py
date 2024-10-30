@@ -1,6 +1,6 @@
-from enum import Enum
 import pycomm3
 
+from enum import Enum
 from .. import messages
 
 # Known registry keys on the terminal that should be whitelisted for read access through RemoteHelper.

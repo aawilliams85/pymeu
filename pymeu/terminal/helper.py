@@ -1,11 +1,11 @@
-from enum import Enum
 import pycomm3
-import struct
+
+from enum import Enum
 from warnings import warn
 
-from .. import messages
 from . import paths
-from ..types import *
+from .. import messages
+from .. import types 
 
 
 # Known static value for successful creation of a folder.
@@ -118,7 +118,7 @@ def create_mer_list(cip: pycomm3.CIPDriver):
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return True
 
-def create_runtime_directory(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
+def create_runtime_directory(cip: pycomm3.CIPDriver, file: types.MEFile) -> bool:
     # Create paths
     if not(create_directory(cip, paths.storage_path)): return False
     if not(create_directory(cip, paths.storage_path + '\\Rockwell Software')): return False
@@ -135,13 +135,13 @@ def delete_file(cip: pycomm3.CIPDriver, file: str) -> bool:
 def delete_file_mer_list(cip: pycomm3.CIPDriver) -> bool:
     return delete_file(cip, paths.upload_list_path)
 
-def get_file_exists(cip: pycomm3.CIPDriver, file: MEFile) -> bool:
+def get_file_exists(cip: pycomm3.CIPDriver, file: types.MEFile) -> bool:
     req_args = [paths.helper_file_path, HelperFunctions.GET_FILE_EXISTS.value, paths.storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): return False    
     return bool(int(resp_data))
 
-def get_file_size(cip: pycomm3.CIPDriver, file: MEFile) -> int:
+def get_file_size(cip: pycomm3.CIPDriver, file: types.MEFile) -> int:
     req_args = [paths.helper_file_path, HelperFunctions.GET_FILE_SIZE.value, paths.storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
@@ -184,7 +184,7 @@ def reboot(cip: pycomm3.CIPDriver):
         # the device reboots and breaks the socket.
         if (str(e) != 'failed to receive reply'): raise e
 
-def set_startup_mer(cip: pycomm3.CIPDriver, file: MEFile, replace_comms: bool, delete_logs: bool) -> bool:
+def set_startup_mer(cip: pycomm3.CIPDriver, file: types.MEFile, replace_comms: bool, delete_logs: bool) -> bool:
     req_args = [paths.helper_file_path, HelperFunctions.CREATE_ME_SHORTCUT.value, paths.storage_path + f':{file.name}: /r /delay']
     if replace_comms: req_args = [req_args[1], req_args[2], req_args[3] + ' /o']
     if delete_logs: req_args = [req_args[1], req_args[2], req_args[3] + ' /d']

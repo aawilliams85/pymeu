@@ -1,11 +1,12 @@
-from enum import Enum
+
 import pycomm3
 import struct
+
+from enum import Enum
 from warnings import warn
 
 from .. import messages
-from ..types import *
-from .paths import *
+from .. import types
 
 # When files are transferred, this is the maximum number of bytes
 # used per message.  Quick tests up to 2000 bytes did succeed, >2000 bytes failed.
@@ -34,7 +35,7 @@ class TransferType(Enum):
     DOWNLOAD = int.from_bytes(b'\x01', byteorder='big')
     UPLOAD = int.from_bytes(b'\x00', byteorder='big')
 
-def create_exchange_download(cip: pycomm3.CIPDriver, file: MEFile, remote_path: str) -> int:
+def create_exchange_download(cip: pycomm3.CIPDriver, file: types.MEFile, remote_path: str) -> int:
     """
     Creates a file exchange for downloading from the local device to the remote terminal.
 
@@ -291,7 +292,7 @@ def upload(cip: pycomm3.CIPDriver, instance: int) -> bytearray:
 
     return resp_binary
 
-def upload_mer(cip: pycomm3.CIPDriver, instance: int, file: MEFile):
+def upload_mer(cip: pycomm3.CIPDriver, instance: int, file: types.MEFile):
     resp_binary = upload(cip, instance)
     with open(file.path, 'wb') as dest_file:
         dest_file.write(resp_binary)
