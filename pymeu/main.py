@@ -1,9 +1,10 @@
 import os
 import pycomm3
 
-from . import terminal
-from .types import *
 from warnings import warn
+from . import terminal
+from . import types
+
 
 class MEUtility(object):
     def __init__(self, comms_path: str, **kwargs):
@@ -22,7 +23,7 @@ class MEUtility(object):
         self.comms_path = comms_path
         self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
 
-    def download(self, file_path: str, **kwargs) -> MEResponse:
+    def download(self, file_path: str, **kwargs) -> types.MEResponse:
         """
         Downloads a *.MER file from the local device to the remote terminal.
 
@@ -48,7 +49,7 @@ class MEUtility(object):
         self.run_at_startup = kwargs.get('run_at_startup', True)
 
         with pycomm3.CIPDriver(self.comms_path) as cip:
-            file = MEFile(os.path.basename(file_path), self.overwrite, False, file_path)
+            file = types.MEFile(os.path.basename(file_path), self.overwrite, False, file_path)
 
             # Validate device at this communications path is a terminal of known version.
             self.device = terminal.validation.get_terminal_info(cip)
@@ -64,9 +65,9 @@ class MEUtility(object):
             # Perform *.MER download to terminal
             if not(terminal.actions.download_mer_file(cip, self.device, file, self.run_at_startup, self.replace_comms, self.delete_logs)): raise Exception('Download to terminal failed.')
 
-        return MEResponse(self.device, 'Success')
+        return types.MEResponse(self.device, 'Success')
 
-    def get_terminal_info(self) -> MEResponse:
+    def get_terminal_info(self) -> types.MEResponse:
         """
         If no upload or download are desired, where terminal info would typically be checked
         as a prerequisite, this function can be called to generate similar log entries to
@@ -82,9 +83,9 @@ class MEUtility(object):
 
             terminal.actions.create_log(cip, self.device)
 
-        return MEResponse(self.device, 'Success')
+        return types.MEResponse(self.device, 'Success')
 
-    def reboot(self) -> MEResponse:
+    def reboot(self) -> types.MEResponse:
         """
         Reboots the remote terminal now.
         """
@@ -99,9 +100,9 @@ class MEUtility(object):
 
             terminal.actions.reboot(cip)
 
-        return MEResponse(self.device, 'Success')
+        return types.MEResponse(self.device, 'Success')
 
-    def upload(self, file_path: str, **kwargs) -> MEResponse:
+    def upload(self, file_path: str, **kwargs) -> types.MEResponse:
         """
         Uploads a *.MER file from the remote terminal to the local device.
 
@@ -115,10 +116,10 @@ class MEUtility(object):
                 specify a different remote filename on the terminal than the local
                 filename specified as part of file_path where it will end up.
         """
-        file = MEFile(os.path.basename(file_path), False, False, file_path)
+        file = types.MEFile(os.path.basename(file_path), False, False, file_path)
         self.remote_file_name = kwargs.get('remote_file_name', file.name)
         self.overwrite = kwargs.get('overwrite', False)
-        rem_file = MEFile(self.remote_file_name,False,False,file_path)
+        rem_file = types.MEFile(self.remote_file_name,False,False,file_path)
 
         # Create upload folder if it doesn't exist yet
         if not(os.path.exists(os.path.dirname(file.path))): os.makedirs(os.path.dirname(file.path))
@@ -138,7 +139,7 @@ class MEUtility(object):
             # Perform *.MER upload from terminal
             if not(terminal.actions.upload_mer_file(cip, self.device, file, rem_file)): raise Exception('Upload from terminal failed.')
         
-        return MEResponse(self.device, 'Success')
+        return types.MEResponse(self.device, 'Success')
 
     def upload_all(self, file_path: str, **kwargs):
         """
@@ -170,7 +171,7 @@ class MEUtility(object):
             for mer in mer_list:
                 if len(mer) > 0:
                     mer_path = os.path.join(file_path, mer)
-                    file = MEFile(os.path.basename(mer_path), self.overwrite, False, mer_path)
+                    file = types.MEFile(os.path.basename(mer_path), self.overwrite, False, mer_path)
 
                     # Check for existing *.MER
                     if not(self.overwrite) and (os.path.exists(mer_path)): raise Exception(f'File {mer_path} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
@@ -178,4 +179,4 @@ class MEUtility(object):
                     # Perform *.MER upload from terminal
                     if not(terminal.actions.upload_mer_file(cip, self.device, file, file)): raise Exception('Upload from terminal failed.')
 
-        return MEResponse(self.device, 'Success')
+        return types.MEResponse(self.device, 'Success')

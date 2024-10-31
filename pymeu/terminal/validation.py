@@ -1,9 +1,9 @@
 import pycomm3
 
-from ..types import *
 from . import helper
 from . import paths
 from . import registry
+from .. import types
 
 # Known RemoteHelper file version numbers, used to help check that device is a valid terminal.
 HELPER_VERSIONS = {
@@ -56,32 +56,36 @@ PRODUCT_TYPES = {
     '24'
 }
 
-def get_terminal_info(cip: pycomm3.CIPDriver) -> MEDeviceInfo:
+def get_terminal_info(cip: pycomm3.CIPDriver) -> types.MEDeviceInfo:
     me_version = registry.get_me_version(cip)
     major_rev = int(me_version.split(".")[0])
 
     if major_rev <= 5:
         paths.helper_path = '\\Storage Card\\Rockwell Software\\RSViewME'
-        paths.helper_file_path = paths.helper_path + '\\' + paths.HELPER_FILE_NAME
         paths.storage_path = '\\Storage Card'
-        paths.upload_list_path = paths.storage_path + '\\' + paths.UPLOAD_LIST_PATH
+    else:
+        paths.helper_path = '\\Windows'
+        paths.storage_path = '\\Application Data'
 
-    return MEDeviceInfo(cip._cip_path, 
-                        helper.get_helper_version(cip),
-                        me_version,
-                        registry.get_product_code(cip),
-                        registry.get_product_type(cip),
-                        [],
-                        [])
+    paths.upload_list_path = paths.storage_path + '\\' + paths.UPLOAD_LIST_PATH
+    paths.helper_file_path = paths.helper_path + '\\' + paths.HELPER_FILE_NAME
 
-def is_terminal_valid(device: MEDeviceInfo) -> bool:
+    return types.MEDeviceInfo(cip._cip_path, 
+                               helper.get_helper_version(cip),
+                               me_version,
+                               registry.get_product_code(cip),
+                               registry.get_product_type(cip),
+                               [],
+                               [])
+
+def is_terminal_valid(device: types.MEDeviceInfo) -> bool:
     if device.helper_version not in HELPER_VERSIONS: return False
     if device.me_version not in ME_VERSIONS: return False
     if device.product_code not in PRODUCT_CODES: return False
     if device.product_type not in PRODUCT_TYPES: return False
     return True
 
-def is_download_valid(cip: pycomm3.CIPDriver, device: MEDeviceInfo, file: MEFile) -> bool:
+def is_download_valid(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: types.MEFile) -> bool:
     # Check that file is correct extension
     if (file.get_ext() != '.mer'):
         device.log.append(f'File {file.name} is not a *.mer file')
