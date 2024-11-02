@@ -6,6 +6,7 @@
     "file": {
         "download": {
             "good": "Test_v11_A.mer",
+            "good_as": "Test_v11_AA.mer",
             "bad_extension": "TestA_v11_A.xyz",
             "bad_missing": "Test1.mer"
         },

@@ -57,6 +57,10 @@ class pymeu_slow_tests(unittest.TestCase):
         self.download_file_path = os.path.join(self.download_folder_path, self.config_data['file']['download']['good'])
         print(self.meu.download(self.download_file_path, overwrite=True))
         
+    def test_download_as(self):
+        self.download_file_path = os.path.join(self.download_folder_path, self.config_data['file']['download']['good'])
+        print(self.meu.download(self.download_file_path, overwrite=True, remote_file_name=self.config_data['file']['download']['good_as']))
+
     def tearDown(self):
         pass
         #time.sleep(60)
