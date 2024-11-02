@@ -112,6 +112,34 @@ def create_directory(cip: pycomm3.CIPDriver, dir: str) -> bool:
     if (resp_code != CREATE_DIR_SUCCESS): raise Exception('Failed to create directory on terminal.')    
     return True
 
+def create_me_shortcut(cip: pycomm3.CIPDriver, file: str, replace_comms: bool, delete_logs: bool) -> bool:
+    """
+    Setup a specific *.MER file to run at terminal startup.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+        file (str): The *.MER file to use
+        replace_comms (bool): If true, replaces the terminal comms setup with the configuration from the *.MER file.
+        delete_logs (bool): If true, deletes logs at startup.
+
+    Returns:
+        Status (bool): True if function runs successfully.
+
+    Request Format:
+        {storage path}:{filename}: /r /delay /o /d
+
+    Note:
+        Even though the *.MER file resides in a subdirectory (ex: {storage path}\\Rockwell Software\\RSViewME\\Runtime\\{{filename}),
+        it is only transmitted as {storage path}:{filename}.  The rest of the path is inserted by the RemoteHelper on the terminal.
+    """ 
+    replace_comms_param = ' /o' if replace_comms else ''
+    delete_logs_param = ' /d' if delete_logs else ''
+    shortcut = f'{paths.storage_path}:{file}: /r /delay{replace_comms_param}{delete_logs_param}'
+    req_args = [paths.helper_file_path, HelperFunctions.CREATE_ME_SHORTCUT.value, shortcut]
+    resp_code, resp_data = run_function(cip, req_args)
+    if (resp_code != 0): raise Exception(f'Failed to create ME Startup Shortcut on terminal: {file}, response code: {resp_code}, response data: {resp_data}.')
+    return True
+
 def create_mer_list(cip: pycomm3.CIPDriver):
     req_args = [paths.helper_file_path,HelperFunctions.CREATE_FILE_LIST.value, paths.storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\*.mer::' + paths.upload_list_path]
     resp_code, resp_data = run_function(cip, req_args)
@@ -129,7 +157,7 @@ def create_runtime_directory(cip: pycomm3.CIPDriver, file: types.MEFile) -> bool
 def delete_file(cip: pycomm3.CIPDriver, file: str) -> bool:
     req_args = [paths.helper_file_path,HelperFunctions.DELETE_FILE.value,file]
     resp_code, resp_data = run_function(cip, req_args)
-    if (resp_code != 0): raise Exception(f'Failed to delete file on remote terminal {file}')
+    if (resp_code != 0): raise Exception(f'Failed to delete file on terminal: {file}, response code: {resp_code}, response data: {resp_data}.')
     return True
 
 def delete_file_mer_list(cip: pycomm3.CIPDriver) -> bool:
@@ -183,11 +211,3 @@ def reboot(cip: pycomm3.CIPDriver):
         # create an exception.  When it is received by the terminal,
         # the device reboots and breaks the socket.
         if (str(e) != 'failed to receive reply'): raise e
-
-def set_startup_mer(cip: pycomm3.CIPDriver, file: types.MEFile, replace_comms: bool, delete_logs: bool) -> bool:
-    req_args = [paths.helper_file_path, HelperFunctions.CREATE_ME_SHORTCUT.value, paths.storage_path + f':{file.name}: /r /delay']
-    if replace_comms: req_args = [req_args[1], req_args[2], req_args[3] + ' /o']
-    if delete_logs: req_args = [req_args[1], req_args[2], req_args[3] + ' /d']
-    resp_code, resp_data = run_function(cip, req_args)
-    if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
-    return True
