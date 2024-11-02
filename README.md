@@ -1,6 +1,6 @@
 # pymeu
 
-PyMEU (Python ME Utility) is a set of helper functions built around pycomm3 to interface with Rockwell Automation PanelView Plus 6/7 HMIs.<br>
+PyMEU (Python ME Utility) is a set of helper functions built around pycomm3 to interface with Rockwell Automation PanelView Plus HMIs.<br>
 
 Use at your own risk.<br>
 
