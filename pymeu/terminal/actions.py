@@ -12,7 +12,7 @@ def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     device.log.append(f'Terminal has files: {upload_mer_list(cip, device)}')
     device.log.append(f'Terminal startup file: {registry.get_startup_mer(cip)}.')
 
-def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:types. MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
+def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
     # Create runtime folder
     #
     # TODO: Can we check if this already exists and skip?
@@ -47,7 +47,7 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:t
 
     # Set *.MER to run at startup and then reboot
     if run_at_startup:
-        helper.set_startup_mer(cip, file, replace_comms, delete_logs)
+        helper.create_me_shortcut(cip, file.name, replace_comms, delete_logs)
         device.log.append(f'Setting file to run at startup.')
         reboot(cip)
         device.log.append(f'Rebooting terminal.')
