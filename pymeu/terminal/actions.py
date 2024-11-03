@@ -35,11 +35,7 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:t
     if not(files.is_set_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
 
     # Transfer *.MER chunk by chunk
-    files.download(cip, file_instance, file.path)
-
-    # Mark file exchange as completed on the terminal
-    files.end_write(cip, file_instance)
-    device.log.append(f'Downloaded {file.path} to {file.name} using file exchange {file_instance}.')
+    files.download_mer(cip, file_instance, file.path)
 
     # Delete file exchange on the terminal
     files.delete_exchange(cip, file_instance)
