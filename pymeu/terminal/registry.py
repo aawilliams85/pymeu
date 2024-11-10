@@ -60,7 +60,7 @@ def get_value(cip: pycomm3.CIPDriver, key: str) -> str:
     resp = messages.read_registry(cip, req_data)
     if not resp: raise Exception(f'Failed to read registry key: {key}')
     resp_code = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
-    if (resp_code != 0): raise Exception(f'Read registry response code was not zero.  Examine packets.')
+    if (resp_code != 0): raise Exception(f'Failed to read registry key: {key}, response code: {resp_code}.')
 
     resp_unk1 = int.from_bytes(resp.value[4:8], byteorder='little', signed=False)
     resp_value = str(resp.value[8:].decode('utf-8').strip('\x00'))
