@@ -1,18 +1,38 @@
 {
-    "comms_path": {
-        "good": "192.168.40.123",
-        "bad": "192.168.254.254"
-    },
-    "file": {
+    "pvp5":{
+        "comms_path": {
+            "good": "192.168.40.124",
+            "bad": "192.168.1.124"
+        },
         "download": {
-            "good": "Test_v11_A.mer",
-            "good_as": "Test_v11_AA.mer",
-            "bad_extension": "TestA_v11_A.xyz",
-            "bad_missing": "Test1.mer"
+            "good": ["Test_v5_A.mer", "Test_v5_B.mer", "Test_v5_C.mer"],
+            "good_as": ["Test_v5_AA.mer", "Test_v5_BB.mer", "Test_v5_CC.mer"],
+            "bad_extension": "Test_v5_A.xyz",
+            "bad_missing": "Test_v5.mer"
         },
         "upload": {
-            "good": "Test_v11_A.mer",
-            "bad_missing": "Test1.mer"
+            "good": ["Test_v5_A.mer", "Test_v5_B.mer", "Test_v5_C.mer"],
+            "good_as": ["Test_v5_AA.mer", "Test_v5_BB.mer", "Test_v5_CC.mer"],
+            "bad_extension": "Test_v5_A.xyz",
+            "bad_missing": "Test_v5.mer"
+        }
+    },
+    "pvp6":{
+        "comms_path": {
+            "good": "192.168.40.123",
+            "bad": "192.168.1.124"
+        },
+        "download": {
+            "good": ["Test_v11_A.mer", "Test_v11_B.mer", "Test_v11_C.mer"],
+            "good_as": ["Test_v11_AA.mer", "Test_v11_BB.mer", "Test_v11_CC.mer"],
+            "bad_extension": "Test_v11_A.xyz",
+            "bad_missing": "Test_v11.mer"
+        },
+        "upload": {
+            "good": ["Test_v11_A.mer", "Test_v11_B.mer", "Test_v11_C.mer"],
+            "good_as": ["Test_v11_AA.mer", "Test_v11_BB.mer", "Test_v11_CC.mer"],
+            "bad_extension": "Test_v11_A.xyz",
+            "bad_missing": "Test_v11.mer"
         }
     }
 }
