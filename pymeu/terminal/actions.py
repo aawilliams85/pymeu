@@ -10,7 +10,13 @@ def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     device.log.append(f'Terminal storage exists: {helper.get_folder_exists(cip)}.')
     device.log.append(f'Terminal has {helper.get_free_space(cip)} free bytes')
     device.log.append(f'Terminal has files: {upload_mer_list(cip, device)}')
-    device.log.append(f'Terminal startup file: {registry.get_startup_mer(cip)}.')
+
+    # For PanelView Plus 5.10 and earlier this registry key appears to be unavailable.
+    try:
+        device.log.append(f'Terminal startup file: {registry.get_startup_mer(cip)}.')
+    except:
+        device.log.append(f'Terminal startup file: Failed to read registry key {registry.RegKeys.ME_STARTUP_APP.value}')
+        pass
 
 def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
     # Create runtime folder
