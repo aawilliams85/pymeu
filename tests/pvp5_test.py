@@ -8,7 +8,7 @@ from pymeu import MEUtility
 # Turn off sort so that tests run in line order
 unittest.TestLoader.sortTestMethodsUsing = None
 
-class pvp6_fast_tests(unittest.TestCase):
+class pvp5_fast_tests(unittest.TestCase):
     def setUp(self):
         self.base_path = os.path.abspath(os.path.dirname(__file__))
         self.config_path = os.path.join(self.base_path, 'config.json')
@@ -39,7 +39,7 @@ class pvp6_fast_tests(unittest.TestCase):
     def tearDown(self):
         pass
 
-class pvp6_slow_tests(unittest.TestCase):
+class pvp5_slow_tests(unittest.TestCase):
     def setUp(self):
         self.base_path = os.path.abspath(os.path.dirname(__file__))
         self.config_path = os.path.join(self.base_path, 'config.json')
