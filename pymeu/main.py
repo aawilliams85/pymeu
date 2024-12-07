@@ -38,6 +38,9 @@ class MEUtility(object):
                 - replace_comms (bool): Optional; if set to True, will replace
                 the terminal's communications setup with the one from the *.MER
                 file being downloaded.  Defaults to false.
+                - remote_file_name (str): Optional; if provided, is used to
+                specify a different remote filename on the terminal than the local
+                filename specified as part of file_path.
                 - run_at_startup (bool): Optional; if set to True, will also set
                 this *.MER file to be run at terminal startup and reboot the terminal
                 now.  Defaults to True.  Note that this is a departure from the ME
@@ -46,10 +49,11 @@ class MEUtility(object):
         self.delete_logs = kwargs.get('delete_logs', False)
         self.overwrite = kwargs.get('overwrite', False)
         self.replace_comms = kwargs.get('replace_comms', False)
+        self.remote_file_name = kwargs.get('remote_file_name', os.path.basename(file_path))
         self.run_at_startup = kwargs.get('run_at_startup', True)
 
         with pycomm3.CIPDriver(self.comms_path) as cip:
-            file = types.MEFile(os.path.basename(file_path), self.overwrite, False, file_path)
+            file = types.MEFile(self.remote_file_name, self.overwrite, False, file_path)
 
             # Validate device at this communications path is a terminal of known version.
             self.device = terminal.validation.get_terminal_info(cip)

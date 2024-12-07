@@ -155,11 +155,7 @@ def create_exchange_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
 def delete_exchange(cip: pycomm3.CIPDriver, instance: int):
     return messages.delete_file_exchange(cip, instance)
 
-def end_write(cip: pycomm3.CIPDriver, instance: int):
-    req_data = b'\x00\x00\x00\x00\x02\x00\xff\xff'
-    return messages.write_file_chunk(cip, instance, req_data)
-
-def download(cip: pycomm3.CIPDriver, instance: int, file: str) -> bool:
+def download(cip: pycomm3.CIPDriver, instance: int, source_data: bytearray) -> bool:
     """
     Downloads a file from the local device to the remote terminal.
     The transfer happens by breaking the file down into one or more
@@ -169,7 +165,7 @@ def download(cip: pycomm3.CIPDriver, instance: int, file: str) -> bool:
     Args:
         cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
         instance (int): The previously created file transfer instance.
-        file (str): The file path on the local device.
+        source_data (bytearray): The binary data of the file to be transferred.
 
     Returns:
         bool: True when transfer is complete.
@@ -201,28 +197,36 @@ def download(cip: pycomm3.CIPDriver, instance: int, file: str) -> bool:
         may indicate an incomplete transfer happened previously. In such cases,
         reboot the terminal and try again.
     """
-
     req_chunk_number = 1
+    req_offset = 0
+    while req_offset < len(source_data):
+        req_chunk = source_data[req_offset:req_offset + CHUNK_SIZE]
+        req_header = struct.pack('<IH', req_chunk_number, len(req_chunk))
+        req_next_chunk_number = req_chunk_number + 1
+        req_data = req_header + req_chunk
+
+        # End of file
+        if not req_chunk: break
+
+        resp = messages.write_file_chunk(cip, instance, req_data)
+        if not resp: raise Exception(f'Failed to write chunk {req_chunk_number} to terminal.')
+        resp_unk1, resp_chunk_number, resp_next_chunk_number = struct.unpack('<III', resp.value)
+        if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
+        if (resp_chunk_number != req_chunk_number ): raise Exception(f'Response chunk number {resp_chunk_number} did not match request chunk number {req_chunk_number}.')
+        if (resp_next_chunk_number != req_next_chunk_number): raise Exception(f'Response next chunk number {resp_next_chunk_number} did not match expected next chunk number {req_next_chunk_number}.')
+
+        # Continue to next chunk
+        req_chunk_number += 1
+        req_offset += len(req_chunk)
+
+    # Close out file
+    req_data = b'\x00\x00\x00\x00\x02\x00\xff\xff'
+    resp = messages.write_file_chunk(cip, instance, req_data)
+    return True
+
+def download_mer(cip: pycomm3.CIPDriver, instance: int, file: str):
     with open(file, 'rb') as source_file:
-        while True:
-            req_chunk = source_file.read(CHUNK_SIZE)
-            req_header = struct.pack('<IH', req_chunk_number, len(req_chunk))
-            req_next_chunk_number = req_chunk_number + 1
-            req_data = req_header + req_chunk
-
-            # End of file
-            if not req_chunk:
-                return True
-
-            resp = messages.write_file_chunk(cip, instance, req_data)
-            if not resp: raise Exception(f'Failed to write chunk {req_chunk_number} to terminal.')
-            resp_unk1, resp_chunk_number, resp_next_chunk_number = struct.unpack('<III', resp.value)
-            if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-            if (resp_chunk_number != req_chunk_number ): raise Exception(f'Response chunk number {resp_chunk_number} did not match request chunk number {req_chunk_number}.')
-            if (resp_next_chunk_number != req_next_chunk_number): raise Exception(f'Response next chunk number {resp_next_chunk_number} did not match expected next chunk number {req_next_chunk_number}.')
-
-            # Continue to next chunk
-            req_chunk_number += 1
+        return download(cip, instance, bytearray(source_file.read()))
 
 def upload(cip: pycomm3.CIPDriver, instance: int) -> bytearray:
     """

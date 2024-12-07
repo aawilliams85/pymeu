@@ -10,7 +10,13 @@ def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     device.log.append(f'Terminal storage exists: {helper.get_folder_exists(cip)}.')
     device.log.append(f'Terminal has {helper.get_free_space(cip)} free bytes')
     device.log.append(f'Terminal has files: {upload_mer_list(cip, device)}')
-    device.log.append(f'Terminal startup file: {registry.get_startup_mer(cip)}.')
+
+    major_rev = int(device.me_version.split(".")[0])
+    if major_rev <= 5:
+        # For PanelView Plus 5.10 and earlier this registry key appears to be unavailable.
+        device.log.append(f'Terminal startup file: could not be determined due to hardware version.')
+    else:
+        device.log.append(f'Terminal startup file: {registry.get_startup_mer(cip)}.')
 
 def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
     # Create runtime folder
@@ -35,11 +41,7 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:t
     if not(files.is_set_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
 
     # Transfer *.MER chunk by chunk
-    files.download(cip, file_instance, file.path)
-
-    # Mark file exchange as completed on the terminal
-    files.end_write(cip, file_instance)
-    device.log.append(f'Downloaded {file.path} to {file.name} using file exchange {file_instance}.')
+    files.download_mer(cip, file_instance, file.path)
 
     # Delete file exchange on the terminal
     files.delete_exchange(cip, file_instance)
