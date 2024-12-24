@@ -20,6 +20,8 @@ class MEDeviceInfo:
     comms_path: str
     helper_version: str
     me_version: str
+    version_major: int
+    version_minor: int
     product_code: str
     product_type: str
     log: list[str]

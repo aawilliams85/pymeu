@@ -1,3 +1,4 @@
+import os
 import pycomm3
 
 from . import files
@@ -49,11 +50,10 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:t
 
     # Set *.MER to run at startup and then reboot
     if run_at_startup:
+        device.log.append(f'Setting file: {file.name} to run at startup with Replace Comms: {replace_comms}, Delete Logs: {delete_logs}.')
         helper.create_me_shortcut(cip, file.name, replace_comms, delete_logs)
         device.log.append(f'Setting file to run at startup.')
-        reboot(cip)
-        device.log.append(f'Rebooting terminal.')
-
+        reboot(cip, device)
     return True
 
 def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: types.MEFile, rem_file: types.MEFile) -> bool:
@@ -97,9 +97,57 @@ def upload_mer_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
 
     return file_list
 
-def reboot(cip: pycomm3.CIPDriver):
-    cip = pycomm3.CIPDriver(cip._cip_path)
-    cip._cfg['socket_timeout'] = 0.25
-    cip.open()
-    helper.reboot(cip)
-    cip.close()
+def reboot(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
+    cip1 = pycomm3.CIPDriver(cip._cip_path)
+    cip1._cfg['socket_timeout'] = 0.25
+    cip1.open()
+    try:
+        # Execute reboot
+        device.log.append(f'Rebooting terminal.')
+        helper.reboot(cip1)
+
+        # If we made it here... the reboot function didn't throw
+        # an exception, which means it didn't reboot.
+        #
+        # Further investigation needed.
+        device.log.append(f'Initial reboot unsuccessful.')
+
+        # Currently tailoring additional action to terminals where:
+        #
+        # Firmware version is 12.108+
+        # Application is set to load at startup
+        # ME Station is set to run application at startup
+        # Current App is defined
+        if (device.version_major <= 11):
+            device.log.append(f'Did not attempt additional reboot because terminal is below minimum applicable version.')
+            return
+        if (device.version_major == 12) and (device.version_minor < 108):
+            device.log.append(f'Did not attempt additional reboot because terminal is below minimum applicable version.')
+            return
+        if not(registry.get_startup_load_current(cip)):
+            device.log.append(f'Did not attempt additional reboot because terminal Startup Options are not set to Load Current Application.')
+            return
+        if (registry.get_startup_options(cip) != 1):
+            device.log.append(f'Did not attempt additional reboot because terminal Startup Options are not set to Run Current Application.')
+            return
+        startup_file = os.path.basename(registry.get_startup_mer(cip).replace('\\','/'))
+        if not(startup_file.lower().endswith('.mer')):
+            device.log.append(f'Did not attempt additional reboot because terminal does not have valid startup *.MER defined.')
+            return
+
+        # Rebuild existing ME Startup Shortcut on terminal
+        delete_logs = registry.get_startup_delete_logs(cip)
+        replace_comms = registry.get_startup_replace_comms(cip)
+        device.log.append(f'Setting file: {startup_file} to run at startup with Replace Comms: {replace_comms}, Delete Logs: {delete_logs}.')
+        helper.create_me_shortcut(cip, startup_file, replace_comms, delete_logs)
+
+        # Execute reboot
+        device.log.append(f'Rebooting terminal.')
+        helper.reboot(cip1)
+    except pycomm3.PycommError as e:
+        # Unlike most CIP messages, this one is expected to
+        # create an exception.  When it is received by the terminal,
+        # the device reboots and breaks the socket.
+        if (str(e) != 'failed to receive reply'): raise e
+    
+    cip1.close()

@@ -53,20 +53,20 @@ ME_VERSIONS = {
 
 # Known terminal product codes, used to help check that device is a valid terminal.
 PRODUCT_CODES = {
-    '17',   #PanelView Plus
-    '47',   #PanelView Plus 6 1000
-    '48',   #PanelView Plus 6
-    '51',   #PanelView Plus 6
-    '94',   #PanelView Plus 7 700 Perf
-    '98',   #PanelView Plus 7 1000 Perf
-    '102',  #PanelView Plus 7
-    '187',  #PanelView Plus 7 1000 Standard
-    '189'   #PanelView Plus 7 1200 Standard
+    17,   #PanelView Plus
+    47,   #PanelView Plus 6 1000
+    48,   #PanelView Plus 6
+    51,   #PanelView Plus 6
+    94,   #PanelView Plus 7 700 Perf
+    98,   #PanelView Plus 7 1000 Perf
+    102,  #PanelView Plus 7
+    187,  #PanelView Plus 7 1000 Standard
+    189   #PanelView Plus 7 1200 Standard
 }
 
 # Known product types, used to help check that device is a valid terminal.
 PRODUCT_TYPES = {
-    '24'
+    24
 }
 
 def get_terminal_info(cip: pycomm3.CIPDriver) -> types.MEDeviceInfo:
@@ -86,6 +86,8 @@ def get_terminal_info(cip: pycomm3.CIPDriver) -> types.MEDeviceInfo:
     return types.MEDeviceInfo(cip._cip_path, 
                                helper.get_helper_version(cip),
                                me_version,
+                               registry.get_version_major(cip),
+                               registry.get_version_minor(cip),
                                registry.get_product_code(cip),
                                registry.get_product_type(cip),
                                [],
