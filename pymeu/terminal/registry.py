@@ -89,3 +89,9 @@ def get_startup_options(cip: pycomm3.CIPDriver) -> str:
 
 def get_startup_replace_comms(cip: pycomm3.CIPDriver) -> str:
     return get_value(cip, [RegKeys.ME_STARTUP_REPLACE_COMMS.value])
+
+def get_version_major(cip: pycomm3.CIPDriver) -> str:
+    return get_value(cip, [RegKeys.CIP_VERSION_MAJOR.value])
+
+def get_version_minor(cip: pycomm3.CIPDriver) -> str:
+    return get_value(cip, [RegKeys.CIP_VERSION_MINOR.value])
