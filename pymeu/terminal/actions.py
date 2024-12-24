@@ -107,7 +107,7 @@ def reboot(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
         helper.reboot(cip1)
 
         # If we made it here... the reboot function didn't throw
-        # and exception, which means it didn't reboot.
+        # an exception, which means it didn't reboot.
         #
         # Further investigation needed.
         device.log.append(f'Initial reboot unsuccessful.')
