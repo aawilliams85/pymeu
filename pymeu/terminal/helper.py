@@ -196,18 +196,6 @@ def get_helper_version(cip: pycomm3.CIPDriver) -> str:
     return str(resp_data)
 
 def reboot(cip: pycomm3.CIPDriver):
-    # For some reason this one has an extra trailing byte.
-    # Not sure if it has some other purpose yet
     req_args = [paths.helper_file_path, HelperFunctions.REBOOT.value,'']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
-
-    try:
-        resp = messages.run_function(cip, req_data)
-        
-        #Should never get here
-        raise Exception(resp)
-    except pycomm3.exceptions.CommError as e:
-        # Unlike most CIP messages, this one is always expected to
-        # create an exception.  When it is received by the terminal,
-        # the device reboots and breaks the socket.
-        if (str(e) != 'failed to receive reply'): raise e
+    resp = messages.run_function(cip, req_data)
