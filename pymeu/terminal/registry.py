@@ -5,7 +5,7 @@ from .. import messages
 
 # Known registry keys on the terminal that should be whitelisted for read access through RemoteHelper.
 class RegKeys(Enum):
-    CIP_VERSION_MAJOR = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\MajorRevision,'                # ex: 11
+    CIP_VERSION_MAJOR = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\MajorRevision'                 # ex: 11
     CIP_VERSION_MINOR = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\MinorRevision'                 # ex: 1
     CIP_PRODUCT_CODE = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\ProductCode'                    # ex: 51
     CIP_PRODUCT_NAME = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\ProductName'                    # ex: PanelView Plus_6 1500
