@@ -75,5 +75,17 @@ def get_product_code(cip: pycomm3.CIPDriver) -> str:
 def get_product_type(cip: pycomm3.CIPDriver) -> str:
     return get_value(cip, [RegKeys.CIP_PRODUCT_TYPE.value])
 
+def get_startup_delete_logs(cip: pycomm3.CIPDriver) -> str:
+    return get_value(cip, [RegKeys.ME_STARTUP_DELETE_LOGS.value])
+
+def get_startup_load_current(cip: pycomm3.CIPDriver) -> str:
+    return get_value(cip, [RegKeys.ME_STARTUP_LOAD_CURRENT.value])
+
 def get_startup_mer(cip: pycomm3.CIPDriver) -> str:
     return get_value(cip, [RegKeys.ME_STARTUP_APP.value])
+
+def get_startup_options(cip: pycomm3.CIPDriver) -> str:
+    return get_value(cip, [RegKeys.ME_STARTUP_OPTIONS.value])
+
+def get_startup_replace_comms(cip: pycomm3.CIPDriver) -> str:
+    return get_value(cip, [RegKeys.ME_STARTUP_REPLACE_COMMS.value])
