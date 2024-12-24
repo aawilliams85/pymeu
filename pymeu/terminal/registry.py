@@ -67,31 +67,131 @@ def get_value(cip: pycomm3.CIPDriver, key: str) -> str:
     return resp_value
 
 def get_me_version(cip: pycomm3.CIPDriver) -> str:
+    """
+    Gets the ME Version on the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        str: ME Version string
+    """
     return get_value(cip, [RegKeys.ME_VERSION.value])
 
 def get_product_code(cip: pycomm3.CIPDriver) -> int:
+    """
+    Gets the product code on the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        int: Product Code value
+    """
     return int(get_value(cip, [RegKeys.CIP_PRODUCT_CODE.value]))
 
 def get_product_type(cip: pycomm3.CIPDriver) -> int:
+    """
+    Gets the product type on the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        int: Product Type value
+    """
     return int(get_value(cip, [RegKeys.CIP_PRODUCT_TYPE.value]))
 
 def get_startup_delete_logs(cip: pycomm3.CIPDriver) -> bool:
+    """
+    Gets the startup setting for Delete Logs on the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        bool: Don't (FALSE) or do (TRUE) delete log files at startup.
+    """
     return bool(int(get_value(cip, [RegKeys.ME_STARTUP_DELETE_LOGS.value])))
 
 def get_startup_load_current(cip: pycomm3.CIPDriver) -> bool:
+    """
+    Gets the startup setting for Load Current Application on the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        bool: Don't (FALSE) or do (TRUE) load the *.MER at startup.
+    """
     return bool(int(get_value(cip, [RegKeys.ME_STARTUP_LOAD_CURRENT.value])))
 
 def get_startup_mer(cip: pycomm3.CIPDriver) -> str:
+    """
+    Gets the *.MER file to load at startup on the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        str: Path to *.MER file.
+    """
     return get_value(cip, [RegKeys.ME_STARTUP_APP.value])
 
 def get_startup_options(cip: pycomm3.CIPDriver) -> int:
+    """
+    Gets the setting for On Startup on the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        int: At startup, 0 = Go to ME Station, 1 = Run Current Application,
+        2 = Don't start ME Station      
+    """
     return int(get_value(cip, [RegKeys.ME_STARTUP_OPTIONS.value]))
 
 def get_startup_replace_comms(cip: pycomm3.CIPDriver) -> bool:
+    """
+    Gets the startup setting for Replace Communications on the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        bool: Don't (FALSE) or do (TRUE) replace terminal communications with *.MER
+        communications settings at startup.
+    """
     return bool(int(get_value(cip, [RegKeys.ME_STARTUP_REPLACE_COMMS.value])))
 
 def get_version_major(cip: pycomm3.CIPDriver) -> int:
+    """
+    Gets the CIP Major Version from the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        int: The major version.
+
+    Note:
+        May not always align with the ME Version / Helper Version.
+        For example, a v5.10 PanelView returned version 3.x.
+    """
     return int(get_value(cip, [RegKeys.CIP_VERSION_MAJOR.value]))
 
 def get_version_minor(cip: pycomm3.CIPDriver) -> int:
+    """
+    Gets the CIP Minor Version from the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        int: The minor version.
+
+    Note:
+        May not always align with the ME Version / Helper Version.
+        For example, a v5.10 PanelView returned version 3.x.
+    """
     return int(get_value(cip, [RegKeys.CIP_VERSION_MINOR.value]))
