@@ -12,12 +12,16 @@ def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     device.log.append(f'Terminal has {helper.get_free_space(cip)} free bytes')
     device.log.append(f'Terminal has files: {upload_mer_list(cip, device)}')
 
-    major_rev = int(device.me_version.split(".")[0])
-    if major_rev <= 5:
-        # For PanelView Plus 5.10 and earlier this registry key appears to be unavailable.
-        device.log.append(f'Terminal startup file: could not be determined due to hardware version.')
-    else:
+    try:
         device.log.append(f'Terminal startup file: {registry.get_startup_mer(cip)}.')
+    except:
+        major_rev = int(device.me_version.split(".")[0])
+        if major_rev <= 5:
+            # For PanelView Plus 5.10 and earlier this registry key appears to be unavailable.
+            device.log.append(f'Terminal startup file: could not be determined due to hardware version.')
+        else:
+            # If no startup app has been defined, it will also fail. 
+            device.log.append(f'Terminal startup file: not configured.')
 
 def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
     # Create runtime folder
