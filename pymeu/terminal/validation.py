@@ -8,6 +8,8 @@ from .. import types
 # Known RemoteHelper file version numbers, used to help check that device is a valid terminal.
 HELPER_VERSIONS = {
     '5.10.00',
+    '6.00.00',
+    '6.10.00',
     '7.00.00',
     '8.00.00',
     '8.10.00',
@@ -29,6 +31,8 @@ HELPER_VERSIONS = {
 # Known terminal MEVersion numbers, used to help check that device is a valid terminal.
 ME_VERSIONS = {
     '5.10.16.09',
+    '6.00.04.16',
+    '6.10.17.09',
     '7.00.20.13',
     '7.00.55.13',
     '8.00.67.12',
