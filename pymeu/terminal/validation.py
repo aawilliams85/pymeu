@@ -93,11 +93,21 @@ def get_terminal_info(cip: pycomm3.CIPDriver) -> types.MEDeviceInfo:
                                [],
                                [])
 
+
+def extract_version_prefix(version: str) -> str:
+    """Extracts the major and minor version (e.g., '12.00') from a version string."""
+    return '.'.join(version.split('.')[:2])
+
+def is_version_matched(device_version: str, known_versions: set) -> bool:
+    """Checks if the device version prefix matches any of the known version prefixes."""
+    device_version_prefix = extract_version_prefix(device_version)
+    return any(extract_version_prefix(known_version) == device_version_prefix for known_version in known_versions)
+
 def is_terminal_valid(device: types.MEDeviceInfo) -> bool:
-    if device.helper_version not in HELPER_VERSIONS: return False
-    if device.me_version not in ME_VERSIONS: return False
-    if device.product_code not in PRODUCT_CODES: return False
     if device.product_type not in PRODUCT_TYPES: return False
+    if device.product_code not in PRODUCT_CODES: return False
+    if not is_version_matched(device.helper_version, HELPER_VERSIONS): return False
+    if not is_version_matched(device.me_version, ME_VERSIONS): return False
     return True
 
 def is_download_valid(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: types.MEFile) -> bool:
