@@ -1,10 +1,10 @@
 import pycomm3
 
-from enum import Enum
+from enum import StrEnum
 from .. import messages
 
 # Known registry keys on the terminal that should be whitelisted for read access through RemoteHelper.
-class RegKeys(Enum):
+class RegKeys(StrEnum):
     CIP_VERSION_MAJOR = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\MajorRevision'                 # ex: 11
     CIP_VERSION_MINOR = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\MinorRevision'                 # ex: 1
     CIP_PRODUCT_CODE = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\ProductCode'                    # ex: 51
@@ -76,7 +76,7 @@ def get_me_version(cip: pycomm3.CIPDriver) -> str:
     Returns:
         str: ME Version string
     """
-    return get_value(cip, [RegKeys.ME_VERSION.value])
+    return get_value(cip, [RegKeys.ME_VERSION])
 
 def get_product_code(cip: pycomm3.CIPDriver) -> int:
     """
@@ -88,7 +88,7 @@ def get_product_code(cip: pycomm3.CIPDriver) -> int:
     Returns:
         int: Product Code value
     """
-    return int(get_value(cip, [RegKeys.CIP_PRODUCT_CODE.value]))
+    return int(get_value(cip, [RegKeys.CIP_PRODUCT_CODE]))
 
 def get_product_type(cip: pycomm3.CIPDriver) -> int:
     """
@@ -100,7 +100,7 @@ def get_product_type(cip: pycomm3.CIPDriver) -> int:
     Returns:
         int: Product Type value
     """
-    return int(get_value(cip, [RegKeys.CIP_PRODUCT_TYPE.value]))
+    return int(get_value(cip, [RegKeys.CIP_PRODUCT_TYPE]))
 
 def get_startup_delete_logs(cip: pycomm3.CIPDriver) -> bool:
     """
@@ -112,7 +112,7 @@ def get_startup_delete_logs(cip: pycomm3.CIPDriver) -> bool:
     Returns:
         bool: Don't (FALSE) or do (TRUE) delete log files at startup.
     """
-    return bool(int(get_value(cip, [RegKeys.ME_STARTUP_DELETE_LOGS.value])))
+    return bool(int(get_value(cip, [RegKeys.ME_STARTUP_DELETE_LOGS])))
 
 def get_startup_load_current(cip: pycomm3.CIPDriver) -> bool:
     """
@@ -124,7 +124,7 @@ def get_startup_load_current(cip: pycomm3.CIPDriver) -> bool:
     Returns:
         bool: Don't (FALSE) or do (TRUE) load the *.MER at startup.
     """
-    return bool(int(get_value(cip, [RegKeys.ME_STARTUP_LOAD_CURRENT.value])))
+    return bool(int(get_value(cip, [RegKeys.ME_STARTUP_LOAD_CURRENT])))
 
 def get_startup_mer(cip: pycomm3.CIPDriver) -> str:
     """
@@ -136,7 +136,7 @@ def get_startup_mer(cip: pycomm3.CIPDriver) -> str:
     Returns:
         str: Path to *.MER file.
     """
-    return get_value(cip, [RegKeys.ME_STARTUP_APP.value])
+    return get_value(cip, [RegKeys.ME_STARTUP_APP])
 
 def get_startup_options(cip: pycomm3.CIPDriver) -> int:
     """
@@ -149,7 +149,7 @@ def get_startup_options(cip: pycomm3.CIPDriver) -> int:
         int: At startup, 0 = Go to ME Station, 1 = Run Current Application,
         2 = Don't start ME Station      
     """
-    return int(get_value(cip, [RegKeys.ME_STARTUP_OPTIONS.value]))
+    return int(get_value(cip, [RegKeys.ME_STARTUP_OPTIONS]))
 
 def get_startup_replace_comms(cip: pycomm3.CIPDriver) -> bool:
     """
@@ -162,7 +162,7 @@ def get_startup_replace_comms(cip: pycomm3.CIPDriver) -> bool:
         bool: Don't (FALSE) or do (TRUE) replace terminal communications with *.MER
         communications settings at startup.
     """
-    return bool(int(get_value(cip, [RegKeys.ME_STARTUP_REPLACE_COMMS.value])))
+    return bool(int(get_value(cip, [RegKeys.ME_STARTUP_REPLACE_COMMS])))
 
 def get_version_major(cip: pycomm3.CIPDriver) -> int:
     """
@@ -178,7 +178,7 @@ def get_version_major(cip: pycomm3.CIPDriver) -> int:
         May not always align with the ME Version / Helper Version.
         For example, a v5.10 PanelView returned version 3.x.
     """
-    return int(get_value(cip, [RegKeys.CIP_VERSION_MAJOR.value]))
+    return int(get_value(cip, [RegKeys.CIP_VERSION_MAJOR]))
 
 def get_version_minor(cip: pycomm3.CIPDriver) -> int:
     """
@@ -194,4 +194,4 @@ def get_version_minor(cip: pycomm3.CIPDriver) -> int:
         May not always align with the ME Version / Helper Version.
         For example, a v5.10 PanelView returned version 3.x.
     """
-    return int(get_value(cip, [RegKeys.CIP_VERSION_MINOR.value]))
+    return int(get_value(cip, [RegKeys.CIP_VERSION_MINOR]))
