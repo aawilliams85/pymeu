@@ -10,7 +10,8 @@ from .. import types
 def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     device.log.append(f'Terminal storage exists: {helper.get_folder_exists(cip)}.')
     device.log.append(f'Terminal has {helper.get_free_space(cip)} free bytes')
-    device.log.append(f'Terminal has files: {upload_mer_list(cip, device)}')
+    device.log.append(f'Terminal has MED files: {upload_med_list(cip, device)}')
+    device.log.append(f'Terminal has MER files: {upload_mer_list(cip, device)}')
 
     try:
         device.log.append(f'Terminal startup file: {registry.get_startup_mer(cip)}.')
@@ -78,6 +79,28 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
 
     return True
 
+def upload_med_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
+    # Create list on the terminal
+    helper.create_med_list(cip)
+
+    # Create file exchange on the terminal
+    file_instance = files.create_exchange_upload(cip, paths.upload_list_path)
+    device.log.append(f'Create file exchange {file_instance} for upload.')
+
+    # Transfer list chunk by chunk
+    file_list = files.upload_list(cip, file_instance)
+    device.log.append(f'Uploaded *.MED list using file exchange {file_instance}.')
+
+    # Delete file exchange on the terminal
+    files.delete_exchange(cip, file_instance)
+    device.log.append(f'Deleted file exchange {file_instance}.')
+
+    # Delete list on the terminal
+    helper.delete_file_list(cip)
+    device.log.append(f'Delete *.MER list on terminal.')
+
+    return file_list
+
 def upload_mer_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     # Create *.MER list
     helper.create_mer_list(cip)
@@ -87,7 +110,7 @@ def upload_mer_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     device.log.append(f'Create file exchange {file_instance} for upload.')
 
     # Transfer *.MER list chunk by chunk
-    file_list = files.upload_mer_list(cip, file_instance)
+    file_list = files.upload_list(cip, file_instance)
     device.log.append(f'Uploaded *.MER list using file exchange {file_instance}.')
     device.files = file_list
 
@@ -96,7 +119,7 @@ def upload_mer_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     device.log.append(f'Deleted file exchange {file_instance}.')
 
     # Delete *.MER list on the terminal
-    helper.delete_file_mer_list(cip)
+    helper.delete_file_list(cip)
     device.log.append(f'Delete *.MER list on terminal.')
 
     return file_list

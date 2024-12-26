@@ -301,7 +301,7 @@ def upload_mer(cip: pycomm3.CIPDriver, instance: int, file: types.MEFile):
     with open(file.path, 'wb') as dest_file:
         dest_file.write(resp_binary)
 
-def upload_mer_list(cip: pycomm3.CIPDriver, instance: int):
+def upload_list(cip: pycomm3.CIPDriver, instance: int):
     resp_binary = upload(cip, instance)
     resp_str = "".join([chr(b) for b in resp_binary if b != 0])
     resp_list = resp_str.split(':')

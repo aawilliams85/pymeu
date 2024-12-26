@@ -140,6 +140,12 @@ def create_me_shortcut(cip: pycomm3.CIPDriver, file: str, replace_comms: bool, d
     if (resp_code != 0): raise Exception(f'Failed to create ME Startup Shortcut on terminal: {file}, response code: {resp_code}, response data: {resp_data}.')
     return True
 
+def create_med_list(cip:pycomm3.CIPDriver):
+    req_args = [paths.helper_file_path,HelperFunctions.CREATE_FILE_LIST.value, '\\Temp\\~MER.00\\*.med::' + paths.upload_list_path]
+    resp_code, resp_data = run_function(cip, req_args)
+    if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
+    return True
+
 def create_mer_list(cip: pycomm3.CIPDriver):
     req_args = [paths.helper_file_path,HelperFunctions.CREATE_FILE_LIST.value, paths.storage_path + '\\Rockwell Software\\RSViewME\\Runtime\\*.mer::' + paths.upload_list_path]
     resp_code, resp_data = run_function(cip, req_args)
@@ -160,7 +166,7 @@ def delete_file(cip: pycomm3.CIPDriver, file: str) -> bool:
     if (resp_code != 0): raise Exception(f'Failed to delete file on terminal: {file}, response code: {resp_code}, response data: {resp_data}.')
     return True
 
-def delete_file_mer_list(cip: pycomm3.CIPDriver) -> bool:
+def delete_file_list(cip: pycomm3.CIPDriver) -> bool:
     return delete_file(cip, paths.upload_list_path)
 
 def get_file_exists(cip: pycomm3.CIPDriver, file: types.MEFile) -> bool:
