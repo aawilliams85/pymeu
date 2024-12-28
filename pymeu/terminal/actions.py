@@ -148,9 +148,6 @@ def reboot(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
         if ((device.version_major < 12) or ((device.version_major == 12) and (device.version_minor < 108))):
             device.log.append(f'Did not attempt additional reboot because terminal is below minimum applicable version.')
             return
-        if not(registry.get_startup_load_current(cip)):
-            device.log.append(f'Did not attempt additional reboot because terminal Startup Options are not set to Load Current Application.')
-            return
         if (registry.get_startup_options(cip) != 1):
             device.log.append(f'Did not attempt additional reboot because terminal Startup Options are not set to Run Current Application.')
             return
