@@ -8,10 +8,20 @@ from . import registry
 from .. import types
 
 def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
-    device.log.append(f'Terminal storage exists: {helper.get_folder_exists(cip)}.')
-    device.log.append(f'Terminal has {helper.get_free_space(cip)} free bytes')
-    device.log.append(f'Terminal has MED files: {upload_med_list(cip, device)}')
-    device.log.append(f'Terminal has MER files: {upload_mer_list(cip, device)}')
+    try:
+        device.log.append(f'Terminal has {helper.get_free_space(cip)} free bytes')
+    except:
+        device.log.append(f'Failed to get free space on terminal.')
+
+    try:
+        device.log.append(f'Terminal has MED files: {upload_med_list(cip, device)}')
+    except:
+        device.log.append(f'Failed to list MED files on terminal.')
+
+    try:
+        device.log.append(f'Terminal has MER files: {upload_mer_list(cip, device)}')
+    except:
+        device.log.append(f'Failed to list MER files on terminal.')
 
     try:
         device.log.append(f'Terminal startup file: {registry.get_startup_mer(cip)}.')
