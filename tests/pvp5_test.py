@@ -24,6 +24,9 @@ class pvp5_fast_tests(unittest.TestCase):
     def test_get_terminal_info(self):
         print(self.meu.get_terminal_info())
 
+    def test_get_terminal_info_print(self):
+        self.meu.get_terminal_info(print_log=True, redact_log=True)
+
     def test_download_invalid_ext(self):
         self.download_file_path = os.path.join(self.download_folder_path, self.config_data['download']['bad_extension'])
         with self.assertRaises(Exception):

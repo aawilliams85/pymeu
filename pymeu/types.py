@@ -22,8 +22,9 @@ class MEDeviceInfo:
     me_version: str
     version_major: int
     version_minor: int
-    product_code: str
-    product_type: str
+    product_code: int
+    product_name: str
+    product_type: int
     log: list[str]
     files: list[str]
 

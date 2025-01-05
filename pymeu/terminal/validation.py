@@ -93,6 +93,7 @@ def get_terminal_info(cip: pycomm3.CIPDriver) -> types.MEDeviceInfo:
                                registry.get_version_major(cip),
                                registry.get_version_minor(cip),
                                registry.get_product_code(cip),
+                               registry.get_product_name(cip),
                                registry.get_product_type(cip),
                                [],
                                [])

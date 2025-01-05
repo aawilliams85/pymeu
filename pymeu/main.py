@@ -71,12 +71,24 @@ class MEUtility(object):
 
         return types.MEResponse(self.device, 'Success')
 
-    def get_terminal_info(self) -> types.MEResponse:
+    def get_terminal_info(self, **kwargs) -> types.MEResponse:
         """
         If no upload or download are desired, where terminal info would typically be checked
         as a prerequisite, this function can be called to generate similar log entries to
         get information about the remote terminal.
+
+        Args:
+            **kwargs: Additional keyword arguments.
+                - print_log (bool): Optional; if set to True, will print values.  Please include
+                a copy with any bug reports!
+                - redact_log (bool): Optional; if set to True, will exclude potentially
+                sensitive values such as the *.MER file names on the remote terminal.
+                Defaults to False.
+
+        
         """
+        self.print_log = kwargs.get('print_log', False)
+        self.redact_log = kwargs.get('redact_log', False)
         with pycomm3.CIPDriver(self.comms_path) as cip:
             self.device = terminal.validation.get_terminal_info(cip)
             if not(terminal.validation.is_terminal_valid(self.device)):
@@ -85,7 +97,7 @@ class MEUtility(object):
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
-            terminal.actions.create_log(cip, self.device)
+            terminal.actions.create_log(cip, self.device, self.print_log, self.redact_log)
 
         return types.MEResponse(self.device, 'Success')
 

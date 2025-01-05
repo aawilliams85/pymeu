@@ -7,32 +7,54 @@ from . import paths
 from . import registry
 from .. import types
 
-def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
-    try:
-        device.log.append(f'Terminal has {helper.get_free_space(cip)} free bytes')
-    except:
-        device.log.append(f'Failed to get free space on terminal.')
+def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, print_log: bool, redact_log: bool):
+    if print_log: print(f'Terminal product type: {device.product_type}.')
+    if print_log: print(f'Terminal product code: {device.product_code}.')
+    if print_log: print(f'Terminal product name: {device.product_name}.')
+    if print_log: print(f'Terminal helper version: {device.helper_version}.')
+    if print_log: print(f'Terminal ME version: {device.me_version}.')
+    if print_log: print(f'Terminal major version: {device.version_major}.')
+    if print_log: print(f'Terminal minor version: {device.version_minor}.')
 
     try:
-        device.log.append(f'Terminal has MED files: {upload_med_list(cip, device)}')
+        line = f'Terminal has {helper.get_free_space(cip)} free bytes.'
     except:
-        device.log.append(f'Failed to list MED files on terminal.')
+        line = f'Failed to get free space on terminal.'
+    device.log.append(line)
+    if print_log: print(f'{line}')
 
     try:
-        device.log.append(f'Terminal has MER files: {upload_mer_list(cip, device)}')
+        files = upload_med_list(cip, device)
+        if redact_log: files = ['Redacted' for _ in files]
+        line = f'Terminal has MED files: {files}.'
     except:
-        device.log.append(f'Failed to list MER files on terminal.')
+        line = f'Failed to list MED files on terminal.'
+    device.log.append(line)
+    if print_log: print(f'{line}')
 
     try:
-        device.log.append(f'Terminal startup file: {registry.get_startup_mer(cip)}.')
+        files = upload_mer_list(cip, device)
+        if redact_log: files = ['Redacted' for _ in files]
+        line = f'Terminal has MER files: {files}.'
+    except:
+        line = f'Failed to list MER files on terminal.'
+    device.log.append(line)
+    if print_log: print(f'{line}')
+
+    try:
+        file = registry.get_startup_mer(cip)
+        if redact_log: file = 'Redacted'
+        line = f'Terminal startup file: {file}.'
     except:
         major_rev = int(device.me_version.split(".")[0])
         if major_rev <= 5:
             # For PanelView Plus 5.10 and earlier this registry key appears to be unavailable.
-            device.log.append(f'Terminal startup file: could not be determined due to hardware version.')
+            line = f'Terminal startup file: could not be determined due to hardware version.'
         else:
             # If no startup app has been defined, it will also fail. 
-            device.log.append(f'Terminal startup file: not configured.')
+            line = f'Terminal startup file: not configured.'
+    device.log.append(line)
+    if print_log: print(f'{line}')
 
 def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
     # Create runtime folder
