@@ -90,6 +90,18 @@ def get_product_code(cip: pycomm3.CIPDriver) -> int:
     """
     return int(get_value(cip, [RegKeys.CIP_PRODUCT_CODE]))
 
+def get_product_name(cip: pycomm3.CIPDriver) -> str:
+    """
+    Gets the product name on the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        str: Product Name value
+    """
+    return str(get_value(cip, [RegKeys.CIP_PRODUCT_NAME]))
+
 def get_product_type(cip: pycomm3.CIPDriver) -> int:
     """
     Gets the product type on the remote terminal.
