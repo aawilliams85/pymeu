@@ -84,11 +84,15 @@ class MEUtility(object):
                 - redact_log (bool): Optional; if set to True, will exclude potentially
                 sensitive values such as the *.MER file names on the remote terminal.
                 Defaults to False.
+                - silent_mode (bool): Optional; if set to True, will exclude values that
+                require invocations or transfers so that Diagnostics window doesn't
+                pop up on the remote terminal.  Defaults to False.
 
         
         """
         self.print_log = kwargs.get('print_log', False)
         self.redact_log = kwargs.get('redact_log', False)
+        self.silent_mode = kwargs.get('silent_mode', False)
         with pycomm3.CIPDriver(self.comms_path) as cip:
             self.device = terminal.validation.get_terminal_info(cip)
             if not(terminal.validation.is_terminal_valid(self.device)):
@@ -97,7 +101,7 @@ class MEUtility(object):
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
-            terminal.actions.create_log(cip, self.device, self.print_log, self.redact_log)
+            terminal.actions.create_log(cip, self.device, self.print_log, self.redact_log, self.silent_mode)
 
         return types.MEResponse(self.device, 'Success')
 
