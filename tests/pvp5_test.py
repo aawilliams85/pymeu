@@ -25,6 +25,9 @@ class pvp5_fast_tests(unittest.TestCase):
         print(self.meu.get_terminal_info())
 
     def test_get_terminal_info_print(self):
+        self.meu.get_terminal_info(print_log=True)
+
+    def test_get_terminal_info_print_redacted(self):
         self.meu.get_terminal_info(print_log=True, redact_log=True)
 
     def test_download_invalid_ext(self):

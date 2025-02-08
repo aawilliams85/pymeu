@@ -27,6 +27,8 @@ class MEDeviceInfo:
     product_type: int
     log: list[str]
     files: list[str]
+    running_med_file: str
+    startup_mer_file: str
 
 @dataclass
 class MEResponse(object):
