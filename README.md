@@ -78,5 +78,5 @@ Terminal startup file: Redacted.
 
 ## Acknowledgements
 
-**dmroeder** for pylogix, inspiring the creation of this tool, python guidance, and various direct contributions for better functionality and compatibility.
+**dmroeder** for pylogix, inspiring the creation of this tool, python guidance, and various direct contributions for better functionality and compatibility.<br>
 **ottowayi** for pycomm3 and various CIP reference materials.
