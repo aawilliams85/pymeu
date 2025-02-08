@@ -7,7 +7,7 @@ from . import paths
 from . import registry
 from .. import types
 
-def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, print_log: bool, redact_log: bool):
+def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, print_log: bool, redact_log: bool, silent_mode: bool):
     if print_log: print(f'Terminal product type: {device.product_type}.')
     if print_log: print(f'Terminal product code: {device.product_code}.')
     if print_log: print(f'Terminal product name: {device.product_name}.')
@@ -23,24 +23,25 @@ def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, print_log: bo
     device.log.append(line)
     if print_log: print(f'{line}')
 
-    try:
-        files = upload_med_list(cip, device)
-        if redact_log: files = ['Redacted' for _ in files]
-        line = f'Terminal has MED files: {files}.'
-        if len(files) > 0: device.running_med_file = files[0]
-    except:
-        line = f'Failed to list MED files on terminal.'
-    device.log.append(line)
-    if print_log: print(f'{line}')
+    if not silent_mode:
+        try:
+            files = upload_med_list(cip, device)
+            if redact_log: files = ['Redacted' for _ in files]
+            line = f'Terminal has MED files: {files}.'
+            if len(files) > 0: device.running_med_file = files[0]
+        except:
+            line = f'Failed to list MED files on terminal.'
+        device.log.append(line)
+        if print_log: print(f'{line}')
 
-    try:
-        files = upload_mer_list(cip, device)
-        if redact_log: files = ['Redacted' for _ in files]
-        line = f'Terminal has MER files: {files}.'
-    except:
-        line = f'Failed to list MER files on terminal.'
-    device.log.append(line)
-    if print_log: print(f'{line}')
+        try:
+            files = upload_mer_list(cip, device)
+            if redact_log: files = ['Redacted' for _ in files]
+            line = f'Terminal has MER files: {files}.'
+        except:
+            line = f'Failed to list MER files on terminal.'
+        device.log.append(line)
+        if print_log: print(f'{line}')
 
     try:
         file = registry.get_startup_mer(cip)
