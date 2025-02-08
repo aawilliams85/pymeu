@@ -96,7 +96,9 @@ def get_terminal_info(cip: pycomm3.CIPDriver) -> types.MEDeviceInfo:
                                registry.get_product_name(cip),
                                registry.get_product_type(cip),
                                [],
-                               [])
+                               [],
+                               '',
+                               '')
 
 
 def extract_version_prefix(version: str) -> str:

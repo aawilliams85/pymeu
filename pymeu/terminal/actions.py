@@ -27,6 +27,7 @@ def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, print_log: bo
         files = upload_med_list(cip, device)
         if redact_log: files = ['Redacted' for _ in files]
         line = f'Terminal has MED files: {files}.'
+        if len(files) > 0: device.running_med_file = files[0]
     except:
         line = f'Failed to list MED files on terminal.'
     device.log.append(line)
@@ -45,6 +46,7 @@ def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, print_log: bo
         file = registry.get_startup_mer(cip)
         if redact_log: file = 'Redacted'
         line = f'Terminal startup file: {file}.'
+        if file.lower().endswith('.mer'): device.startup_mer_file = file.split('\\')[-1]
     except:
         major_rev = int(device.me_version.split(".")[0])
         if major_rev <= 5:
