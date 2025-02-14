@@ -61,6 +61,7 @@ PRODUCT_CODES = {
     47,   #PanelView Plus 6 1000
     48,   #PanelView Plus 6
     51,   #PanelView Plus 6
+    77,   #PanelView Plus 6 600
     94,   #PanelView Plus 7 700 Perf
     98,   #PanelView Plus 7 1000 Perf
     102,  #PanelView Plus 7
