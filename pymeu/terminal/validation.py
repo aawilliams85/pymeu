@@ -117,7 +117,7 @@ PRODUCT_CODES = {
     189,  #PanelView Plus 7 Standard 1200W
     190,  #PanelView Plus 7 Standard 1200W DLR
     191,  #PanelView Plus 7 Standard 1500
-    192  #PanelView Plus 7 Standard 1500 DLR
+    192   #PanelView Plus 7 Standard 1500 DLR
 }
 
 # Known product types, used to help check that device is a valid terminal.
