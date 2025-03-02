@@ -86,12 +86,14 @@ def create_transfer_instance_download(cip: pycomm3.CIPDriver, file: types.MEFile
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     resp = messages.create_transfer_instance(cip, req_data)
-    if not resp: raise Exception('Failed to create download transfer instance to terminal.')
+    resp_exception_text = 'Failed to create transfer instance for download'
+    if not resp: raise Exception(f'{resp_exception_text}.  No message response.')
+ 
     resp_msg_instance, resp_unk1, resp_transfer_instance, resp_chunk_size = struct.unpack('<HHHH', resp.value)
-    if (resp_msg_instance != 0): raise Exception(f'Response message instance {resp_msg_instance} is not zero.  Most likely there was an incomplete transfer.  Reboot terminal and try again.')
-    if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-    if (resp_transfer_instance != 1): warn(f'Response transfer instance {resp_transfer_instance} is not one.  Examine packets.')
-    if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
+    if (resp_msg_instance != 0): raise Exception(f'{resp_exception_text}.  Response message instance: {resp_msg_instance}, expected: 0.  There may be an incomplete transfer.  Reboot terminal and try again.')
+    if (resp_unk1 != 0 ): raise Exception(f'{resp_exception_text}.  Response UNK1 bytes: {resp_unk1}, expected: 0.  Please file a bug report with all available information.')
+    if (resp_transfer_instance != 1): warn(f'Response transfer instance: {resp_transfer_instance}, expected: 1.  There may be another transfer in process, which could cause unexpected results.')
+    if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {CHUNK_SIZE}.  Please file a bug report with all available information.')
     return resp_transfer_instance
 
 def create_transfer_instance_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
@@ -144,12 +146,14 @@ def create_transfer_instance_upload(cip: pycomm3.CIPDriver, remote_path: str) ->
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     resp = messages.create_transfer_instance(cip, req_data)
-    if not resp: raise Exception('Failed to create upload transfer instance to terminal.')
+    resp_exception_text = 'Failed to create transfer instance for upload'
+    if not resp: raise Exception(f'{resp_exception_text}.  No message response.')
+
     resp_msg_instance, resp_unk1, resp_transfer_instance, resp_chunk_size, resp_file_size = struct.unpack('<HHHHI', resp.value)
-    if (resp_msg_instance != 0): raise Exception(f'Response message instance {resp_msg_instance} is not zero.  Most likely there was an incomplete transfer.  Reboot terminal and try again.')
-    if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-    if (resp_transfer_instance != 1): warn(f'Response transfer instance {resp_transfer_instance} is not one.  Examine packets.')
-    if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
+    if (resp_msg_instance != 0): raise Exception(f'{resp_exception_text}.  Response message instance: {resp_msg_instance}, expected: 0.  There may be an incomplete transfer.  Reboot terminal and try again.')
+    if (resp_unk1 != 0 ): raise Exception(f'{resp_exception_text}.  Response UNK1 bytes: {resp_unk1}, expected: 0.  Please file a bug report with all available information.')
+    if (resp_transfer_instance != 1): warn(f'Response transfer instance: {resp_transfer_instance}, expected: 1.  There may be another transfer in process, which could cause unexpected results.')
+    if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {CHUNK_SIZE}.  Please file a bug report with all available information.')
     return resp_transfer_instance
 
 def delete_transfer_instance(cip: pycomm3.CIPDriver, transfer_instance: int):
