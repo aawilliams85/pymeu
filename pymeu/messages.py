@@ -17,7 +17,7 @@ class CipServices(Enum):
     WRITE_FILE = int.from_bytes(b'\x52', byteorder='big')
     READ_FILE = int.from_bytes(b'\x53', byteorder='big')
 
-def create_file_exchange(cip: pycomm3.CIPDriver, data):
+def create_transfer_instance(cip: pycomm3.CIPDriver, data):
     return cip.generic_message(
         service=pycomm3.Services.create,
         class_code=CipClasses.FILE.value,
@@ -27,20 +27,20 @@ def create_file_exchange(cip: pycomm3.CIPDriver, data):
         route_path=None
     )
 
-def delete_file_exchange(cip: pycomm3.CIPDriver, instance: int):
+def delete_transfer_instance(cip: pycomm3.CIPDriver, transfer_instance: int):
     return cip.generic_message(
         service=pycomm3.Services.delete,
         class_code=CipClasses.FILE.value,
-        instance=instance,
+        instance=transfer_instance,
         connected=False,
         route_path=None
     )
 
-def read_file_chunk(cip: pycomm3.CIPDriver, instance: int, data):
+def read_file_chunk(cip: pycomm3.CIPDriver, transfer_instance: int, data):
     return cip.generic_message(
         service=CipServices.READ_FILE.value,
         class_code=CipClasses.FILE.value,
-        instance=instance,
+        instance=transfer_instance,
         request_data=data,
         connected=False,
         route_path=None
@@ -66,11 +66,11 @@ def run_function(cip: pycomm3.CIPDriver, data):
         route_path=None
     )
 
-def write_file_chunk(cip: pycomm3.CIPDriver, instance: int, data):
+def write_file_chunk(cip: pycomm3.CIPDriver, transfer_instance: int, data):
     return cip.generic_message(
         service=CipServices.WRITE_FILE.value,
         class_code=CipClasses.FILE.value,
-        instance=instance,
+        instance=transfer_instance,
         request_data=data,
         connected=False,
         route_path=None
