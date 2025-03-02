@@ -1,10 +1,12 @@
 import json
 import os
+import pycomm3
 import time
 import unittest
 
 from pymeu import MEUtility
-from pymeu.types import MEResponseStatus
+from pymeu import terminal
+from pymeu import types
 
 # Turn off sort so that tests run in line order
 unittest.TestLoader.sortTestMethodsUsing = None
@@ -55,7 +57,31 @@ class pvp6_fast_tests(unittest.TestCase):
         resp = self.meu.upload(self.upload_file_path, overwrite=True)
         for s in resp.device.log: print(s)
         print(resp.status)
-        self.assertEqual(resp.status, MEResponseStatus.FAILURE)
+        self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)
+
+    def test_upload_multiple_instances(self):
+        self.meu2 = MEUtility(self.config_data['comms_path']['good'])
+        with pycomm3.CIPDriver(self.meu2.comms_path) as cip2:
+            # Open parallel transfer instance
+            #
+            # The get_terminal_info() check is necessary to set up the paths for this terminal version.
+            # Need to consider making this part of MEUtility somehow instead of free-floating variables
+            terminal.validation.get_terminal_info(cip2)
+            file2 = self.config_data['upload']['good'][0]
+            path2 = terminal.paths.storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file2}'
+            transfer_instance_2 = terminal.files.create_transfer_instance_upload(cip2, path2)
+
+            # Upload
+            self.upload_file_path = os.path.join(self.upload_folder_path, self.config_data['upload']['good'][0])
+            resp = self.meu.upload(self.upload_file_path, overwrite=True)
+
+            # Verify upload result
+            for s in resp.device.log: print(s)
+            print(resp.status)
+            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+
+            # Close parallel transfer instance
+            terminal.files.delete_transfer_instance(cip2, transfer_instance_2)
 
     def tearDown(self):
         pass
