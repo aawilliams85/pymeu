@@ -315,19 +315,19 @@ def is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
     resp = messages.get_attr_unk(cip, b'\x30\x01')
     if not resp: return False
     if resp.value not in GET_UNK1_VALUES:
-        warn(f'Invalid UNK1 value.  Examine packets.')
+        warn(f'Invalid UNK1 value.  Please file a bug report with all available information.')
         return False
 
     resp = messages.get_attr_unk(cip, b'\x30\x08')
     if not resp: return False
     if resp.value not in GET_UNK2_VALUES:
-        warn(f'Invalid UNK2 value.  Examine packets.')
+        warn(f'Invalid UNK2 value.  Please file a bug report with all available information.')
         return False
 
     resp = messages.get_attr_unk(cip, b'\x30\x09')
     if not resp: return False
     if resp.value not in GET_UNK3_VALUES:
-        warn(f'Invalid UNK3 value.  Examine packets.')
+        warn(f'Invalid UNK3 value.  Please file a bug report with all available information.')
         return False
 
     return True
