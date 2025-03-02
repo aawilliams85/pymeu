@@ -152,7 +152,6 @@ def get_terminal_info(cip: pycomm3.CIPDriver) -> types.MEDeviceInfo:
                                '',
                                '')
 
-
 def extract_version_prefix(version: str) -> str:
     """Extracts the major and minor version (e.g., '12.00') from a version string."""
     return '.'.join(version.split('.')[:2])
