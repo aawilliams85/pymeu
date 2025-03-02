@@ -72,9 +72,9 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:t
     # to is_download_valid().
     if not(files.is_get_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
 
-    # Create a file exchange on the terminal
-    file_instance = files.create_exchange_download(cip, file, paths.storage_path + '\\Rockwell Software\\RSViewME\\Runtime')
-    device.log.append(f'Create file exchange {file_instance} for download.')
+    # Create a transfer instance on the terminal
+    transfer_instance = files.create_transfer_instance_download(cip, file, paths.storage_path + '\\Rockwell Software\\RSViewME\\Runtime')
+    device.log.append(f'Create transfer instance {transfer_instance} for download.')
 
     # Set attributes
     #
@@ -82,11 +82,11 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:t
     if not(files.is_set_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
 
     # Transfer *.MER chunk by chunk
-    files.download_mer(cip, file_instance, file.path)
+    files.download_mer(cip, transfer_instance, file.path)
 
-    # Delete file exchange on the terminal
-    files.delete_exchange(cip, file_instance)
-    device.log.append(f'Deleted file exchange {file_instance}.')
+    # Delete transfer instance on the terminal
+    files.delete_transfer_instance(cip, transfer_instance)
+    device.log.append(f'Deleted transfer instance {transfer_instance}.')
 
     # Set *.MER to run at startup and then reboot
     if run_at_startup:
@@ -100,17 +100,17 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
     # Verify file exists on terminal
     if not(helper.get_file_exists(cip, rem_file)): raise Exception(f'File {rem_file.name} does not exist on terminal.')
 
-    # Create file exchange
-    file_instance = files.create_exchange_upload(cip, paths.storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{rem_file.name}')
-    device.log.append(f'Create file exchange {file_instance} for upload.')
+    # Create a transfer instance on the terminal
+    transfer_instance = files.create_transfer_instance_upload(cip, paths.storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{rem_file.name}')
+    device.log.append(f'Create transfer instance {transfer_instance} for upload.')
 
     # Transfer *.MER chunk by chunk
-    files.upload_mer(cip, file_instance, file)
-    device.log.append(f'Uploaded {rem_file.name} to {file.path} using file exchange {file_instance}.')
+    files.upload_mer(cip, transfer_instance, file)
+    device.log.append(f'Uploaded {rem_file.name} to {file.path} using file exchange {transfer_instance}.')
 
-    # Delete file exchange on the terminal
-    files.delete_exchange(cip, file_instance)
-    device.log.append(f'Deleted file exchange {file_instance}.')
+    # Delete transfer instance on the terminal
+    files.delete_transfer_instance(cip, transfer_instance)
+    device.log.append(f'Deleted transfer instance {transfer_instance}.')
 
     return True
 
@@ -118,17 +118,17 @@ def upload_med_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     # Create list on the terminal
     helper.create_med_list(cip)
 
-    # Create file exchange on the terminal
-    file_instance = files.create_exchange_upload(cip, paths.upload_list_path)
-    device.log.append(f'Create file exchange {file_instance} for upload.')
+    # Create transfer instance on the terminal
+    transfer_instance = files.create_transfer_instance_upload(cip, paths.upload_list_path)
+    device.log.append(f'Create transfer instance {transfer_instance} for upload.')
 
     # Transfer list chunk by chunk
-    file_list = files.upload_list(cip, file_instance)
-    device.log.append(f'Uploaded *.MED list using file exchange {file_instance}.')
+    file_list = files.upload_list(cip, transfer_instance)
+    device.log.append(f'Uploaded *.MED list using file exchange {transfer_instance}.')
 
-    # Delete file exchange on the terminal
-    files.delete_exchange(cip, file_instance)
-    device.log.append(f'Deleted file exchange {file_instance}.')
+    # Delete transfer instance on the terminal
+    files.delete_transfer_instance(cip, transfer_instance)
+    device.log.append(f'Deleted transfer instance {transfer_instance}.')
 
     # Delete list on the terminal
     helper.delete_file_list(cip)
@@ -140,18 +140,18 @@ def upload_mer_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     # Create *.MER list
     helper.create_mer_list(cip)
 
-    # Create file exchange on the terminal
-    file_instance = files.create_exchange_upload(cip, paths.upload_list_path)
-    device.log.append(f'Create file exchange {file_instance} for upload.')
+    # Create transfer instance on the terminal
+    transfer_instance = files.create_transfer_instance_upload(cip, paths.upload_list_path)
+    device.log.append(f'Create transfer instance {transfer_instance} for upload.')
 
     # Transfer *.MER list chunk by chunk
-    file_list = files.upload_list(cip, file_instance)
-    device.log.append(f'Uploaded *.MER list using file exchange {file_instance}.')
+    file_list = files.upload_list(cip, transfer_instance)
+    device.log.append(f'Uploaded *.MER list using file exchange {transfer_instance}.')
     device.files = file_list
 
-    # Delete file exchange on the terminal
-    files.delete_exchange(cip, file_instance)
-    device.log.append(f'Deleted file exchange {file_instance}.')
+    # Delete transfer instance on the terminal
+    files.delete_transfer_instance(cip, transfer_instance)
+    device.log.append(f'Deleted transfer instance {transfer_instance}.')
 
     # Delete *.MER list on the terminal
     helper.delete_file_list(cip)

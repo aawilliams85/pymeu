@@ -35,9 +35,9 @@ class TransferType(Enum):
     DOWNLOAD = int.from_bytes(b'\x01', byteorder='big')
     UPLOAD = int.from_bytes(b'\x00', byteorder='big')
 
-def create_exchange_download(cip: pycomm3.CIPDriver, file: types.MEFile, remote_path: str) -> int:
+def create_transfer_instance_download(cip: pycomm3.CIPDriver, file: types.MEFile, remote_path: str) -> int:
     """
-    Creates a file exchange for downloading from the local device to the remote terminal.
+    Creates a transfer instance for downloading from the local device to the remote terminal.
 
     Args:
         cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
@@ -46,11 +46,11 @@ def create_exchange_download(cip: pycomm3.CIPDriver, file: types.MEFile, remote_
         will be downloaded to.
 
     Returns:
-        int: The file exchange instance returned from the device, that can be
+        int: The transfer instance returned from the device, that can be
         used for subsequent file transfer operations.
 
     Raises:
-        Exception: If the file exchange creation fails or if the response 
+        Exception: If the transfer instance creation fails or if the response 
         contains unexpected values, indicating potential issues with the 
         transfer.
 
@@ -73,7 +73,7 @@ def create_exchange_download(cip: pycomm3.CIPDriver, file: types.MEFile, remote_
         |---------------|-----------------------------------------------------|
         | Bytes 0->1    | Message instance (should match request, 0x00)       |
         | Bytes 2->3    | Unknown purpose                                     |
-        | Bytes 4->5    | File instance (use this instance for file transfer) |
+        | Bytes 4->5    | Transfer instance (use this instance for download)  |
         | Bytes 6->7    | Chunk size in bytes                                 |
 
     Note:
@@ -85,18 +85,18 @@ def create_exchange_download(cip: pycomm3.CIPDriver, file: types.MEFile, remote_
     req_args = [f'{remote_path}\\{file.name}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
-    resp = messages.create_file_exchange(cip, req_data)
-    if not resp: raise Exception('Failed to create file exchange on terminal')
-    resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size = struct.unpack('<HHHH', resp.value)
+    resp = messages.create_transfer_instance(cip, req_data)
+    if not resp: raise Exception('Failed to create download transfer instance to terminal.')
+    resp_msg_instance, resp_unk1, resp_transfer_instance, resp_chunk_size = struct.unpack('<HHHH', resp.value)
     if (resp_msg_instance != 0): raise Exception(f'Response message instance {resp_msg_instance} is not zero.  Most likely there was an incomplete transfer.  Reboot terminal and try again.')
     if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-    if (resp_file_instance != 1): warn(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
+    if (resp_transfer_instance != 1): warn(f'Response transfer instance {resp_transfer_instance} is not one.  Examine packets.')
     if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
-    return resp_file_instance
+    return resp_transfer_instance
 
-def create_exchange_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
+def create_transfer_instance_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
     """
-    Creates a file exchange for uploading from the remote terminal to the local device.
+    Creates a transfer instance for uploading from the remote terminal to the local device.
 
     Args:
         cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
@@ -104,11 +104,11 @@ def create_exchange_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
         will be uploaded from.
 
     Returns:
-        int: The file exchange instance returned from the device, that can be
+        int: The transfer instance returned from the device, that can be
         used for subsequent file transfer operations.
 
     Raises:
-        Exception: If the file exchange creation fails or if the response 
+        Exception: If the transfer instance creation fails or if the response 
         contains unexpected values, indicating potential issues with the 
         transfer.
 
@@ -130,7 +130,7 @@ def create_exchange_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
         |---------------|-----------------------------------------------------|
         | Bytes 0->1    | Message instance (should match request, 0x00)       |
         | Bytes 2->3    | Unknown purpose                                     |
-        | Bytes 4->5    | File instance (use this instance for file transfer) |
+        | Bytes 4->5    | Transfer instance (use this instance for upload)    |
         | Bytes 6->7    | Chunk size in bytes                                 |
         | Bytes 8->11   | File size in bytes                                  |
 
@@ -143,19 +143,19 @@ def create_exchange_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
     req_args = [f'{remote_path}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
-    resp = messages.create_file_exchange(cip, req_data)
-    if not resp: raise Exception('Failed to create file exchange on terminal')
-    resp_msg_instance, resp_unk1, resp_file_instance, resp_chunk_size, resp_file_size = struct.unpack('<HHHHI', resp.value)
+    resp = messages.create_transfer_instance(cip, req_data)
+    if not resp: raise Exception('Failed to create upload transfer instance to terminal.')
+    resp_msg_instance, resp_unk1, resp_transfer_instance, resp_chunk_size, resp_file_size = struct.unpack('<HHHHI', resp.value)
     if (resp_msg_instance != 0): raise Exception(f'Response message instance {resp_msg_instance} is not zero.  Most likely there was an incomplete transfer.  Reboot terminal and try again.')
     if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-    if (resp_file_instance != 1): warn(f'Response file instance {resp_file_instance} is not one.  Examine packets.')
+    if (resp_transfer_instance != 1): warn(f'Response transfer instance {resp_transfer_instance} is not one.  Examine packets.')
     if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'Response chunk size {resp_chunk_size} did not match request size {CHUNK_SIZE}')
-    return resp_file_instance
+    return resp_transfer_instance
 
-def delete_exchange(cip: pycomm3.CIPDriver, instance: int):
-    return messages.delete_file_exchange(cip, instance)
+def delete_transfer_instance(cip: pycomm3.CIPDriver, transfer_instance: int):
+    return messages.delete_transfer_instance(cip, transfer_instance)
 
-def download(cip: pycomm3.CIPDriver, instance: int, source_data: bytearray) -> bool:
+def download(cip: pycomm3.CIPDriver, transfer_instance: int, source_data: bytearray) -> bool:
     """
     Downloads a file from the local device to the remote terminal.
     The transfer happens by breaking the file down into one or more
@@ -164,7 +164,7 @@ def download(cip: pycomm3.CIPDriver, instance: int, source_data: bytearray) -> b
 
     Args:
         cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
-        instance (int): The previously created file transfer instance.
+        transfer_instance (int): The previously created file transfer instance.
         source_data (bytearray): The binary data of the file to be transferred.
 
     Returns:
@@ -208,7 +208,7 @@ def download(cip: pycomm3.CIPDriver, instance: int, source_data: bytearray) -> b
         # End of file
         if not req_chunk: break
 
-        resp = messages.write_file_chunk(cip, instance, req_data)
+        resp = messages.write_file_chunk(cip, transfer_instance, req_data)
         if not resp: raise Exception(f'Failed to write chunk {req_chunk_number} to terminal.')
         resp_unk1, resp_chunk_number, resp_next_chunk_number = struct.unpack('<III', resp.value)
         if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
@@ -221,14 +221,14 @@ def download(cip: pycomm3.CIPDriver, instance: int, source_data: bytearray) -> b
 
     # Close out file
     req_data = b'\x00\x00\x00\x00\x02\x00\xff\xff'
-    resp = messages.write_file_chunk(cip, instance, req_data)
+    resp = messages.write_file_chunk(cip, transfer_instance, req_data)
     return True
 
-def download_mer(cip: pycomm3.CIPDriver, instance: int, file: str):
+def download_mer(cip: pycomm3.CIPDriver, transfer_instance: int, file: str):
     with open(file, 'rb') as source_file:
-        return download(cip, instance, bytearray(source_file.read()))
+        return download(cip, transfer_instance, bytearray(source_file.read()))
 
-def upload(cip: pycomm3.CIPDriver, instance: int) -> bytearray:
+def upload(cip: pycomm3.CIPDriver, transfer_instance: int) -> bytearray:
     """
     Uploads a file from the remote terminal to the local device.
     The transfer happens by breaking the file down into one or more
@@ -237,7 +237,7 @@ def upload(cip: pycomm3.CIPDriver, instance: int) -> bytearray:
 
     Args:
         cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
-        instance (int): The previously created file transfer instance.
+        transfer_instance (int): The previously created file transfer instance.
 
     Returns:
         bytearray: The raw binary data uploaded from the remote terminal.
@@ -273,7 +273,7 @@ def upload(cip: pycomm3.CIPDriver, instance: int) -> bytearray:
     while True:
         req_data = struct.pack('<I', req_chunk_number)
 
-        resp = messages.read_file_chunk(cip, instance, req_data)
+        resp = messages.read_file_chunk(cip, transfer_instance, req_data)
         if not resp: raise Exception(f'Failed to read chunk {req_chunk_number} to terminal.')
         resp_unk1 = int.from_bytes(resp.value[:4], byteorder='little', signed=False)
         resp_chunk_number = int.from_bytes(resp.value[4:8], byteorder='little', signed=False)
@@ -296,13 +296,13 @@ def upload(cip: pycomm3.CIPDriver, instance: int) -> bytearray:
 
     return resp_binary
 
-def upload_mer(cip: pycomm3.CIPDriver, instance: int, file: types.MEFile):
-    resp_binary = upload(cip, instance)
+def upload_mer(cip: pycomm3.CIPDriver, transfer_instance: int, file: types.MEFile):
+    resp_binary = upload(cip, transfer_instance)
     with open(file.path, 'wb') as dest_file:
         dest_file.write(resp_binary)
 
-def upload_list(cip: pycomm3.CIPDriver, instance: int):
-    resp_binary = upload(cip, instance)
+def upload_list(cip: pycomm3.CIPDriver, transfer_instance: int):
+    resp_binary = upload(cip, transfer_instance)
     resp_str = "".join([chr(b) for b in resp_binary if b != 0])
     resp_list = resp_str.split(':')
     return resp_list
