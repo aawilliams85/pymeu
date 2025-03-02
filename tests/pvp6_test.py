@@ -4,6 +4,7 @@ import time
 import unittest
 
 from pymeu import MEUtility
+from pymeu.types import MEResponseStatus
 
 # Turn off sort so that tests run in line order
 unittest.TestLoader.sortTestMethodsUsing = None
@@ -48,6 +49,13 @@ class pvp6_fast_tests(unittest.TestCase):
         resp = self.meu.upload_all(self.upload_folder_path, overwrite=True)
         for s in resp.device.log: print(s)
         print(resp.status)
+
+    def test_upload_bad_missing(self):
+        self.upload_file_path = os.path.join(self.upload_folder_path, self.config_data['upload']['bad_missing'])
+        resp = self.meu.upload(self.upload_file_path, overwrite=True)
+        for s in resp.device.log: print(s)
+        print(resp.status)
+        self.assertEqual(resp.status, MEResponseStatus.FAILURE)
 
     def tearDown(self):
         pass

@@ -147,6 +147,7 @@ class MEUtility(object):
         # Check for existing *.MER
         if not(self.overwrite) and (os.path.exists(file.path)): raise Exception(f'File {file.name} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
 
+        resp = False
         with pycomm3.CIPDriver(self.comms_path) as cip:
             # Validate device at this communications path is a terminal of known version.
             self.device = terminal.validation.get_terminal_info(cip)
@@ -157,9 +158,14 @@ class MEUtility(object):
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
             # Perform *.MER upload from terminal
-            if not(terminal.actions.upload_mer_file(cip, self.device, file, rem_file)): raise Exception('Upload from terminal failed.')
-        
-        return types.MEResponse(self.device, 'Success')
+            try:
+                resp = terminal.actions.upload_mer_file(cip, self.device, file, rem_file)
+            except Exception as e:
+                self.device.log.append(f'Exception: {str(e)}')
+                self.device.log.append(f'Failed to upload from terminal.')
+
+        resp_status = types.MEResponseStatus.SUCCESS if resp else types.MEResponseStatus.FAILURE
+        return types.MEResponse(self.device, resp_status)
 
     def upload_all(self, file_path: str, **kwargs):
         """

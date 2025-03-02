@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from enum import StrEnum
 
 @dataclass
 class MEFile:
@@ -34,3 +35,7 @@ class MEDeviceInfo:
 class MEResponse(object):
     device: MEDeviceInfo
     status: str
+
+class MEResponseStatus(StrEnum):
+    SUCCESS = 'Success'
+    FAILURE = 'Failure'

@@ -103,12 +103,14 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
     # Verify file exists on terminal
     if proceed:
         try:
-            if not(helper.get_file_exists(cip, rem_file)):
+            if helper.get_file_exists(cip, rem_file):
+                device.log.append(f'File {rem_file.name} exists on terminal.')
+            else:
                 device.log.append(f'File {rem_file.name} does not exist on terminal.')
                 proceed = False
                 resp = False
         except Exception as e:
-            device.log.append(f'{e}')
+            device.log.append(f'Exception: {str(e)}')
             device.log.append(f'Failed to check if file {rem_file.name} exists on terminal.')
             proceed = False
             resp = False
@@ -119,7 +121,7 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
             transfer_instance = files.create_transfer_instance_upload(cip, paths.storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{rem_file.name}')
             device.log.append(f'Create transfer instance {transfer_instance} for upload.')
         except Exception as e:
-            device.log.append(f'{e}')
+            device.log.append(f'Exception: {str(e)}')
             device.log.append(f'Failed to create transfer instance for upload')
             proceed = False
             resp = False
@@ -130,7 +132,7 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
             files.upload_mer(cip, transfer_instance, file)
             device.log.append(f'Uploaded {rem_file.name} to {file.path} using file exchange {transfer_instance}.')
         except Exception as e:
-            device.log.append(f'{e}')
+            device.log.append(f'Exception: {str(e)}')
             device.log.append(f'Failed to upload {rem_file.name} to {file.path} using file exchange {transfer_instance}.')
             # This block doesn't turn off the PROCEED flag so that the subsequent delete transfer instance will still attempt to run
             resp = False
@@ -141,7 +143,7 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
             files.delete_transfer_instance(cip, transfer_instance)
             device.log.append(f'Deleted transfer instance {transfer_instance}.')
         except Exception as e:
-            device.log.append(f'{e}')
+            device.log.append(f'Exception: {str(e)}')
             device.log.append(f'Failed to delete transfer instance {transfer_instance}.')
             proceed = False
             resp = False
