@@ -60,15 +60,12 @@ class pvp5_fast_tests(unittest.TestCase):
         self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)
 
     def test_upload_multiple_instances(self):
-        self.meu2 = MEUtility(self.config_data['comms_path']['good'])
-        with pycomm3.CIPDriver(self.meu2.comms_path) as cip2:
+        meu2 = MEUtility(self.config_data['comms_path']['good'])
+        with pycomm3.CIPDriver(meu2.comms_path) as cip2:
             # Open parallel transfer instance
-            #
-            # The get_terminal_info() check is necessary to set up the paths for this terminal version.
-            # Need to consider making this part of MEUtility somehow instead of free-floating variables
-            terminal.validation.get_terminal_info(cip2)
+            device2 = terminal.validation.get_terminal_info(cip2)
             file2 = self.config_data['upload']['good'][0]
-            path2 = terminal.paths.storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{file2}'
+            path2 = f'{device2.paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\{file2}'
             transfer_instance_2 = terminal.files.create_transfer_instance_upload(cip2, path2)
 
             # Upload
