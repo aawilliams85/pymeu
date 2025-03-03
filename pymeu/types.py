@@ -17,6 +17,12 @@ class MEFile:
         return os.path.getsize(self.path)
     
 @dataclass
+class MEDevicePaths:
+    helper_file: str
+    storage: str
+    upload_list: str
+
+@dataclass
 class MEDeviceInfo:
     comms_path: str
     helper_version: str
@@ -30,6 +36,7 @@ class MEDeviceInfo:
     files: list[str]
     running_med_file: str
     startup_mer_file: str
+    paths: MEDevicePaths
 
 @dataclass
 class MEResponse(object):

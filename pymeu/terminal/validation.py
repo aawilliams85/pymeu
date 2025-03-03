@@ -1,7 +1,6 @@
 import pycomm3
 
 from . import helper
-from . import paths
 from . import registry
 from .. import types
 
@@ -125,22 +124,28 @@ PRODUCT_TYPES = {
     24
 }
 
+HELPER_FILE_NAME = 'RemoteHelper.DLL'
+UPLOAD_LIST_PATH = 'Rockwell Software\\RSViewME\\Runtime\\Results.txt'
+
 def get_terminal_info(cip: pycomm3.CIPDriver) -> types.MEDeviceInfo:
     me_version = registry.get_me_version(cip)
     major_rev = int(me_version.split(".")[0])
 
     if major_rev <= 5:
-        paths.helper_path = '\\Storage Card\\Rockwell Software\\RSViewME'
-        paths.storage_path = '\\Storage Card'
+        helper_path = '\\Storage Card\\Rockwell Software\\RSViewME'
+        storage_path = '\\Storage Card'
     else:
-        paths.helper_path = '\\Windows'
-        paths.storage_path = '\\Application Data'
+        helper_path = '\\Windows'
+        storage_path = '\\Application Data'
 
-    paths.upload_list_path = paths.storage_path + '\\' + paths.UPLOAD_LIST_PATH
-    paths.helper_file_path = paths.helper_path + '\\' + paths.HELPER_FILE_NAME
+    helper_file_path = f'{helper_path}\\{HELPER_FILE_NAME}'
+    upload_list_path = f'{storage_path}\\{UPLOAD_LIST_PATH}'
+    paths = types.MEDevicePaths(helper_file_path,
+                              storage_path,
+                              upload_list_path)
 
     return types.MEDeviceInfo(cip._cip_path, 
-                               helper.get_helper_version(cip),
+                               helper.get_helper_version(cip, paths),
                                me_version,
                                registry.get_version_major(cip),
                                registry.get_version_minor(cip),
@@ -150,7 +155,8 @@ def get_terminal_info(cip: pycomm3.CIPDriver) -> types.MEDeviceInfo:
                                [],
                                [],
                                '',
-                               '')
+                               '',
+                               paths)
 
 def extract_version_prefix(version: str) -> str:
     """Extracts the major and minor version (e.g., '12.00') from a version string."""
@@ -175,13 +181,13 @@ def is_download_valid(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: 
         return False
 
     # Check that storage folder exists
-    resp_storage_exists = helper.get_folder_exists(cip)
+    resp_storage_exists = helper.get_folder_exists(cip, device.paths)
     if not(resp_storage_exists):
         device.log.append(f'Storage folder does not exist on terminal')
         return False
 
     # Check free space
-    resp_free_space = helper.get_free_space(cip)
+    resp_free_space = helper.get_free_space(cip, device.paths)
     if (resp_free_space > file.get_size()):
         device.log.append(f'File {file.name} requires {file.get_size()} byes.  Free space on terminal {resp_free_space} bytes.')
     else:
@@ -189,7 +195,7 @@ def is_download_valid(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: 
         return False
 
     # Check if file name already exists
-    resp_file_exists = helper.get_file_exists(cip, file)
+    resp_file_exists = helper.get_file_exists(cip, device.paths, file)
     file.overwrite_required = False
     if (resp_file_exists and file.overwrite_requested):
         device.log.append(f'File {file.name} already exists on terminal, and overwrite was requested.  Setting overwrite to required.')
@@ -202,7 +208,7 @@ def is_download_valid(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: 
 
     # Check space consumed by file if it exists
     if resp_file_exists:
-        resp_file_size = helper.get_file_size(cip, file)
+        resp_file_size = helper.get_file_size(cip, device.paths, file)
         device.log.append(f'File {file.name} on terminal is {resp_file_size} bytes.')
 
     return True

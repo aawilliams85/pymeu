@@ -3,7 +3,6 @@ import pycomm3
 
 from . import files
 from . import helper
-from . import paths
 from . import registry
 from .. import types
 
@@ -15,9 +14,12 @@ def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, print_log: bo
     if print_log: print(f'Terminal ME version: {device.me_version}.')
     if print_log: print(f'Terminal major version: {device.version_major}.')
     if print_log: print(f'Terminal minor version: {device.version_minor}.')
+    if print_log: print(f'Terminal helper path: {device.paths.helper_file}.')
+    if print_log: print(f'Terminal storage path: {device.paths.storage}.')
+    if print_log: print(f'Terminal upload list path: {device.paths.upload_list}.')
 
     try:
-        line = f'Terminal has {helper.get_free_space(cip)} free bytes.'
+        line = f'Terminal has {helper.get_free_space(cip, device.paths)} free bytes.'
     except:
         line = f'Failed to get free space on terminal.'
     device.log.append(line)
@@ -63,7 +65,7 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:t
     # Create runtime folder
     #
     # TODO: Can we check if this already exists and skip?
-    if not(helper.create_runtime_directory(cip, file)): raise Exception('Failed to create runtime path on terminal.')
+    if not(helper.create_runtime_directory(cip, device.paths, file)): raise Exception('Failed to create runtime path on terminal.')
 
     # Get attributes
     #
@@ -73,7 +75,7 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:t
     if not(files.is_get_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
 
     # Create a transfer instance on the terminal
-    transfer_instance = files.create_transfer_instance_download(cip, file, paths.storage_path + '\\Rockwell Software\\RSViewME\\Runtime')
+    transfer_instance = files.create_transfer_instance_download(cip, file, device.paths.storage + '\\Rockwell Software\\RSViewME\\Runtime')
     device.log.append(f'Create transfer instance {transfer_instance} for download.')
 
     # Set attributes
@@ -91,7 +93,7 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:t
     # Set *.MER to run at startup and then reboot
     if run_at_startup:
         device.log.append(f'Setting file: {file.name} to run at startup with Replace Comms: {replace_comms}, Delete Logs: {delete_logs}.')
-        helper.create_me_shortcut(cip, file.name, replace_comms, delete_logs)
+        helper.create_me_shortcut(cip, device.paths, file.name, replace_comms, delete_logs)
         device.log.append(f'Setting file to run at startup.')
         reboot(cip, device)
     return True
@@ -103,7 +105,7 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
     # Verify file exists on terminal
     if proceed:
         try:
-            if helper.get_file_exists(cip, rem_file):
+            if helper.get_file_exists(cip, device.paths, rem_file):
                 device.log.append(f'File {rem_file.name} exists on terminal.')
             else:
                 device.log.append(f'File {rem_file.name} does not exist on terminal.')
@@ -118,7 +120,7 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
     # Create a transfer instance on the terminal
     if proceed:
         try:
-            transfer_instance = files.create_transfer_instance_upload(cip, paths.storage_path + f'\\Rockwell Software\\RSViewME\\Runtime\\{rem_file.name}')
+            transfer_instance = files.create_transfer_instance_upload(cip, device.paths.storage + f'\\Rockwell Software\\RSViewME\\Runtime\\{rem_file.name}')
             device.log.append(f'Create transfer instance {transfer_instance} for upload.')
         except Exception as e:
             device.log.append(f'Exception: {str(e)}')
@@ -152,10 +154,10 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
 
 def upload_med_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     # Create list on the terminal
-    helper.create_med_list(cip)
+    helper.create_med_list(cip, device)
 
     # Create transfer instance on the terminal
-    transfer_instance = files.create_transfer_instance_upload(cip, paths.upload_list_path)
+    transfer_instance = files.create_transfer_instance_upload(cip, device.paths.upload_list)
     device.log.append(f'Create transfer instance {transfer_instance} for upload.')
 
     # Transfer list chunk by chunk
@@ -167,17 +169,17 @@ def upload_med_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     device.log.append(f'Deleted transfer instance {transfer_instance}.')
 
     # Delete list on the terminal
-    helper.delete_file_list(cip)
+    helper.delete_file_list(cip, device.paths)
     device.log.append(f'Delete *.MER list on terminal.')
 
     return file_list
 
 def upload_mer_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     # Create *.MER list
-    helper.create_mer_list(cip)
+    helper.create_mer_list(cip, device.paths)
 
     # Create transfer instance on the terminal
-    transfer_instance = files.create_transfer_instance_upload(cip, paths.upload_list_path)
+    transfer_instance = files.create_transfer_instance_upload(cip, device.paths.upload_list)
     device.log.append(f'Create transfer instance {transfer_instance} for upload.')
 
     # Transfer *.MER list chunk by chunk
@@ -190,7 +192,7 @@ def upload_mer_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     device.log.append(f'Deleted transfer instance {transfer_instance}.')
 
     # Delete *.MER list on the terminal
-    helper.delete_file_list(cip)
+    helper.delete_file_list(cip, device.paths)
     device.log.append(f'Delete *.MER list on terminal.')
 
     return file_list
@@ -202,7 +204,7 @@ def reboot(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     try:
         # Execute reboot
         device.log.append(f'Rebooting terminal.')
-        helper.reboot(cip1)
+        helper.reboot(cip1, device.paths)
 
         # If we made it here... the reboot function didn't throw
         # an exception, which means it didn't reboot.
@@ -231,11 +233,11 @@ def reboot(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
         delete_logs = registry.get_startup_delete_logs(cip)
         replace_comms = registry.get_startup_replace_comms(cip)
         device.log.append(f'Setting file: {startup_file} to run at startup with Replace Comms: {replace_comms}, Delete Logs: {delete_logs}.')
-        helper.create_me_shortcut(cip, startup_file, replace_comms, delete_logs)
+        helper.create_me_shortcut(cip, device.paths, startup_file, replace_comms, delete_logs)
 
         # Execute reboot
         device.log.append(f'Rebooting terminal.')
-        helper.reboot(cip1)
+        helper.reboot(cip1, device.paths)
     except pycomm3.PycommError as e:
         # Unlike most CIP messages, this one is expected to
         # create an exception.  When it is received by the terminal,
