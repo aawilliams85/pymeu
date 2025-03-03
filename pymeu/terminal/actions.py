@@ -154,7 +154,7 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
 
 def upload_med_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     # Create list on the terminal
-    helper.create_med_list(cip, device)
+    helper.create_med_list(cip, device.paths)
 
     # Create transfer instance on the terminal
     transfer_instance = files.create_transfer_instance_upload(cip, device.paths.upload_list)
