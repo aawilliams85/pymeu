@@ -140,23 +140,23 @@ def create_me_shortcut(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths, file:
     return True
 
 def create_med_list(cip:pycomm3.CIPDriver, paths: types.MEDevicePaths):
-    req_args = [paths.helper_file,HelperFunctions.CREATE_FILE_LIST, '\\Temp\\~MER.00\\*.med::' + paths.upload_list]
+    req_args = [paths.helper_file,HelperFunctions.CREATE_FILE_LIST, f'\\Temp\\~MER.00\\*.med::{paths.upload_list}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return True
 
 def create_mer_list(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths):
-    req_args = [paths.helper_file,HelperFunctions.CREATE_FILE_LIST, paths.storage + '\\Rockwell Software\\RSViewME\\Runtime\\*.mer::' + paths.upload_list]
+    req_args = [paths.helper_file,HelperFunctions.CREATE_FILE_LIST, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\*.mer::{paths.upload_list}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return True
 
 def create_runtime_directory(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths, file: types.MEFile) -> bool:
     # Create paths
-    if not(create_directory(cip, paths, paths.storage)): return False
-    if not(create_directory(cip, paths, paths.storage + '\\Rockwell Software')): return False
-    if not(create_directory(cip, paths, paths.storage + '\\Rockwell Software\\RSViewME')): return False
-    if not(create_directory(cip, paths, paths.storage + '\\Rockwell Software\\RSViewME\\Runtime')): return False
+    if not(create_directory(cip, paths, f'{paths.storage}')): return False
+    if not(create_directory(cip, paths, f'{paths.storage}\\Rockwell Software')): return False
+    if not(create_directory(cip, paths, f'{paths.storage}\\Rockwell Software\\RSViewME')): return False
+    if not(create_directory(cip, paths, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime')): return False
     return True
 
 def delete_file(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths, file: str) -> bool:
@@ -169,13 +169,13 @@ def delete_file_list(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths) -> bool
     return delete_file(cip, paths, paths.upload_list)
 
 def get_file_exists(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths, file: types.MEFile) -> bool:
-    req_args = [paths.helper_file, HelperFunctions.GET_FILE_EXISTS, paths.storage + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
+    req_args = [paths.helper_file, HelperFunctions.GET_FILE_EXISTS, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): return False    
     return bool(int(resp_data))
 
 def get_file_size(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths, file: types.MEFile) -> int:
-    req_args = [paths.helper_file, HelperFunctions.GET_FILE_SIZE, paths.storage + f'\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
+    req_args = [paths.helper_file, HelperFunctions.GET_FILE_SIZE, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return int(resp_data)
@@ -189,7 +189,7 @@ def get_folder_exists(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths) -> boo
     return bool(int(resp_data))
 
 def get_free_space(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths) -> int:
-    req_args = [paths.helper_file, HelperFunctions.GET_FREE_SPACE, paths.storage + '\\Rockwell Software\\RSViewME\\Runtime\\']
+    req_args = [paths.helper_file, HelperFunctions.GET_FREE_SPACE, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return int(resp_data)
