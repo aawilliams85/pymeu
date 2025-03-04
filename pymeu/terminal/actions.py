@@ -63,40 +63,85 @@ def create_log(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, print_log: bo
 
 def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
     # Create runtime folder
-    #
-    # TODO: Can we check if this already exists and skip?
-    if not(helper.create_runtime_directory(cip, device.paths, file)): raise Exception('Failed to create runtime path on terminal.')
+    try:
+        helper.create_runtime_directory(cip, device.paths, file)
+        device.log.append(f'Create runtime directory on terminal.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to create runtime directory on terminal.')
+        return False
 
     # Get attributes
     #
     # Still no clue on what these are, or when/how they would change.
     # If they aren't changed by creating paths, could be moved ahead
     # to is_download_valid().
-    if not(files.is_get_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
+    try:
+        get_unk1 = files.is_get_unk_valid(cip)
+        if get_unk1:
+            device.log.append(f'Got UNK1 attributes from terminal.')
+        else:
+            device.log.append(f'Got invalid UNK1 attributes from terminal.  Please file a bug report with all available information.')
+            return False
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to get UNK1 attributes from terminal.')
+        return False
 
     # Create a transfer instance on the terminal
-    transfer_instance = files.create_transfer_instance_download(cip, file, device.paths.storage + '\\Rockwell Software\\RSViewME\\Runtime')
-    device.log.append(f'Create transfer instance {transfer_instance} for download.')
+    try:
+        transfer_instance = files.create_transfer_instance_download(cip, file, f'{device.paths.storage}\\Rockwell Software\\RSViewME\\Runtime')
+        device.log.append(f'Create transfer instance {transfer_instance} for download.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to create transfer instance for download')
+        return False
 
     # Set attributes
     #
     # Still no clue what this is.  Might be setting file up for write?
-    if not(files.is_set_unk_valid(cip)): raise Exception('Invalid response from an unknown attribute.  Check packets.')
+    continue_download = True
+    try:
+        set_unk1 = files.is_set_unk_valid(cip)
+        if set_unk1:
+            device.log.append(f'Set UNK1 attributes on terminal.')
+        else:
+            device.log.append(f'Failed to set UNK1 attributes on terminal.  Please file a bug report with all available information.')
+            continue_download = False
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to set UNK1 attributes on terminal.')
+        continue_download = False
 
     # Transfer *.MER chunk by chunk
-    files.download_mer(cip, transfer_instance, file.path)
+    try:
+        if continue_download:
+            files.download_mer(cip, transfer_instance, file.path)
+            device.log.append(f'Downloaded {file.name} using transfer instance {transfer_instance}.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to download {file.name} using transfer instance {transfer_instance}.')
 
     # Delete transfer instance on the terminal
-    files.delete_transfer_instance(cip, transfer_instance)
-    device.log.append(f'Deleted transfer instance {transfer_instance}.')
+    try:
+        files.delete_transfer_instance(cip, transfer_instance)
+        device.log.append(f'Deleted transfer instance {transfer_instance}.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to delete transfer instance {transfer_instance}.')
 
     # Set *.MER to run at startup and then reboot
-    if run_at_startup:
-        device.log.append(f'Setting file: {file.name} to run at startup with Replace Comms: {replace_comms}, Delete Logs: {delete_logs}.')
-        helper.create_me_shortcut(cip, device.paths, file.name, replace_comms, delete_logs)
-        device.log.append(f'Setting file to run at startup.')
-        reboot(cip, device)
-    return True
+    try:
+        if continue_download:
+            if run_at_startup:
+                helper.create_me_shortcut(cip, device.paths, file.name, replace_comms, delete_logs)
+                device.log.append(f'Set file: {file.name} to run at startup with Replace Comms: {replace_comms}, Delete Logs: {delete_logs}.')
+                reboot(cip, device)
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to set file to run at startup.')
+        
+    return continue_download
 
 def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: types.MEFile, rem_file: types.MEFile) -> bool:
     # Verify file exists on terminal
@@ -113,7 +158,7 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
 
     # Create a transfer instance on the terminal
     try:
-        transfer_instance = files.create_transfer_instance_upload(cip, device.paths.storage + f'\\Rockwell Software\\RSViewME\\Runtime\\{rem_file.name}')
+        transfer_instance = files.create_transfer_instance_upload(cip, f'{device.paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\{rem_file.name}')
         device.log.append(f'Create transfer instance {transfer_instance} for upload.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
