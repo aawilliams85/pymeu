@@ -63,13 +63,31 @@ class MEUtility(object):
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
                 
-            # Validate that all starting conditions for downnload to terminal are as expected
-            if not(terminal.validation.is_download_valid(cip, self.device, file)): raise Exception('Download to terminal is invalid.')
+            # Validate that all starting conditions for downnload to terminal are good
+            try:
+                resp = terminal.validation.is_download_valid(cip, self.device, file)
+                if resp:
+                    self.device.log.append(f'Validated download for {file.name}.')
+                else:
+                    self.device.log.append(f'Failed to validate download.')
+                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+            except Exception as e:
+                self.device.log.append(f'Exception: {str(e)}')
+                self.device.log.append(f'Failed to validate download.')
+                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
 
             # Perform *.MER download to terminal
-            if not(terminal.actions.download_mer_file(cip, self.device, file, self.run_at_startup, self.replace_comms, self.delete_logs)): raise Exception('Download to terminal failed.')
+            try:
+                resp = terminal.actions.download_mer_file(cip, self.device, file, self.run_at_startup, self.replace_comms, self.delete_logs)
+                if not(resp):
+                    self.device.log.append(f'Failed to download to terminal.')
+                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+            except Exception as e:
+                self.device.log.append(f'Exception: {str(e)}')
+                self.device.log.append(f'Failed to download to terminal.')
+                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, 'Success')
+        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
 
     def get_terminal_info(self, **kwargs) -> types.MEResponse:
         """
@@ -147,7 +165,6 @@ class MEUtility(object):
         # Check for existing *.MER
         if not(self.overwrite) and (os.path.exists(file.path)): raise Exception(f'File {file.name} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
 
-        resp = False
         with pycomm3.CIPDriver(self.comms_path) as cip:
             # Validate device at this communications path is a terminal of known version.
             self.device = terminal.validation.get_terminal_info(cip)
@@ -160,12 +177,14 @@ class MEUtility(object):
             # Perform *.MER upload from terminal
             try:
                 resp = terminal.actions.upload_mer_file(cip, self.device, file, rem_file)
+                if not(resp):
+                    self.device.log.append(f'Failed to upload from terminal.')
+                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to upload from terminal.')
 
-        resp_status = types.MEResponseStatus.SUCCESS if resp else types.MEResponseStatus.FAILURE
-        return types.MEResponse(self.device, resp_status)
+        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
 
     def upload_all(self, file_path: str, **kwargs):
         """
