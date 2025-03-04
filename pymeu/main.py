@@ -105,8 +105,6 @@ class MEUtility(object):
                 - silent_mode (bool): Optional; if set to True, will exclude values that
                 require invocations or transfers so that Diagnostics window doesn't
                 pop up on the remote terminal.  Defaults to False.
-
-        
         """
         self.print_log = kwargs.get('print_log', False)
         self.redact_log = kwargs.get('redact_log', False)
@@ -119,9 +117,14 @@ class MEUtility(object):
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
-            terminal.actions.create_log(cip, self.device, self.print_log, self.redact_log, self.silent_mode)
+            try:
+                terminal.actions.create_log(cip, self.device, self.print_log, self.redact_log, self.silent_mode)
+            except Exception as e:
+                self.device.log.append(f'Exception: {str(e)}')
+                self.device.log.append(f'Failed to get terminal info.')
+                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, 'Success')
+        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
 
     def reboot(self) -> types.MEResponse:
         """
@@ -136,9 +139,13 @@ class MEUtility(object):
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
-            terminal.actions.reboot(cip, self.device)
+            try:
+                terminal.actions.reboot(cip, self.device)
+            except Exception as e:
+                self.device.log.append(f'Failed to reboot terminal.')
+                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, 'Success')
+        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
 
     def upload(self, file_path: str, **kwargs) -> types.MEResponse:
         """
@@ -162,9 +169,6 @@ class MEUtility(object):
         # Create upload folder if it doesn't exist yet
         if not(os.path.exists(os.path.dirname(file.path))): os.makedirs(os.path.dirname(file.path))
 
-        # Check for existing *.MER
-        if not(self.overwrite) and (os.path.exists(file.path)): raise Exception(f'File {file.name} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
-
         with pycomm3.CIPDriver(self.comms_path) as cip:
             # Validate device at this communications path is a terminal of known version.
             self.device = terminal.validation.get_terminal_info(cip)
@@ -173,6 +177,11 @@ class MEUtility(object):
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
+
+            # Check for existing *.MER
+            if not(self.overwrite) and (os.path.exists(file.path)):
+                self.device.log.append(f'File {file.path} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
+                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
 
             # Perform *.MER upload from terminal
             try:
@@ -183,6 +192,7 @@ class MEUtility(object):
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to upload from terminal.')
+                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
 
         return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
 
@@ -211,7 +221,12 @@ class MEUtility(object):
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
-            mer_list = terminal.actions.upload_mer_list(cip, self.device)
+            try:
+                mer_list = terminal.actions.upload_mer_list(cip, self.device)
+            except Exception as e:
+                self.device.log.append(f'Exception: {str(e)}')
+                self.device.log.append(f'Failed to upload *.MER list from terminal.')
+                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
             
             for mer in mer_list:
                 if len(mer) > 0:
@@ -219,9 +234,19 @@ class MEUtility(object):
                     file = types.MEFile(os.path.basename(mer_path), self.overwrite, False, mer_path)
 
                     # Check for existing *.MER
-                    if not(self.overwrite) and (os.path.exists(mer_path)): raise Exception(f'File {mer_path} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
-
+                    if not(self.overwrite) and (os.path.exists(mer_path)):
+                        self.device.log.append(f'File {mer_path} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
+                        return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    
                     # Perform *.MER upload from terminal
-                    if not(terminal.actions.upload_mer_file(cip, self.device, file, file)): raise Exception('Upload from terminal failed.')
+                    try:
+                        resp = terminal.actions.upload_mer_file(cip, self.device, file, file)
+                        if not(resp):
+                            self.device.log.append(f'Failed to upload from terminal.')
+                            return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    except Exception as e:
+                        self.device.log.append(f'Exception: {str(e)}')
+                        self.device.log.append(f'Failed to upload from terminal.')
+                        return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, 'Success')
+        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
