@@ -123,10 +123,10 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
     # Transfer *.MER chunk by chunk
     try:
         files.upload_mer(cip, transfer_instance, file)
-        device.log.append(f'Uploaded {rem_file.name} to {file.path} using file exchange {transfer_instance}.')
+        device.log.append(f'Uploaded {rem_file.name} to {file.path} using transfer instance {transfer_instance}.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to upload {rem_file.name} to {file.path} using file exchange {transfer_instance}.')
+        device.log.append(f'Failed to upload {rem_file.name} to {file.path} using transfer instance {transfer_instance}.')
 
     # Delete transfer instance on the terminal
     try:
@@ -138,48 +138,96 @@ def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: ty
 
     return True
 
-def upload_med_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
+def upload_med_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo) -> list[str]:
     # Create list on the terminal
-    helper.create_med_list(cip, device.paths)
+    try:
+        helper.create_med_list(cip, device.paths)
+        device.log.append(f'Created *.MED list on terminal.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to create *.MED list on terminal.')
+        return None
 
     # Create transfer instance on the terminal
-    transfer_instance = files.create_transfer_instance_upload(cip, device.paths.upload_list)
-    device.log.append(f'Create transfer instance {transfer_instance} for upload.')
+    try:
+        transfer_instance = files.create_transfer_instance_upload(cip, device.paths.upload_list)
+        device.log.append(f'Create transfer instance {transfer_instance} for upload.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to create transfer instance for upload')
+        return None
 
     # Transfer list chunk by chunk
-    file_list = files.upload_list(cip, transfer_instance)
-    device.log.append(f'Uploaded *.MED list using file exchange {transfer_instance}.')
+    file_list = None
+    try:
+        file_list = files.upload_list(cip, transfer_instance)
+        device.log.append(f'Uploaded *.MED list using transfer instance {transfer_instance}.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to upload *.MED list using transfer instance {transfer_instance}.')
 
     # Delete transfer instance on the terminal
-    files.delete_transfer_instance(cip, transfer_instance)
-    device.log.append(f'Deleted transfer instance {transfer_instance}.')
+    try:
+        files.delete_transfer_instance(cip, transfer_instance)
+        device.log.append(f'Deleted transfer instance {transfer_instance}.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to delete transfer instance {transfer_instance}.')
 
     # Delete list on the terminal
-    helper.delete_file_list(cip, device.paths)
-    device.log.append(f'Delete *.MER list on terminal.')
+    try:
+        helper.delete_file_list(cip, device.paths)
+        device.log.append(f'Deleted *.MED list on terminal.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to delete *.MED list on terminal.')
 
     return file_list
 
-def upload_mer_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
+def upload_mer_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo) -> list[str]:
     # Create *.MER list
-    helper.create_mer_list(cip, device.paths)
+    try:
+        helper.create_mer_list(cip, device.paths)
+        device.log.append(f'Created *.MER list on terminal.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to create *.MER list on terminal.')
+        return None
 
     # Create transfer instance on the terminal
-    transfer_instance = files.create_transfer_instance_upload(cip, device.paths.upload_list)
-    device.log.append(f'Create transfer instance {transfer_instance} for upload.')
+    try:
+        transfer_instance = files.create_transfer_instance_upload(cip, device.paths.upload_list)
+        device.log.append(f'Create transfer instance {transfer_instance} for upload.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to create transfer instance for upload')
+        return None
 
-    # Transfer *.MER list chunk by chunk
-    file_list = files.upload_list(cip, transfer_instance)
-    device.log.append(f'Uploaded *.MER list using file exchange {transfer_instance}.')
-    device.files = file_list
+    # Transfer list chunk by chunk
+    file_list = None
+    try:
+        file_list = files.upload_list(cip, transfer_instance)
+        device.files = file_list
+        device.log.append(f'Uploaded *.MER list using transfer instance {transfer_instance}.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to upload *.MED list using transfer instance {transfer_instance}.')
 
     # Delete transfer instance on the terminal
-    files.delete_transfer_instance(cip, transfer_instance)
-    device.log.append(f'Deleted transfer instance {transfer_instance}.')
+    try:
+        files.delete_transfer_instance(cip, transfer_instance)
+        device.log.append(f'Deleted transfer instance {transfer_instance}.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to delete transfer instance {transfer_instance}.')
 
-    # Delete *.MER list on the terminal
-    helper.delete_file_list(cip, device.paths)
-    device.log.append(f'Delete *.MER list on terminal.')
+    # Delete list on the terminal
+    try:
+        helper.delete_file_list(cip, device.paths)
+        device.log.append(f'Deleted *.MED list on terminal.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to delete *.MED list on terminal.')
 
     return file_list
 
