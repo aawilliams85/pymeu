@@ -38,8 +38,8 @@ class pvp5_fast_tests(unittest.TestCase):
 
     def test_download_invalid_ext(self):
         self.download_file_path = os.path.join(self.download_folder_path, self.config_data['download']['bad_extension'])
-        with self.assertRaises(Exception):
-            self.meu.download(self.download_file_path)
+        resp = self.meu.download(self.download_file_path)
+        self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)
 
     def test_upload(self):
         self.upload_file_path = os.path.join(self.upload_folder_path, self.config_data['upload']['good'][0])
