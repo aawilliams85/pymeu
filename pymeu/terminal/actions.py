@@ -99,58 +99,44 @@ def download_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file:t
     return True
 
 def upload_mer_file(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: types.MEFile, rem_file: types.MEFile) -> bool:
-    proceed = True
-    resp = True
-
     # Verify file exists on terminal
-    if proceed:
-        try:
-            if helper.get_file_exists(cip, device.paths, rem_file):
-                device.log.append(f'File {rem_file.name} exists on terminal.')
-            else:
-                device.log.append(f'File {rem_file.name} does not exist on terminal.')
-                proceed = False
-                resp = False
-        except Exception as e:
-            device.log.append(f'Exception: {str(e)}')
-            device.log.append(f'Failed to check if file {rem_file.name} exists on terminal.')
-            proceed = False
-            resp = False
+    try:
+        if helper.get_file_exists(cip, device.paths, rem_file):
+            device.log.append(f'File {rem_file.name} exists on terminal.')
+        else:
+            device.log.append(f'File {rem_file.name} does not exist on terminal.')
+            return False
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to check if file {rem_file.name} exists on terminal.')
+        return False
 
     # Create a transfer instance on the terminal
-    if proceed:
-        try:
-            transfer_instance = files.create_transfer_instance_upload(cip, device.paths.storage + f'\\Rockwell Software\\RSViewME\\Runtime\\{rem_file.name}')
-            device.log.append(f'Create transfer instance {transfer_instance} for upload.')
-        except Exception as e:
-            device.log.append(f'Exception: {str(e)}')
-            device.log.append(f'Failed to create transfer instance for upload')
-            proceed = False
-            resp = False
+    try:
+        transfer_instance = files.create_transfer_instance_upload(cip, device.paths.storage + f'\\Rockwell Software\\RSViewME\\Runtime\\{rem_file.name}')
+        device.log.append(f'Create transfer instance {transfer_instance} for upload.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to create transfer instance for upload')
+        return False
 
     # Transfer *.MER chunk by chunk
-    if proceed:
-        try:
-            files.upload_mer(cip, transfer_instance, file)
-            device.log.append(f'Uploaded {rem_file.name} to {file.path} using file exchange {transfer_instance}.')
-        except Exception as e:
-            device.log.append(f'Exception: {str(e)}')
-            device.log.append(f'Failed to upload {rem_file.name} to {file.path} using file exchange {transfer_instance}.')
-            # This block doesn't turn off the PROCEED flag so that the subsequent delete transfer instance will still attempt to run
-            resp = False
+    try:
+        files.upload_mer(cip, transfer_instance, file)
+        device.log.append(f'Uploaded {rem_file.name} to {file.path} using file exchange {transfer_instance}.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to upload {rem_file.name} to {file.path} using file exchange {transfer_instance}.')
 
     # Delete transfer instance on the terminal
-    if proceed:
-        try:
-            files.delete_transfer_instance(cip, transfer_instance)
-            device.log.append(f'Deleted transfer instance {transfer_instance}.')
-        except Exception as e:
-            device.log.append(f'Exception: {str(e)}')
-            device.log.append(f'Failed to delete transfer instance {transfer_instance}.')
-            proceed = False
-            resp = False
+    try:
+        files.delete_transfer_instance(cip, transfer_instance)
+        device.log.append(f'Deleted transfer instance {transfer_instance}.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to delete transfer instance {transfer_instance}.')
 
-    return resp
+    return True
 
 def upload_med_list(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo):
     # Create list on the terminal
