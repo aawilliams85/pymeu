@@ -1,10 +1,10 @@
 
-import pycomm3
 import struct
 
 from enum import IntEnum
 from warnings import warn
 
+from .. import comms
 from .. import messages
 from .. import types
 
@@ -35,7 +35,7 @@ class TransferType(IntEnum):
     DOWNLOAD = int.from_bytes(b'\x01', byteorder='big')
     UPLOAD = int.from_bytes(b'\x00', byteorder='big')
 
-def create_transfer_instance_download(cip: pycomm3.CIPDriver, file: types.MEFile, remote_path: str) -> int:
+def create_transfer_instance_download(cip: comms.Driver, file: types.MEFile, remote_path: str) -> int:
     """
     Creates a transfer instance for downloading from the local device to the remote terminal.
 
@@ -95,7 +95,7 @@ def create_transfer_instance_download(cip: pycomm3.CIPDriver, file: types.MEFile
     if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {CHUNK_SIZE}.  Please file a bug report with all available information.')
     return resp_transfer_instance
 
-def create_transfer_instance_upload(cip: pycomm3.CIPDriver, remote_path: str) -> int:
+def create_transfer_instance_upload(cip: comms.Driver, remote_path: str) -> int:
     """
     Creates a transfer instance for uploading from the remote terminal to the local device.
 
@@ -154,10 +154,10 @@ def create_transfer_instance_upload(cip: pycomm3.CIPDriver, remote_path: str) ->
     if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {CHUNK_SIZE}.  Please file a bug report with all available information.')
     return resp_transfer_instance
 
-def delete_transfer_instance(cip: pycomm3.CIPDriver, transfer_instance: int):
+def delete_transfer_instance(cip: comms.Driver, transfer_instance: int):
     return messages.delete_transfer_instance(cip, transfer_instance)
 
-def download(cip: pycomm3.CIPDriver, transfer_instance: int, source_data: bytearray) -> bool:
+def download(cip: comms.Driver, transfer_instance: int, source_data: bytearray) -> bool:
     """
     Downloads a file from the local device to the remote terminal.
     The transfer happens by breaking the file down into one or more
@@ -226,11 +226,11 @@ def download(cip: pycomm3.CIPDriver, transfer_instance: int, source_data: bytear
     resp = messages.write_file_chunk(cip, transfer_instance, req_data)
     return True
 
-def download_mer(cip: pycomm3.CIPDriver, transfer_instance: int, file: str):
+def download_mer(cip: comms.Driver, transfer_instance: int, file: str):
     with open(file, 'rb') as source_file:
         return download(cip, transfer_instance, bytearray(source_file.read()))
 
-def upload(cip: pycomm3.CIPDriver, transfer_instance: int) -> bytearray:
+def upload(cip: comms.Driver, transfer_instance: int) -> bytearray:
     """
     Uploads a file from the remote terminal to the local device.
     The transfer happens by breaking the file down into one or more
@@ -298,18 +298,18 @@ def upload(cip: pycomm3.CIPDriver, transfer_instance: int) -> bytearray:
 
     return resp_binary
 
-def upload_mer(cip: pycomm3.CIPDriver, transfer_instance: int, file: types.MEFile):
+def upload_mer(cip: comms.Driver, transfer_instance: int, file: types.MEFile):
     resp_binary = upload(cip, transfer_instance)
     with open(file.path, 'wb') as dest_file:
         dest_file.write(resp_binary)
 
-def upload_list(cip: pycomm3.CIPDriver, transfer_instance: int):
+def upload_list(cip: comms.Driver, transfer_instance: int):
     resp_binary = upload(cip, transfer_instance)
     resp_str = "".join([chr(b) for b in resp_binary if b != 0])
     resp_list = resp_str.split(':')
     return resp_list
 
-def is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
+def is_get_unk_valid(cip: comms.Driver) -> bool:
     # I don't know what any of these three attributes are for yet.
     # It may be checking that the file exchange is available.
     resp = messages.get_attr_unk(cip, b'\x30\x01')
@@ -332,7 +332,7 @@ def is_get_unk_valid(cip: pycomm3.CIPDriver) -> bool:
 
     return True
 
-def is_set_unk_valid(cip: pycomm3.CIPDriver) -> bool:
+def is_set_unk_valid(cip: comms.Driver) -> bool:
     # I don't know what setting this attribute does yet.
     # It may be marking the file exchange as in use.
     #
