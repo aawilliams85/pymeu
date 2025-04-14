@@ -1,9 +1,9 @@
 import json
 import os
-import pycomm3
 import time
 import unittest
 
+from pymeu import comms
 from pymeu import MEUtility
 from pymeu import terminal
 from pymeu import types
@@ -61,7 +61,7 @@ class pvp5_fast_tests(unittest.TestCase):
 
     def test_upload_multiple_instances(self):
         meu2 = MEUtility(self.config_data['comms_path']['good'])
-        with pycomm3.CIPDriver(meu2.comms_path) as cip2:
+        with comms.Driver(meu2.comms_path) as cip2:
             # Open parallel transfer instance
             device2 = terminal.validation.get_terminal_info(cip2)
             file2 = self.config_data['upload']['good'][0]
