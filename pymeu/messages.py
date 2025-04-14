@@ -1,17 +1,17 @@
 
-from enum import Enum
+from enum import IntEnum
 from . import comms
 
 # Known CIP class codes that aren't previously defined by pycomm3.
 # Further investigation needed.
-class CipClasses(Enum):
+class CipClasses(IntEnum):
     FUNCTION = int.from_bytes(b'\x04\xFD', byteorder='big')
     REGISTRY = int.from_bytes(b'\x04\xFE', byteorder='big')
     FILE = int.from_bytes(b'\x04\xFF', byteorder='big')
 
 # Known CIP service codes that aren't previously defined by pycomm3.
 # Further investigation needed.
-class CipServices(Enum):
+class CipServices(IntEnum):
     CREATE = int.from_bytes(b'\x08', byteorder='big')
     DELETE = int.from_bytes(b'\x09', byteorder='big')
     GET_ATTRIBUTE_SINGLE = int.from_bytes(b'\x0e', byteorder='big')
@@ -23,7 +23,7 @@ class CipServices(Enum):
 
 def create_transfer_instance(cip: comms.Driver, data):
     return cip.generic_message(
-        service=CipServices.CREATE.value,
+        service=CipServices.CREATE,
         class_code=CipClasses.FILE,
         instance=0x00,
         request_data=data,
@@ -33,7 +33,7 @@ def create_transfer_instance(cip: comms.Driver, data):
 
 def delete_transfer_instance(cip: comms.Driver, transfer_instance: int):
     return cip.generic_message(
-        service=CipServices.DELETE.value,
+        service=CipServices.DELETE,
         class_code=CipClasses.FILE,
         instance=transfer_instance,
         connected=False,
@@ -82,7 +82,7 @@ def write_file_chunk(cip: comms.Driver, transfer_instance: int, data):
 
 def get_attr_unk(cip: comms.Driver, data):
     return cip.generic_message(
-        service=CipServices.GET_ATTRIBUTE_SINGLE.value,
+        service=CipServices.GET_ATTRIBUTE_SINGLE,
         class_code=CipClasses.FILE,
         instance=0x00,
         request_data=data,
@@ -92,7 +92,7 @@ def get_attr_unk(cip: comms.Driver, data):
 
 def set_attr_unk(cip: comms.Driver, data):
     return cip.generic_message(
-        service=CipServices.SET_ATTRIBUTE_SINGLE.value,
+        service=CipServices.SET_ATTRIBUTE_SINGLE,
         class_code=CipClasses.FILE,
         instance=0x01,
         request_data=data,
