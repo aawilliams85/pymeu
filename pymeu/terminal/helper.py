@@ -1,8 +1,8 @@
-import pycomm3
 
 from enum import StrEnum
 from warnings import warn
 
+from .. import comms
 from .. import messages
 from .. import types 
 
@@ -61,7 +61,7 @@ class HelperFunctions(StrEnum):
     #       Returns 1 if folder exists, 0 otherwise.
     STOP_PROCESS = 'TerminateEXE'
 
-def run_function(cip: pycomm3.CIPDriver, req_args):
+def run_function(cip: comms.Driver, req_args):
     """
     Executes a function on the remote terminal.
 
@@ -105,13 +105,13 @@ def run_function(cip: pycomm3.CIPDriver, req_args):
     resp_data = resp.value[4:].decode('utf-8').strip('\x00')
     return resp_code, resp_data
 
-def create_directory(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths, dir: str) -> bool:
+def create_directory(cip: comms.Driver, paths: types.MEDevicePaths, dir: str) -> bool:
     req_args = [paths.helper_file, HelperFunctions.CREATE_DIRECTORY, dir]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != CREATE_DIR_SUCCESS): raise Exception('Failed to create directory on terminal.')    
     return True
 
-def create_me_shortcut(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths, file: str, replace_comms: bool, delete_logs: bool) -> bool:
+def create_me_shortcut(cip: comms.Driver, paths: types.MEDevicePaths, file: str, replace_comms: bool, delete_logs: bool) -> bool:
     """
     Setup a specific *.MER file to run at terminal startup.
 
@@ -139,19 +139,19 @@ def create_me_shortcut(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths, file:
     if (resp_code != 0): raise Exception(f'Failed to create ME Startup Shortcut on terminal: {file}, response code: {resp_code}, response data: {resp_data}.')
     return True
 
-def create_med_list(cip:pycomm3.CIPDriver, paths: types.MEDevicePaths):
+def create_med_list(cip: comms.Driver, paths: types.MEDevicePaths):
     req_args = [paths.helper_file,HelperFunctions.CREATE_FILE_LIST, f'\\Temp\\~MER.00\\*.med::{paths.upload_list}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return True
 
-def create_mer_list(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths):
+def create_mer_list(cip: comms.Driver, paths: types.MEDevicePaths):
     req_args = [paths.helper_file,HelperFunctions.CREATE_FILE_LIST, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\*.mer::{paths.upload_list}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return True
 
-def create_runtime_directory(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths, file: types.MEFile) -> bool:
+def create_runtime_directory(cip: comms.Driver, paths: types.MEDevicePaths, file: types.MEFile) -> bool:
     # Create paths
     if not(create_directory(cip, paths, f'{paths.storage}')): return False
     if not(create_directory(cip, paths, f'{paths.storage}\\Rockwell Software')): return False
@@ -159,28 +159,28 @@ def create_runtime_directory(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths,
     if not(create_directory(cip, paths, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime')): return False
     return True
 
-def delete_file(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths, file: str) -> bool:
+def delete_file(cip: comms.Driver, paths: types.MEDevicePaths, file: str) -> bool:
     req_args = [paths.helper_file,HelperFunctions.DELETE_FILE,file]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Failed to delete file on terminal: {file}, response code: {resp_code}, response data: {resp_data}.')
     return True
 
-def delete_file_list(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths) -> bool:
+def delete_file_list(cip: comms.Driver, paths: types.MEDevicePaths) -> bool:
     return delete_file(cip, paths, paths.upload_list)
 
-def get_file_exists(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths, file: types.MEFile) -> bool:
+def get_file_exists(cip: comms.Driver, paths: types.MEDevicePaths, file: types.MEFile) -> bool:
     req_args = [paths.helper_file, HelperFunctions.GET_FILE_EXISTS, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): return False    
     return bool(int(resp_data))
 
-def get_file_size(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths, file: types.MEFile) -> int:
+def get_file_size(cip: comms.Driver, paths: types.MEDevicePaths, file: types.MEFile) -> int:
     req_args = [paths.helper_file, HelperFunctions.GET_FILE_SIZE, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\{file.name}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return int(resp_data)
 
-def get_folder_exists(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths) -> bool:
+def get_folder_exists(cip: comms.Driver, paths: types.MEDevicePaths) -> bool:
     req_args = [paths.helper_file, HelperFunctions.GET_FOLDER_EXISTS, paths.storage]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0):
@@ -188,19 +188,19 @@ def get_folder_exists(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths) -> boo
         return False
     return bool(int(resp_data))
 
-def get_free_space(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths) -> int:
+def get_free_space(cip: comms.Driver, paths: types.MEDevicePaths) -> int:
     req_args = [paths.helper_file, HelperFunctions.GET_FREE_SPACE, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return int(resp_data)
 
-def get_helper_version(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths) -> str:
+def get_helper_version(cip: comms.Driver, paths: types.MEDevicePaths) -> str:
     req_args = [paths.helper_file, HelperFunctions.GET_VERSION, paths.helper_file]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return str(resp_data)
 
-def reboot(cip: pycomm3.CIPDriver, paths: types.MEDevicePaths):
+def reboot(cip: comms.Driver, paths: types.MEDevicePaths):
     req_args = [paths.helper_file, HelperFunctions.REBOOT,'']
     req_data = b''.join(arg.encode() + b'\x00' for arg in req_args)
     resp = messages.run_function(cip, req_data)
