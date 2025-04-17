@@ -51,8 +51,11 @@ class MEUtility(object):
         self.remote_file_name = kwargs.get('remote_file_name', os.path.basename(file_path))
         self.run_at_startup = kwargs.get('run_at_startup', True)
 
-        if ("\\" or "/") not in file_path:
-            file_path = "C:\\Users\\Public\\Documents\\RSView Enterprise\\ME\\Runtime\\" + file_path
+        if not os.path.isfile(file_path):
+            print(file_path)
+            if ("\\" or "/") not in file_path:
+                file_path = "C:\\Users\\Public\\Documents\\RSView Enterprise\\ME\\Runtime\\" + file_path
+            print(f'new: {file_path}')
 
         with pycomm3.CIPDriver(self.comms_path) as cip:
             file = types.MEFile(self.remote_file_name, self.overwrite, False, file_path)
