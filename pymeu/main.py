@@ -5,7 +5,6 @@ from warnings import warn
 from . import terminal
 from . import types
 
-
 class MEUtility(object):
     def __init__(self, comms_path: str, **kwargs):
         """
@@ -51,6 +50,9 @@ class MEUtility(object):
         self.replace_comms = kwargs.get('replace_comms', False)
         self.remote_file_name = kwargs.get('remote_file_name', os.path.basename(file_path))
         self.run_at_startup = kwargs.get('run_at_startup', True)
+
+        if ("\\" or "/") not in file_path:
+            file_path = "C:\\Users\\Public\\Documents\\RSView Enterprise\\ME\\Runtime\\" + file_path
 
         with pycomm3.CIPDriver(self.comms_path) as cip:
             file = types.MEFile(self.remote_file_name, self.overwrite, False, file_path)
