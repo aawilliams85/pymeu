@@ -1,7 +1,7 @@
-import pycomm3
 
 from . import helper
 from . import registry
+from .. import comms
 from .. import types
 
 # Known RemoteHelper file version numbers, used to help check that device is a valid terminal.
@@ -127,7 +127,7 @@ PRODUCT_TYPES = {
 HELPER_FILE_NAME = 'RemoteHelper.DLL'
 UPLOAD_LIST_PATH = 'Rockwell Software\\RSViewME\\Runtime\\Results.txt'
 
-def get_terminal_info(cip: pycomm3.CIPDriver) -> types.MEDeviceInfo:
+def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
     me_version = registry.get_me_version(cip)
     major_rev = int(me_version.split(".")[0])
 
@@ -174,7 +174,7 @@ def is_terminal_valid(device: types.MEDeviceInfo) -> bool:
     if not is_version_matched(device.me_version, ME_VERSIONS): return False
     return True
 
-def is_download_valid(cip: pycomm3.CIPDriver, device: types.MEDeviceInfo, file: types.MEFile) -> bool:
+def is_download_valid(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile) -> bool:
     # Check that file is correct extension
     if (file.get_ext() != '.mer'):
         device.log.append(f'File {file.name} is not a *.mer file')
