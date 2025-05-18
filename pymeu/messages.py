@@ -2,15 +2,11 @@
 from enum import IntEnum
 from . import comms
 
-# Known CIP class codes that aren't previously defined by pycomm3.
-# Further investigation needed.
 class CipClasses(IntEnum):
     FUNCTION = int.from_bytes(b'\x04\xFD', byteorder='big')
     REGISTRY = int.from_bytes(b'\x04\xFE', byteorder='big')
     FILE = int.from_bytes(b'\x04\xFF', byteorder='big')
 
-# Known CIP service codes that aren't previously defined by pycomm3.
-# Further investigation needed.
 class CipServices(IntEnum):
     CREATE = int.from_bytes(b'\x08', byteorder='big')
     DELETE = int.from_bytes(b'\x09', byteorder='big')
