@@ -21,6 +21,7 @@ class MEDevicePaths:
     helper_file: str
     storage: str
     upload_list: str
+    runtime: str
 
 @dataclass
 class MEDeviceInfo:

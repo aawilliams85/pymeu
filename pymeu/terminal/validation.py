@@ -125,7 +125,8 @@ PRODUCT_TYPES = {
 }
 
 HELPER_FILE_NAME = 'RemoteHelper.DLL'
-UPLOAD_LIST_PATH = 'Rockwell Software\\RSViewME\\Runtime\\Results.txt'
+RUNTIME_PATH = 'Rockwell Software\\RSViewME\\Runtime'
+UPLOAD_LIST_PATH = f'{RUNTIME_PATH}\\Results.txt'
 
 def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
     me_version = registry.get_me_version(cip)
@@ -140,9 +141,12 @@ def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
 
     helper_file_path = f'{helper_path}\\{HELPER_FILE_NAME}'
     upload_list_path = f'{storage_path}\\{UPLOAD_LIST_PATH}'
+    runtime_path = f'{storage_path}\\{RUNTIME_PATH}'
+    
     paths = types.MEDevicePaths(helper_file_path,
                               storage_path,
-                              upload_list_path)
+                              upload_list_path,
+                              runtime_path)
 
     return types.MEDeviceInfo(cip._cip_path, 
                                helper.get_helper_version(cip, paths),
