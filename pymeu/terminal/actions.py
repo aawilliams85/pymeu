@@ -17,6 +17,7 @@ def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, r
     if print_log: print(f'Terminal helper path: {device.paths.helper_file}.')
     if print_log: print(f'Terminal storage path: {device.paths.storage}.')
     if print_log: print(f'Terminal upload list path: {device.paths.upload_list}.')
+    if print_log: print(f'Terminal runtime path: {device.paths.runtime}.')
 
     try:
         line = f'Terminal has {helper.get_free_space(cip, device.paths)} free bytes.'
@@ -64,7 +65,7 @@ def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, r
 def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
     # Create runtime folder
     try:
-        helper.create_runtime_directory(cip, device.paths, file)
+        helper.create_runtime_directory(cip, device.paths)
         device.log.append(f'Create runtime directory on terminal.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -90,7 +91,7 @@ def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.
 
     # Create a transfer instance on the terminal
     try:
-        transfer_instance = files.create_transfer_instance_download(cip, file, f'{device.paths.storage}\\Rockwell Software\\RSViewME\\Runtime')
+        transfer_instance = files.create_transfer_instance_download(cip, file, f'{device.paths.runtime}')
         device.log.append(f'Create transfer instance {transfer_instance} for download.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -158,7 +159,7 @@ def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.M
 
     # Create a transfer instance on the terminal
     try:
-        transfer_instance = files.create_transfer_instance_upload(cip, f'{device.paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\{rem_file.name}')
+        transfer_instance = files.create_transfer_instance_upload(cip, f'{device.paths.runtime}\\{rem_file.name}')
         device.log.append(f'Create transfer instance {transfer_instance} for upload.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')

@@ -146,17 +146,18 @@ def create_med_list(cip: comms.Driver, paths: types.MEDevicePaths):
     return True
 
 def create_mer_list(cip: comms.Driver, paths: types.MEDevicePaths):
-    req_args = [paths.helper_file,HelperFunctions.CREATE_FILE_LIST, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\*.mer::{paths.upload_list}']
+    req_args = [paths.helper_file,HelperFunctions.CREATE_FILE_LIST, f'{paths.runtime}\\*.mer::{paths.upload_list}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return True
 
-def create_runtime_directory(cip: comms.Driver, paths: types.MEDevicePaths, file: types.MEFile) -> bool:
-    # Create paths
-    if not(create_directory(cip, paths, f'{paths.storage}')): return False
-    if not(create_directory(cip, paths, f'{paths.storage}\\Rockwell Software')): return False
-    if not(create_directory(cip, paths, f'{paths.storage}\\Rockwell Software\\RSViewME')): return False
-    if not(create_directory(cip, paths, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime')): return False
+def create_runtime_directory(cip: comms.Driver, paths: types.MEDevicePaths) -> bool:
+    subfolders = paths.runtime.split('\\')
+    current_path = subfolders[0]
+    for folder in subfolders[1:]:
+        current_path = f'{current_path}\\{folder}'
+        if not create_directory(cip, paths, current_path): return False
+
     return True
 
 def delete_file(cip: comms.Driver, paths: types.MEDevicePaths, file: str) -> bool:
@@ -175,7 +176,7 @@ def get_file_exists(cip: comms.Driver, paths: types.MEDevicePaths, file_path: st
     return bool(int(resp_data))
 
 def get_file_exists_mer(cip: comms.Driver, paths: types.MEDevicePaths, file_name: str) -> bool:
-    file_path = f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\{file_name}'
+    file_path = f'{paths.runtime}\\{file_name}'
     return get_file_exists(cip, paths, file_path)
 
 def get_file_size(cip: comms.Driver, paths: types.MEDevicePaths, file_path: str) -> int:
@@ -185,7 +186,7 @@ def get_file_size(cip: comms.Driver, paths: types.MEDevicePaths, file_path: str)
     return int(resp_data)
 
 def get_file_size_mer(cip: comms.Driver, paths: types.MEDevicePaths, file_name: str) -> int:
-    file_path = f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\{file_name}'
+    file_path = f'{paths.runtime}\\{file_name}'
     return get_file_size(cip, paths, file_path)
 
 def get_folder_exists(cip: comms.Driver, paths: types.MEDevicePaths, folder_path: str) -> bool:
@@ -195,7 +196,7 @@ def get_folder_exists(cip: comms.Driver, paths: types.MEDevicePaths, folder_path
     return bool(int(resp_data))
 
 def get_free_space(cip: comms.Driver, paths: types.MEDevicePaths) -> int:
-    req_args = [paths.helper_file, HelperFunctions.GET_FREE_SPACE, f'{paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\']
+    req_args = [paths.helper_file, HelperFunctions.GET_FREE_SPACE, f'{paths.runtime}\\']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return int(resp_data)
