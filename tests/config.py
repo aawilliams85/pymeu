@@ -20,6 +20,8 @@ UPLOAD_FOLDER_PATH = os.path.join(BASE_PATH, 'upload')
 HELPER_FILE_NAME = 'RemoteHelper.DLL'
 RUNTIME_PATH = 'Rockwell Software\\RSViewME\\Runtime'
 UPLOAD_LIST_PATH = f'{RUNTIME_PATH}\\Results.txt'
+NONEXISTENT_FILE = '\\NonexistentPath\\NonexistentFile.ext'
+NONEXISTENT_FOLDER = '\\NonexistentPath'
 
 # PanelView Plus v5 configuration
 PVP5 = 'PVP5'
