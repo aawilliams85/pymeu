@@ -180,9 +180,10 @@ def get_file_exists_mer(cip: comms.Driver, paths: types.MEDevicePaths, file_name
     return get_file_exists(cip, paths, file_path)
 
 def get_file_size(cip: comms.Driver, paths: types.MEDevicePaths, file_path: str) -> int:
+    if not(get_file_exists(cip, paths, file_path)): raise FileNotFoundError(f'File {file_path} does not exist on remote terminal.')
     req_args = [paths.helper_file, HelperFunctions.GET_FILE_SIZE, file_path]
     resp_code, resp_data = run_function(cip, req_args)
-    if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
+    if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
     return int(resp_data)
 
 def get_file_size_mer(cip: comms.Driver, paths: types.MEDevicePaths, file_name: str) -> int:

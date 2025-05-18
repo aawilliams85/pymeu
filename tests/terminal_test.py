@@ -29,12 +29,13 @@ class helper_tests(unittest.TestCase):
         print('')
         for device in DEVICES:
             for driver in DRIVERS:
+                file_path = device.device_paths.helper_file
                 with comms.Driver(device.comms_path) as cip:
-                    value = terminal.helper.get_file_exists(cip, device.device_paths, device.device_paths.helper_file)
+                    value = terminal.helper.get_file_exists(cip, device.device_paths, file_path)
                     result = (
                           f'Device: {device.name}\n' 
                           f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.GET_FILE_EXISTS} {device.device_paths.helper_file}\n'
+                          f'Function: {terminal.helper.HelperFunctions.GET_FILE_EXISTS} {file_path}\n'
                           f'Value: {value}\n'
                     )
                     print(result)
@@ -44,7 +45,7 @@ class helper_tests(unittest.TestCase):
         print('')
         for device in DEVICES:
             for driver in DRIVERS:
-                file_path = '\\NonexistentPath\\NonexistentFile.ext'
+                file_path = NONEXISTENT_FILE
                 with comms.Driver(device.comms_path) as cip:
                     value = terminal.helper.get_file_exists(cip, device.device_paths, file_path)
                     result = (
@@ -56,16 +57,48 @@ class helper_tests(unittest.TestCase):
                     print(result)
                     self.assertEqual(value, False)
 
+    def test_get_file_size(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                file_path = device.device_paths.helper_file
+                with comms.Driver(device.comms_path) as cip:
+                    value = terminal.helper.get_file_size(cip, device.device_paths, file_path)
+                    result = (
+                          f'Device: {device.name}\n' 
+                          f'Driver: {driver}\n' 
+                          f'Function: {terminal.helper.HelperFunctions.GET_FILE_SIZE} {file_path}\n'
+                          f'Value: {value}\n'
+                    )
+                    print(result)
+                    self.assertGreater(value, 0)
+
+    def test_get_file_size_bad_nonexistent(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                file_path = NONEXISTENT_FILE
+                with comms.Driver(device.comms_path) as cip:
+                    result = (
+                          f'Device: {device.name}\n' 
+                          f'Driver: {driver}\n' 
+                          f'Function: {terminal.helper.HelperFunctions.GET_FILE_SIZE} {file_path}\n'
+                    )
+                    print(result)
+                    with self.assertRaises(FileNotFoundError):
+                        terminal.helper.get_file_size(cip, device.device_paths, file_path)
+
     def test_get_folder_exists(self):
         print('')
         for device in DEVICES:
             for driver in DRIVERS:
+                folder_path = device.device_paths.storage
                 with comms.Driver(device.comms_path) as cip:
-                    value = terminal.helper.get_folder_exists(cip, device.device_paths, device.device_paths.storage)
+                    value = terminal.helper.get_folder_exists(cip, device.device_paths, folder_path)
                     result = (
                           f'Device: {device.name}\n' 
                           f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.GET_FOLDER_EXISTS} {device.device_paths.storage}\n'
+                          f'Function: {terminal.helper.HelperFunctions.GET_FOLDER_EXISTS} {folder_path}\n'
                           f'Value: {value}\n'
                     )
                     print(result)
@@ -75,7 +108,7 @@ class helper_tests(unittest.TestCase):
         print('')
         for device in DEVICES:
             for driver in DRIVERS:
-                folder_path = '\\NonexistentPath'
+                folder_path = NONEXISTENT_FOLDER
                 with comms.Driver(device.comms_path) as cip:
                     value = terminal.helper.get_folder_exists(cip, device.device_paths, folder_path)
                     result = (
