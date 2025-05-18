@@ -43,7 +43,15 @@ class helper_tests(unittest.TestCase):
 
 class registry_tests(unittest.TestCase):
     def setUp(self):
-        pass
+        self.skip_pairs = {
+            PVP5: {
+                terminal.registry.RegKeys.ME_STARTUP_APP,
+                terminal.registry.RegKeys.ME_STARTUP_DELETE_LOGS,
+                terminal.registry.RegKeys.ME_STARTUP_LOAD_CURRENT,
+                terminal.registry.RegKeys.ME_STARTUP_OPTIONS,
+                terminal.registry.RegKeys.ME_STARTUP_REPLACE_COMMS
+            },
+        }
 
     def test_read_registry(self):
         print('')
@@ -51,27 +59,16 @@ class registry_tests(unittest.TestCase):
             for driver in DRIVERS:
                 with comms.Driver(device.comms_path) as cip:
                     for key in terminal.registry.RegKeys:
-                        if (device.name == PVP5) and (key == terminal.registry.RegKeys.ME_STARTUP_APP):
-                            print(f'Skipping known failure for Device: {device.name}, Key: {key}.')
-                            continue
-                        if (device.name == PVP5) and (key == terminal.registry.RegKeys.ME_STARTUP_DELETE_LOGS):
-                            print(f'Skipping known failure for Device: {device.name}, Key: {key}.')
-                            continue
-                        if (device.name == PVP5) and (key == terminal.registry.RegKeys.ME_STARTUP_LOAD_CURRENT):
-                            print(f'Skipping known failure for Device: {device.name}, Key: {key}.')
-                            continue
-                        if (device.name == PVP5) and (key == terminal.registry.RegKeys.ME_STARTUP_OPTIONS):
-                            print(f'Skipping known failure for Device: {device.name}, Key: {key}.')
-                            continue
-                        if (device.name == PVP5) and (key == terminal.registry.RegKeys.ME_STARTUP_REPLACE_COMMS):
-                            print(f'Skipping known failure for Device: {device.name}, Key: {key}.')
-                            continue
+                        if device.name in self.skip_pairs and key in self.skip_pairs[device.name]:
+                            value = 'Skipping known failure.'
+                        else:
+                            value = f'Value: {terminal.registry.get_value(cip, [key])}'
 
                         result = (
                               f'Device: {device.name}\n'
                               f'Driver: {driver}\n'
                               f'Key: {key}\n'
-                              f'Value: {terminal.registry.get_value(cip, [key])}\n'
+                              f'{value}\n'
                         )
                         print(result)
 
