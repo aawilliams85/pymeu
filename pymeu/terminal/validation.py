@@ -181,7 +181,7 @@ def is_download_valid(cip: comms.Driver, device: types.MEDeviceInfo, file: types
         return False
 
     # Check that storage folder exists
-    resp_storage_exists = helper.get_folder_exists(cip, device.paths)
+    resp_storage_exists = helper.get_folder_exists(cip, device.paths, device.paths.storage)
     if not(resp_storage_exists):
         device.log.append(f'Storage folder does not exist on terminal')
         return False
