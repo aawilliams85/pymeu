@@ -1,7 +1,10 @@
 import time
 import unittest
 
+from pymeu import comms
 from pymeu import MEUtility
+from pymeu import terminal
+from pymeu import types
 
 from config import *
 
@@ -12,18 +15,36 @@ class download_tests(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_download_bad_ext(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                meu = MEUtility(device.comms_path, driver=driver)
+                download_file_path = os.path.join(DOWNLOAD_FOLDER_PATH, device.mer_files[0].replace('.mer','.zzz'))
+                result = (
+                        f'Device: {device.name}\n'
+                        f'Driver: {driver}\n'
+                        f'Function: download({download_file_path}, overwrite=True)\n'
+                )
+                print(result)
+                resp = meu.download(download_file_path, overwrite=True)
+                for s in resp.device.log: print(s)
+                print('')
+                self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)
+
     def test_download_overwrite(self):
         print('')
         for device in DEVICES:
             for driver in DRIVERS:
                 meu = MEUtility(device.comms_path, driver=driver)
+                download_file_path = os.path.join(DOWNLOAD_FOLDER_PATH, device.mer_files[0])
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
-                        f'Function: download({device.download_paths[0]}, overwrite=True)\n'
+                        f'Function: download({download_file_path}, overwrite=True)\n'
                 )
                 print(result)
-                resp = meu.download(device.download_paths[0], overwrite=True)
+                resp = meu.download(download_file_path, overwrite=True)
                 for s in resp.device.log: print(s)
                 print('')
                 self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
@@ -34,13 +55,14 @@ class download_tests(unittest.TestCase):
         for device in DEVICES:
             for driver in DRIVERS:
                 meu = MEUtility(device.comms_path, driver=driver)
+                download_file_path = os.path.join(DOWNLOAD_FOLDER_PATH, device.mer_files[0])
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
-                        f'Function: download({device.download_paths[0]}, overwrite=True, remote_file_name={device.mer_files[1]})\n'
+                        f'Function: download({download_file_path}, overwrite=True, remote_file_name={device.mer_files[1]})\n'
                 )
                 print(result)
-                resp = meu.download(device.download_paths[0], overwrite=True, remote_file_name=device.mer_files[1])
+                resp = meu.download(download_file_path, overwrite=True, remote_file_name=device.mer_files[1])
                 for s in resp.device.log: print(s)
                 print('')
                 self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
@@ -139,7 +161,41 @@ class upload_tests(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_upload_all(self):
+    def test_upload_bad_nonexistent(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                meu = MEUtility(device.comms_path, driver=driver)
+                upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, 'Nonexistent_Project.mer')
+                result = (
+                        f'Device: {device.name}\n'
+                        f'Driver: {driver}\n'
+                        f'Function: upload({upload_file_path}, overwrite=True)\n'
+                )
+                print(result)
+                resp = meu.upload(upload_file_path, overwrite=True)
+                for s in resp.device.log: print(s)
+                print('')
+                self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)
+
+    def test_upload_overwrite(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                meu = MEUtility(device.comms_path, driver=driver)
+                upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, device.mer_files[0])
+                result = (
+                        f'Device: {device.name}\n'
+                        f'Driver: {driver}\n'
+                        f'Function: upload({upload_file_path}, overwrite=True)\n'
+                )
+                print(result)
+                resp = meu.upload(upload_file_path, overwrite=True)
+                for s in resp.device.log: print(s)
+                print('')
+                self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+
+    def test_upload_all_overwrite(self):
         print('')
         for device in DEVICES:
             for driver in DRIVERS:
@@ -154,6 +210,34 @@ class upload_tests(unittest.TestCase):
                 for s in resp.device.log: print(s)
                 print('')
                 self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+
+    def test_upload_multiple_instances(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                meu = MEUtility(device.comms_path, driver=driver)
+                upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, device.mer_files[0])
+                result = (
+                        f'Device: {device.name}\n'
+                        f'Driver: {driver}\n'
+                        f'Function: upload({upload_file_path}, overwrite=True) with multiple instances\n'
+                )
+                print(result)
+
+                with comms.Driver(device.comms_path, driver=driver) as cip2:
+                    # Open parallel transfer instance (normally transfer instance 1)
+                    device2 = terminal.validation.get_terminal_info(cip2)
+                    path2 = f'{device2.paths.storage}\\Rockwell Software\\RSViewME\\Runtime\\{device.mer_files[0]}'
+                    transfer_instance_2 = terminal.files.create_transfer_instance_upload(cip2, path2)
+
+                    # Perform upload (normally transfer instance 2)
+                    resp = meu.upload(upload_file_path, overwrite=True)
+                    for s in resp.device.log: print(s)
+                    print('')
+                    self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+
+                    # Close parallel transfer instance
+                    terminal.files.delete_transfer_instance(cip2, transfer_instance_2)
 
     def tearDown(self):
         pass
