@@ -180,8 +180,8 @@ def get_file_size(cip: comms.Driver, paths: types.MEDevicePaths, file: types.MEF
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
     return int(resp_data)
 
-def get_folder_exists(cip: comms.Driver, paths: types.MEDevicePaths) -> bool:
-    req_args = [paths.helper_file, HelperFunctions.GET_FOLDER_EXISTS, paths.storage]
+def get_folder_exists(cip: comms.Driver, paths: types.MEDevicePaths, folder_path: str) -> bool:
+    req_args = [paths.helper_file, HelperFunctions.GET_FOLDER_EXISTS, folder_path]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0):
         warn(f'Response code was not zero.  Examine packets.')
