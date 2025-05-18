@@ -183,9 +183,7 @@ def get_file_size(cip: comms.Driver, paths: types.MEDevicePaths, file: types.MEF
 def get_folder_exists(cip: comms.Driver, paths: types.MEDevicePaths, folder_path: str) -> bool:
     req_args = [paths.helper_file, HelperFunctions.GET_FOLDER_EXISTS, folder_path]
     resp_code, resp_data = run_function(cip, req_args)
-    if (resp_code != 0):
-        warn(f'Response code was not zero.  Examine packets.')
-        return False
+    if (resp_code != 0): return False    
     return bool(int(resp_data))
 
 def get_free_space(cip: comms.Driver, paths: types.MEDevicePaths) -> int:

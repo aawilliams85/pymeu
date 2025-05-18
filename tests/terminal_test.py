@@ -12,7 +12,7 @@ class helper_tests(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_helper_version(self):
+    def test_get_helper_version(self):
         print('')
         for device in DEVICES:
             for driver in DRIVERS:
@@ -25,7 +25,38 @@ class helper_tests(unittest.TestCase):
                     )
                     print(result)
 
-    def test_helper_free_space(self):
+    def test_get_folder_exists(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                with comms.Driver(device.comms_path) as cip:
+                    value = terminal.helper.get_folder_exists(cip, device.device_paths, device.device_paths.storage)
+                    result = (
+                          f'Device: {device.name}\n' 
+                          f'Driver: {driver}\n' 
+                          f'Function: {terminal.helper.HelperFunctions.GET_FOLDER_EXISTS} {device.device_paths.storage}\n'
+                          f'Value: {value}\n'
+                    )
+                    print(result)
+                    self.assertEqual(value, True)
+
+    def test_get_folder_exists_bad_nonexistent(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                folder_path = '\\NonexistentPath'
+                with comms.Driver(device.comms_path) as cip:
+                    value = terminal.helper.get_folder_exists(cip, device.device_paths, folder_path)
+                    result = (
+                          f'Device: {device.name}\n' 
+                          f'Driver: {driver}\n' 
+                          f'Function: {terminal.helper.HelperFunctions.GET_FOLDER_EXISTS} {folder_path}\n'
+                          f'Value: {value}\n'
+                    )
+                    print(result)
+                    self.assertEqual(value, False)
+
+    def test_get_free_space(self):
         print('')
         for device in DEVICES:
             for driver in DRIVERS:
