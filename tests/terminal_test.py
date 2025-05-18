@@ -25,6 +25,37 @@ class helper_tests(unittest.TestCase):
                     )
                     print(result)
 
+    def test_get_file_exists(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                with comms.Driver(device.comms_path) as cip:
+                    value = terminal.helper.get_file_exists(cip, device.device_paths, device.device_paths.helper_file)
+                    result = (
+                          f'Device: {device.name}\n' 
+                          f'Driver: {driver}\n' 
+                          f'Function: {terminal.helper.HelperFunctions.GET_FILE_EXISTS} {device.device_paths.helper_file}\n'
+                          f'Value: {value}\n'
+                    )
+                    print(result)
+                    self.assertEqual(value, True)
+
+    def test_get_file_exists_bad_nonexistent(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                file_path = '\\NonexistentPath\\NonexistentFile.ext'
+                with comms.Driver(device.comms_path) as cip:
+                    value = terminal.helper.get_file_exists(cip, device.device_paths, file_path)
+                    result = (
+                          f'Device: {device.name}\n' 
+                          f'Driver: {driver}\n' 
+                          f'Function: {terminal.helper.HelperFunctions.GET_FILE_EXISTS} {file_path}\n'
+                          f'Value: {value}\n'
+                    )
+                    print(result)
+                    self.assertEqual(value, False)
+
     def test_get_folder_exists(self):
         print('')
         for device in DEVICES:
