@@ -146,7 +146,7 @@ def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.
 def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_file: types.MEFile) -> bool:
     # Verify file exists on terminal
     try:
-        if helper.get_file_exists(cip, device.paths, rem_file):
+        if helper.get_file_exists_mer(cip, device.paths, rem_file.name):
             device.log.append(f'File {rem_file.name} exists on terminal.')
         else:
             device.log.append(f'File {rem_file.name} does not exist on terminal.')

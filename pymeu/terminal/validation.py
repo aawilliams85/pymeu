@@ -195,7 +195,7 @@ def is_download_valid(cip: comms.Driver, device: types.MEDeviceInfo, file: types
         return False
 
     # Check if file name already exists
-    resp_file_exists = helper.get_file_exists(cip, device.paths, file)
+    resp_file_exists = helper.get_file_exists_mer(cip, device.paths, file.name)
     file.overwrite_required = False
     if (resp_file_exists and file.overwrite_requested):
         device.log.append(f'File {file.name} already exists on terminal, and overwrite was requested.  Setting overwrite to required.')
@@ -208,7 +208,7 @@ def is_download_valid(cip: comms.Driver, device: types.MEDeviceInfo, file: types
 
     # Check space consumed by file if it exists
     if resp_file_exists:
-        resp_file_size = helper.get_file_size(cip, device.paths, file)
+        resp_file_size = helper.get_file_size_mer(cip, device.paths, file.name)
         device.log.append(f'File {file.name} on terminal is {resp_file_size} bytes.')
 
     return True
