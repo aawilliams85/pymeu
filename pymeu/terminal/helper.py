@@ -196,11 +196,15 @@ def get_folder_exists(cip: comms.Driver, paths: types.MEDevicePaths, folder_path
     if (resp_code != 0): return False    
     return bool(int(resp_data))
 
-def get_free_space(cip: comms.Driver, paths: types.MEDevicePaths) -> int:
-    req_args = [paths.helper_file, HelperFunctions.GET_FREE_SPACE, f'{paths.runtime}\\']
+def get_free_space(cip: comms.Driver, paths: types.MEDevicePaths, folder_path: str) -> int:
+    req_args = [paths.helper_file, HelperFunctions.GET_FREE_SPACE, folder_path]
     resp_code, resp_data = run_function(cip, req_args)
-    if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
+    if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
     return int(resp_data)
+
+def get_free_space_runtime(cip: comms.Driver, paths: types.MEDevicePaths) -> int:
+    folder_path = f'{paths.runtime}\\'
+    return get_free_space(cip, paths, folder_path)
 
 def get_helper_version(cip: comms.Driver, paths: types.MEDevicePaths) -> str:
     req_args = [paths.helper_file, HelperFunctions.GET_VERSION, paths.helper_file]

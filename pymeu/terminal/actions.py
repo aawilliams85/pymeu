@@ -20,7 +20,7 @@ def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, r
     if print_log: print(f'Terminal runtime path: {device.paths.runtime}.')
 
     try:
-        line = f'Terminal has {helper.get_free_space(cip, device.paths)} free bytes.'
+        line = f'Terminal has {helper.get_free_space_runtime(cip, device.paths)} free bytes.'
     except:
         line = f'Failed to get free space on terminal.'
     device.log.append(line)

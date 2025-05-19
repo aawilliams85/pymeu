@@ -142,7 +142,7 @@ def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
     helper_file_path = f'{helper_path}\\{HELPER_FILE_NAME}'
     upload_list_path = f'{storage_path}\\{UPLOAD_LIST_PATH}'
     runtime_path = f'{storage_path}\\{RUNTIME_PATH}'
-    
+
     paths = types.MEDevicePaths(helper_file_path,
                               storage_path,
                               upload_list_path,
@@ -191,7 +191,7 @@ def is_download_valid(cip: comms.Driver, device: types.MEDeviceInfo, file: types
         return False
 
     # Check free space
-    resp_free_space = helper.get_free_space(cip, device.paths)
+    resp_free_space = helper.get_free_space_runtime(cip, device.paths)
     if (resp_free_space > file.get_size()):
         device.log.append(f'File {file.name} requires {file.get_size()} byes.  Free space on terminal {resp_free_space} bytes.')
     else:
