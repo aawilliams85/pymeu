@@ -13,53 +13,23 @@ CREATE_DIR_SUCCESS = 183 # 'b\xb7'
 
 # Known functions available from RemoteHelper.
 class HelperFunctions(StrEnum):
-    REBOOT = 'BootTerminal'
-    # ex: 'BootTerminal',''
-    #       Returns a comms error since upon successful execution, terminal is reset.
-
-    CREATE_DIRECTORY = 'CreateRemDirectory'
-    # ex: 'CreateRemDirectory','{Path}'
-    #       Returns a static value if successful, further investigation needed.
-
-    CREATE_SHORTCUT = 'CreateRemShortcut'
-
-    CREATE_ME_SHORTCUT = 'CreateRemMEStartupShortcut'
-    # ex: 'CreateRemMEStartupShortcut','{Folder Path}:{Filename.MER}: /r /delay'
-    #       Can also specify /o to replace comms and /d to delete logs at startup
-    #       Returns 1 if shortcut created successfully, 0 otherwise.
-
-    DELETE_DIRECTORY = 'DeleteRemDirectory'
-
-    DELETE_FILE = 'DeleteRemFile'
-
-    CREATE_FILE_LIST = 'FileBrowse'
-    # ex: 'FileBrowse','{Search Path}\\*.{Search Extension}::{Results File Path}
-    #       Returns 1 if results file generated successfully, 0 otherwise.
-
-    GET_FILE_EXISTS = 'FileExists'
-    # ex: 'FileExists','{File Path}'
-    #       Returns 1 if file exists, 0 otherwise.
-
-    GET_FILE_SIZE = 'FileSize'
-    # ex: 'FileSize','{File Path}'
-    #       Returns the number of bytes.
-
-    CREATE_FOLDER_LIST = 'FolderBrowse'
-
-    GET_FREE_SPACE = 'FreeSpace'
-    # ex: 'FreeSpace','{Path}'
-    #       Returns the number of bytes.
+    CREATE_FILE_LIST = 'FileBrowse' # Args: {Search Path}\\*.{Search Extension}::{Results File Path}, Returns: 1 if result generated
+    #CREATE_FILE_SHORTCUT = 'CreateRemShortcut' # Untested
+    CREATE_FOLDER = 'CreateRemDirectory' # Args: {Folder Path}, Returns: Static value if successful [Further investigation needed]
+    #CREATE_FOLDER_LIST = 'FolderBrowse' # Untested
+    CREATE_ME_SHORTCUT = 'CreateRemMEStartupShortcut' # Args: {Folder Path}:{Filename.MER}: /r /delay /o /d, Returns: 1 if startup shortcut is created
+    DELETE_FILE = 'DeleteRemFile' # Args: {File Path}, Returns ???
+    #DELETE_FOLDER = 'DeleteRemDirectory' # Untested
+    #GET_EXE_RUNNING = 'IsExeRunning' # Untested
+    GET_FILE_EXISTS = 'FileExists' # Args: {File Path}, Returns: 1 if {File Path} exists
+    GET_FILE_SIZE = 'FileSize' # Args: {File Path}, Returns: File size in bytes
     GET_FILE_VERSION = 'GetFileVersion'
-    GET_VERSION = 'GetVersion'
-    # ex: 'GetVersion','{File Path}'
-    #       Returns the a version string.
-
-    START_PROCESS = 'InvokeEXE'
-    GET_EXE_RUNNING = 'IsExeRunning'
-    GET_FOLDER_EXISTS = 'StorageExists'
-    # ex: 'StorageExists'.'{Path}'
-    #       Returns 1 if folder exists, 0 otherwise.
-    STOP_PROCESS = 'TerminateEXE'
+    GET_FOLDER_EXISTS = 'StorageExists' # Args: {Folder Path}, Returns: 1 if {Folder Path} exists
+    GET_FREE_SPACE = 'FreeSpace' # Args: {Folder Path}, Returns: Free size in bytes
+    GET_VERSION = 'GetVersion' # Args: {File Path}, Returns: Version string
+    REBOOT = 'BootTerminal' # Args: null, Returns: Comms error since upon successful execution, terminal is reset.
+    #START_PROCESS = 'InvokeEXE' # Untested
+    #STOP_PROCESS = 'TerminateEXE' # Untested
 
 def run_function(cip: comms.Driver, req_args):
     """
@@ -105,21 +75,6 @@ def run_function(cip: comms.Driver, req_args):
     resp_data = resp.value[4:].decode('utf-8').strip('\x00')
     return resp_code, resp_data
 
-def create_directory(cip: comms.Driver, paths: types.MEDevicePaths, dir: str) -> bool:
-    req_args = [paths.helper_file, HelperFunctions.CREATE_DIRECTORY, dir]
-    resp_code, resp_data = run_function(cip, req_args)
-    if (resp_code != CREATE_DIR_SUCCESS): raise Exception('Failed to create directory on terminal.')    
-    return True
-
-def create_directory_runtime(cip: comms.Driver, paths: types.MEDevicePaths) -> bool:
-    subfolders = paths.runtime.split('\\')
-    current_path = subfolders[0]
-    for folder in subfolders[1:]:
-        current_path = f'{current_path}\\{folder}'
-        if not create_directory(cip, paths, current_path): return False
-
-    return True
-
 def create_file_list_med(cip: comms.Driver, paths: types.MEDevicePaths):
     req_args = [paths.helper_file,HelperFunctions.CREATE_FILE_LIST, f'\\Temp\\~MER.00\\*.med::{paths.upload_list}']
     resp_code, resp_data = run_function(cip, req_args)
@@ -130,6 +85,21 @@ def create_file_list_mer(cip: comms.Driver, paths: types.MEDevicePaths):
     req_args = [paths.helper_file,HelperFunctions.CREATE_FILE_LIST, f'{paths.runtime}\\*.mer::{paths.upload_list}']
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
+    return True
+
+def create_folder(cip: comms.Driver, paths: types.MEDevicePaths, dir: str) -> bool:
+    req_args = [paths.helper_file, HelperFunctions.CREATE_FOLDER, dir]
+    resp_code, resp_data = run_function(cip, req_args)
+    if (resp_code != CREATE_DIR_SUCCESS): raise Exception('Failed to create directory on terminal.')    
+    return True
+
+def create_folder_runtime(cip: comms.Driver, paths: types.MEDevicePaths) -> bool:
+    subfolders = paths.runtime.split('\\')
+    current_path = subfolders[0]
+    for folder in subfolders[1:]:
+        current_path = f'{current_path}\\{folder}'
+        if not create_folder(cip, paths, current_path): return False
+
     return True
 
 def create_me_shortcut(cip: comms.Driver, paths: types.MEDevicePaths, file: str, replace_comms: bool, delete_logs: bool) -> bool:
@@ -161,7 +131,7 @@ def create_me_shortcut(cip: comms.Driver, paths: types.MEDevicePaths, file: str,
     return True
 
 def delete_file(cip: comms.Driver, paths: types.MEDevicePaths, file: str) -> bool:
-    req_args = [paths.helper_file,HelperFunctions.DELETE_FILE,file]
+    req_args = [paths.helper_file, HelperFunctions.DELETE_FILE, file]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Failed to delete file on terminal: {file}, response code: {resp_code}, response data: {resp_data}.')
     return True
