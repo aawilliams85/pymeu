@@ -43,7 +43,6 @@ class helper_tests(unittest.TestCase):
                     with self.assertRaises(FileNotFoundError):
                         terminal.helper.get_file_version(cip, device.device_paths, file_path)
 
-
     def test_get_file_exists(self):
         print('')
         for device in DEVICES:
@@ -167,7 +166,7 @@ class helper_tests(unittest.TestCase):
                           f'Function: {terminal.helper.HelperFunctions.GET_FREE_SPACE} {folder_path}\n'
                     )
                     print(result)
-                    with self.assertRaises(Exception):
+                    with self.assertRaises(FileNotFoundError):
                         terminal.helper.get_free_space(cip, device.device_paths, folder_path)
 
     def tearDown(self):

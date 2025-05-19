@@ -197,6 +197,7 @@ def get_folder_exists(cip: comms.Driver, paths: types.MEDevicePaths, folder_path
     return bool(int(resp_data))
 
 def get_free_space(cip: comms.Driver, paths: types.MEDevicePaths, folder_path: str) -> int:
+    if not(get_folder_exists(cip, paths, folder_path)): raise FileNotFoundError(f'Folder {folder_path} does not exist on remote terminal.')
     req_args = [paths.helper_file, HelperFunctions.GET_FREE_SPACE, folder_path]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
