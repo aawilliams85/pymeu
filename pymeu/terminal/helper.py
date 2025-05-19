@@ -206,10 +206,11 @@ def get_free_space_runtime(cip: comms.Driver, paths: types.MEDevicePaths) -> int
     folder_path = f'{paths.runtime}\\'
     return get_free_space(cip, paths, folder_path)
 
-def get_helper_version(cip: comms.Driver, paths: types.MEDevicePaths) -> str:
-    req_args = [paths.helper_file, HelperFunctions.GET_VERSION, paths.helper_file]
+def get_file_version(cip: comms.Driver, paths: types.MEDevicePaths, file_path: str) -> str:
+    if not(get_file_exists(cip, paths, file_path)): raise FileNotFoundError(f'File {file_path} does not exist on remote terminal.')
+    req_args = [paths.helper_file, HelperFunctions.GET_VERSION, file_path]
     resp_code, resp_data = run_function(cip, req_args)
-    if (resp_code != 0): raise Exception(f'Response code was not zero.  Examine packets.')
+    if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
     return str(resp_data)
 
 def reboot(cip: comms.Driver, paths: types.MEDevicePaths):
