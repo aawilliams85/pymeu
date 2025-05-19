@@ -65,7 +65,7 @@ def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, r
 def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
     # Create runtime folder
     try:
-        helper.create_directory_runtime(cip, device.paths)
+        helper.create_folder_runtime(cip, device.paths)
         device.log.append(f'Create runtime directory on terminal.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
