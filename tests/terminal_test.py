@@ -124,14 +124,32 @@ class helper_tests(unittest.TestCase):
         print('')
         for device in DEVICES:
             for driver in DRIVERS:
+                folder_path = f'{device.device_paths.runtime}\\'
+                with comms.Driver(device.comms_path) as cip:
+                    value = terminal.helper.get_free_space(cip, device.device_paths, folder_path)
+                    result = (
+                          f'Device: {device.name}\n' 
+                          f'Driver: {driver}\n' 
+                          f'Function: {terminal.helper.HelperFunctions.GET_FREE_SPACE} {folder_path}\n'
+                          f'Value: {value}\n'
+                    )
+                    print(result)
+                    self.assertGreater(value, 0)
+
+    def test_get_free_space_bad_nonexistent(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                folder_path = f'{NONEXISTENT_FOLDER}\\'
                 with comms.Driver(device.comms_path) as cip:
                     result = (
                           f'Device: {device.name}\n' 
                           f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.GET_FREE_SPACE}\n'
-                          f'Value: {terminal.helper.get_free_space(cip, device.device_paths)}\n'
+                          f'Function: {terminal.helper.HelperFunctions.GET_FREE_SPACE} {folder_path}\n'
                     )
                     print(result)
+                    with self.assertRaises(Exception):
+                        terminal.helper.get_free_space(cip, device.device_paths, folder_path)
 
     def tearDown(self):
         pass
