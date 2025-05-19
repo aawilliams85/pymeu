@@ -12,6 +12,45 @@ class helper_tests(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_create_folder(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                folder_path = device.device_paths.runtime
+                with comms.Driver(device.comms_path) as cip:
+                    value = terminal.helper.create_folder(cip, device.device_paths, folder_path)
+                    result = (
+                          f'Device: {device.name}\n' 
+                          f'Driver: {driver}\n' 
+                          f'Function: {terminal.helper.HelperFunctions.CREATE_FOLDER} {folder_path}\n'
+                          f'Value: {value}\n'
+                    )
+                    print(result)
+                    self.assertEqual(value, True)
+
+    '''
+    # This is half-baked.
+    #
+    # The PVP5 accepts the invalid path and then seems to answer that the folder exists in other tests,
+    # until reboot.
+    # The PVP6 rejects the invalid path and throws an exception.
+
+    def test_create_folder_bad_nonexistent(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                folder_path = NONEXISTENT_FOLDER
+                with comms.Driver(device.comms_path) as cip:
+                    result = (
+                          f'Device: {device.name}\n' 
+                          f'Driver: {driver}\n' 
+                          f'Function: {terminal.helper.HelperFunctions.CREATE_FOLDER} {folder_path}\n'
+                    )
+                    print(result)
+                    with self.assertRaises(Exception):
+                        terminal.helper.create_folder(cip, device.device_paths, folder_path)
+    '''
+
     def test_get_file_exists(self):
         print('')
         for device in DEVICES:
@@ -75,37 +114,6 @@ class helper_tests(unittest.TestCase):
                     with self.assertRaises(FileNotFoundError):
                         terminal.helper.get_file_size(cip, device.device_paths, file_path)
 
-    def test_get_file_version(self):
-        print('')
-        for device in DEVICES:
-            for driver in DRIVERS:
-                file_path = device.device_paths.helper_file
-                with comms.Driver(device.comms_path) as cip:
-                    value = terminal.helper.get_file_version(cip, device.device_paths, file_path)
-                    result = (
-                          f'Device: {device.name}\n'
-                          f'Driver: {driver}\n'
-                          f'Function: {terminal.helper.HelperFunctions.GET_VERSION} {file_path}\n'
-                          f'Value: {value}\n'
-                    )
-                    print(result)
-                    self.assertIsNotNone(value)
-
-    def test_get_file_version_bad_nonexistent(self):
-        print('')
-        for device in DEVICES:
-            for driver in DRIVERS:
-                file_path = NONEXISTENT_FILE
-                with comms.Driver(device.comms_path) as cip:
-                    result = (
-                          f'Device: {device.name}\n'
-                          f'Driver: {driver}\n'
-                          f'Function: {terminal.helper.HelperFunctions.GET_VERSION} {file_path}\n'
-                    )
-                    print(result)
-                    with self.assertRaises(FileNotFoundError):
-                        terminal.helper.get_file_version(cip, device.device_paths, file_path)
-
     def test_get_folder_exists(self):
         print('')
         for device in DEVICES:
@@ -168,6 +176,37 @@ class helper_tests(unittest.TestCase):
                     print(result)
                     with self.assertRaises(FileNotFoundError):
                         terminal.helper.get_free_space(cip, device.device_paths, folder_path)
+
+    def test_get_version(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                file_path = device.device_paths.helper_file
+                with comms.Driver(device.comms_path) as cip:
+                    value = terminal.helper.get_version(cip, device.device_paths, file_path)
+                    result = (
+                          f'Device: {device.name}\n'
+                          f'Driver: {driver}\n'
+                          f'Function: {terminal.helper.HelperFunctions.GET_VERSION} {file_path}\n'
+                          f'Value: {value}\n'
+                    )
+                    print(result)
+                    self.assertIsNotNone(value)
+
+    def test_get_version_bad_nonexistent(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                file_path = NONEXISTENT_FILE
+                with comms.Driver(device.comms_path) as cip:
+                    result = (
+                          f'Device: {device.name}\n'
+                          f'Driver: {driver}\n'
+                          f'Function: {terminal.helper.HelperFunctions.GET_VERSION} {file_path}\n'
+                    )
+                    print(result)
+                    with self.assertRaises(FileNotFoundError):
+                        terminal.helper.get_version(cip, device.device_paths, file_path)
 
     def tearDown(self):
         pass

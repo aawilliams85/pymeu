@@ -18,12 +18,12 @@ class HelperFunctions(StrEnum):
     CREATE_FOLDER = 'CreateRemDirectory' # Args: {Folder Path}, Returns: Static value if successful [Further investigation needed]
     #CREATE_FOLDER_LIST = 'FolderBrowse' # Untested
     CREATE_ME_SHORTCUT = 'CreateRemMEStartupShortcut' # Args: {Folder Path}:{Filename.MER}: /r /delay /o /d, Returns: 1 if startup shortcut is created
-    DELETE_FILE = 'DeleteRemFile' # Args: {File Path}, Returns ???
+    DELETE_FILE = 'DeleteRemFile' # Args: {File Path}, Returns: ???
     #DELETE_FOLDER = 'DeleteRemDirectory' # Untested
     #GET_EXE_RUNNING = 'IsExeRunning' # Untested
     GET_FILE_EXISTS = 'FileExists' # Args: {File Path}, Returns: 1 if {File Path} exists
     GET_FILE_SIZE = 'FileSize' # Args: {File Path}, Returns: File size in bytes
-    GET_FILE_VERSION = 'GetFileVersion'
+    #GET_FILE_VERSION = 'GetFileVersion' # Untested
     GET_FOLDER_EXISTS = 'StorageExists' # Args: {Folder Path}, Returns: 1 if {Folder Path} exists
     GET_FREE_SPACE = 'FreeSpace' # Args: {Folder Path}, Returns: Free size in bytes
     GET_VERSION = 'GetVersion' # Args: {File Path}, Returns: Version string
@@ -90,7 +90,7 @@ def create_file_list_mer(cip: comms.Driver, paths: types.MEDevicePaths):
 def create_folder(cip: comms.Driver, paths: types.MEDevicePaths, dir: str) -> bool:
     req_args = [paths.helper_file, HelperFunctions.CREATE_FOLDER, dir]
     resp_code, resp_data = run_function(cip, req_args)
-    if (resp_code != CREATE_DIR_SUCCESS): raise Exception('Failed to create directory on terminal.')    
+    if (resp_code != CREATE_DIR_SUCCESS): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
     return True
 
 def create_folder_runtime(cip: comms.Driver, paths: types.MEDevicePaths) -> bool:
@@ -130,14 +130,23 @@ def create_me_shortcut(cip: comms.Driver, paths: types.MEDevicePaths, file: str,
     if (resp_code != 0): raise Exception(f'Failed to create ME Startup Shortcut on terminal: {file}, response code: {resp_code}, response data: {resp_data}.')
     return True
 
-def delete_file(cip: comms.Driver, paths: types.MEDevicePaths, file: str) -> bool:
-    req_args = [paths.helper_file, HelperFunctions.DELETE_FILE, file]
+def delete_file(cip: comms.Driver, paths: types.MEDevicePaths, file_path: str) -> bool:
+    req_args = [paths.helper_file, HelperFunctions.DELETE_FILE, file_path]
     resp_code, resp_data = run_function(cip, req_args)
-    if (resp_code != 0): raise Exception(f'Failed to delete file on terminal: {file}, response code: {resp_code}, response data: {resp_data}.')
+    if (resp_code != 0): raise Exception(f'Failed to delete file on terminal: {file_path}, response code: {resp_code}, response data: {resp_data}.')
     return True
 
 def delete_file_list(cip: comms.Driver, paths: types.MEDevicePaths) -> bool:
     return delete_file(cip, paths, paths.upload_list)
+
+'''
+# Untested
+def delete_folder(cip: comms.Driver, paths: types.MEDevicePaths, folder_path: str) -> bool:
+    req_args = [paths.helper_file, HelperFunctions.DELETE_FOLDER, folder_path]
+    resp_code, resp_data = run_function(cip, req_args)
+    if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
+    return True
+'''
 
 def get_file_exists(cip: comms.Driver, paths: types.MEDevicePaths, file_path: str) -> bool:
     req_args = [paths.helper_file, HelperFunctions.GET_FILE_EXISTS, file_path]
@@ -160,13 +169,6 @@ def get_file_size_mer(cip: comms.Driver, paths: types.MEDevicePaths, file_name: 
     file_path = f'{paths.runtime}\\{file_name}'
     return get_file_size(cip, paths, file_path)
 
-def get_file_version(cip: comms.Driver, paths: types.MEDevicePaths, file_path: str) -> str:
-    if not(get_file_exists(cip, paths, file_path)): raise FileNotFoundError(f'File {file_path} does not exist on remote terminal.')
-    req_args = [paths.helper_file, HelperFunctions.GET_VERSION, file_path]
-    resp_code, resp_data = run_function(cip, req_args)
-    if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
-    return str(resp_data)
-
 def get_folder_exists(cip: comms.Driver, paths: types.MEDevicePaths, folder_path: str) -> bool:
     req_args = [paths.helper_file, HelperFunctions.GET_FOLDER_EXISTS, folder_path]
     resp_code, resp_data = run_function(cip, req_args)
@@ -183,6 +185,13 @@ def get_free_space(cip: comms.Driver, paths: types.MEDevicePaths, folder_path: s
 def get_free_space_runtime(cip: comms.Driver, paths: types.MEDevicePaths) -> int:
     folder_path = f'{paths.runtime}\\'
     return get_free_space(cip, paths, folder_path)
+
+def get_version(cip: comms.Driver, paths: types.MEDevicePaths, file_path: str) -> str:
+    if not(get_file_exists(cip, paths, file_path)): raise FileNotFoundError(f'File {file_path} does not exist on remote terminal.')
+    req_args = [paths.helper_file, HelperFunctions.GET_VERSION, file_path]
+    resp_code, resp_data = run_function(cip, req_args)
+    if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
+    return str(resp_data)
 
 def reboot(cip: comms.Driver, paths: types.MEDevicePaths):
     req_args = [paths.helper_file, HelperFunctions.REBOOT,'']
