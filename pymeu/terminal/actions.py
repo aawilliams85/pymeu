@@ -65,7 +65,7 @@ def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, r
 def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
     # Create runtime folder
     try:
-        helper.create_runtime_directory(cip, device.paths)
+        helper.create_directory_runtime(cip, device.paths)
         device.log.append(f'Create runtime directory on terminal.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -187,7 +187,7 @@ def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.M
 def upload_med_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
     # Create list on the terminal
     try:
-        helper.create_med_list(cip, device.paths)
+        helper.create_file_list_med(cip, device.paths)
         device.log.append(f'Created *.MED list on terminal.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -233,7 +233,7 @@ def upload_med_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
 def upload_mer_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
     # Create *.MER list
     try:
-        helper.create_mer_list(cip, device.paths)
+        helper.create_file_list_mer(cip, device.paths)
         device.log.append(f'Created *.MER list on terminal.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
