@@ -251,8 +251,10 @@ class registry_tests(unittest.TestCase):
     def test_read_registry(self):
         print('')
         for device in DEVICES:
+            results = []
             for driver in DRIVERS:
                 with comms.Driver(device.comms_path) as cip:
+                    kvp = []
                     for key in terminal.registry.RegKeys:
                         if device.name in self.skip_pairs and key in self.skip_pairs[device.name]:
                             value = 'Skipping known failure.'
@@ -266,6 +268,9 @@ class registry_tests(unittest.TestCase):
                               f'{value}\n'
                         )
                         print(result)
+                        kvp.append(f'{key},{value}')
+                    results.append(kvp)
+            self.assertTrue(all(x == results[0] for x in results))
 
     def tearDown(self):
         pass
