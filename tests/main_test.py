@@ -183,7 +183,7 @@ class upload_tests(unittest.TestCase):
         for device in DEVICES:
             for driver in DRIVERS:
                 meu = MEUtility(device.comms_path, driver=driver)
-                upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, device.mer_files[0])
+                upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, device.name, driver, device.mer_files[0])
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
@@ -200,13 +200,14 @@ class upload_tests(unittest.TestCase):
         for device in DEVICES:
             for driver in DRIVERS:
                 meu = MEUtility(device.comms_path, driver=driver)
+                upload_folder_path = os.path.join(UPLOAD_FOLDER_PATH, device.name, driver)
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
                         f'Function: upload_all({UPLOAD_FOLDER_PATH}, overwrite=True)\n'
                 )
                 print(result)
-                resp = meu.upload_all(UPLOAD_FOLDER_PATH, overwrite=True)
+                resp = meu.upload_all(upload_folder_path, overwrite=True)
                 for s in resp.device.log: print(s)
                 print('')
                 self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
@@ -216,7 +217,7 @@ class upload_tests(unittest.TestCase):
         for device in DEVICES:
             for driver in DRIVERS:
                 meu = MEUtility(device.comms_path, driver=driver)
-                upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, device.mer_files[0])
+                upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, device.name, driver, device.mer_files[0])
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
