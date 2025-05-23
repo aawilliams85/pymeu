@@ -1,3 +1,4 @@
+import filecmp
 import time
 import unittest
 
@@ -181,6 +182,7 @@ class upload_tests(unittest.TestCase):
     def test_upload_overwrite(self):
         print('')
         for device in DEVICES:
+            results = []
             for driver in DRIVERS:
                 meu = MEUtility(device.comms_path, driver=driver)
                 upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, device.name, driver, device.mer_files[0])
@@ -194,6 +196,8 @@ class upload_tests(unittest.TestCase):
                 for s in resp.device.log: print(s)
                 print('')
                 self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+                results.append(upload_file_path)
+            self.assertTrue(all(filecmp.cmp(results[0], x, shallow=False) for x in results))
 
     def test_upload_all_overwrite(self):
         print('')
