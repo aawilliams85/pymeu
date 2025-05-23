@@ -50,7 +50,7 @@ coverage.xml
 docs/_build/
 
 # Uploads from tests
-/tests/upload/*.mer
+/tests/upload/*
 
 # pypi config
 *.pypirc
