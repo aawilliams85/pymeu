@@ -15,6 +15,7 @@ class helper_tests(unittest.TestCase):
     def test_create_folder(self):
         print('')
         for device in DEVICES:
+            results = []
             for driver in DRIVERS:
                 folder_path = device.device_paths.runtime
                 with comms.Driver(device.comms_path) as cip:
@@ -27,6 +28,8 @@ class helper_tests(unittest.TestCase):
                     )
                     print(result)
                     self.assertEqual(value, True)
+                    results.append(value)
+            self.assertTrue(all(x == results[0] for x in results))
 
     '''
     # This is half-baked.
@@ -38,6 +41,7 @@ class helper_tests(unittest.TestCase):
     def test_create_folder_bad_nonexistent(self):
         print('')
         for device in DEVICES:
+            results = []
             for driver in DRIVERS:
                 folder_path = NONEXISTENT_FOLDER
                 with comms.Driver(device.comms_path) as cip:
@@ -54,6 +58,7 @@ class helper_tests(unittest.TestCase):
     def test_get_file_exists(self):
         print('')
         for device in DEVICES:
+            results = []
             for driver in DRIVERS:
                 file_path = device.device_paths.helper_file
                 with comms.Driver(device.comms_path) as cip:
@@ -66,10 +71,13 @@ class helper_tests(unittest.TestCase):
                     )
                     print(result)
                     self.assertEqual(value, True)
+                    results.append(value)
+            self.assertTrue(all(x == results[0] for x in results))
 
     def test_get_file_exists_bad_nonexistent(self):
         print('')
         for device in DEVICES:
+            results = []
             for driver in DRIVERS:
                 file_path = NONEXISTENT_FILE
                 with comms.Driver(device.comms_path) as cip:
@@ -82,10 +90,13 @@ class helper_tests(unittest.TestCase):
                     )
                     print(result)
                     self.assertEqual(value, False)
+                    results.append(value)
+            self.assertTrue(all(x == results[0] for x in results))
 
     def test_get_file_size(self):
         print('')
         for device in DEVICES:
+            results = []
             for driver in DRIVERS:
                 file_path = device.device_paths.helper_file
                 with comms.Driver(device.comms_path) as cip:
@@ -98,6 +109,8 @@ class helper_tests(unittest.TestCase):
                     )
                     print(result)
                     self.assertGreater(value, 0)
+                    results.append(value)
+            self.assertTrue(all(x == results[0] for x in results))
 
     def test_get_file_size_bad_nonexistent(self):
         print('')
@@ -117,6 +130,7 @@ class helper_tests(unittest.TestCase):
     def test_get_folder_exists(self):
         print('')
         for device in DEVICES:
+            results = []
             for driver in DRIVERS:
                 folder_path = device.device_paths.storage
                 with comms.Driver(device.comms_path) as cip:
@@ -129,10 +143,13 @@ class helper_tests(unittest.TestCase):
                     )
                     print(result)
                     self.assertEqual(value, True)
+                    results.append(value)
+            self.assertTrue(all(x == results[0] for x in results))
 
     def test_get_folder_exists_bad_nonexistent(self):
         print('')
         for device in DEVICES:
+            results = []
             for driver in DRIVERS:
                 folder_path = NONEXISTENT_FOLDER
                 with comms.Driver(device.comms_path) as cip:
@@ -145,10 +162,13 @@ class helper_tests(unittest.TestCase):
                     )
                     print(result)
                     self.assertEqual(value, False)
+                    results.append(value)
+            self.assertTrue(all(x == results[0] for x in results))
 
     def test_get_free_space(self):
         print('')
         for device in DEVICES:
+            results = []
             for driver in DRIVERS:
                 folder_path = f'{device.device_paths.runtime}\\'
                 with comms.Driver(device.comms_path) as cip:
@@ -161,6 +181,8 @@ class helper_tests(unittest.TestCase):
                     )
                     print(result)
                     self.assertGreater(value, 0)
+                    results.append(value)
+            self.assertTrue(all(x == results[0] for x in results))
 
     def test_get_free_space_bad_nonexistent(self):
         print('')
@@ -180,6 +202,7 @@ class helper_tests(unittest.TestCase):
     def test_get_version(self):
         print('')
         for device in DEVICES:
+            results = []
             for driver in DRIVERS:
                 file_path = device.device_paths.helper_file
                 with comms.Driver(device.comms_path) as cip:
@@ -192,6 +215,8 @@ class helper_tests(unittest.TestCase):
                     )
                     print(result)
                     self.assertIsNotNone(value)
+                    results.append(value)
+            self.assertTrue(all(x == results[0] for x in results))
 
     def test_get_version_bad_nonexistent(self):
         print('')
