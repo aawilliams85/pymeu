@@ -15,6 +15,7 @@ class Driver:
 
     def __init__(self, comms_path=None, driver=None):
         self._comms_path = comms_path
+        self._route_path = None
 
         if not AVAILABLE_DRIVERS:
             raise ImportError("You need to install pycomm3 or pylogix")
@@ -22,21 +23,20 @@ class Driver:
         # select the driver the user requested
         if driver:
             if driver in AVAILABLE_DRIVERS:
-                self.plc_driver = driver
+                self._driver = driver
             else:
                 raise ImportError(f"{driver} is not installed on the system")
         else:
             # no driver requested, pick the first one
-            self.plc_driver = AVAILABLE_DRIVERS[0]
+            self._driver = AVAILABLE_DRIVERS[0]
 
-        if self.plc_driver == "pylogix":
-            self._route_path = None
+        if self._driver == "pylogix":
             if self.is_routed_path():
                 self._comms_path, self._route_path = self.pycomm3_path_to_pylogix_route(self._comms_path)
 
             self.cip = pylogix.PLC(self._comms_path)
             self.cip.Route = self._route_path
-        elif self.plc_driver == "pycomm3":
+        elif self._driver == "pycomm3":
             self.cip = pycomm3.CIPDriver(self._comms_path)
             self.cip.open()
 
@@ -44,13 +44,13 @@ class Driver:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.plc_driver == "pylogix":
+        if self._driver == "pylogix":
             self.cip.Close()
-        if self.plc_driver == "pycomm3":
+        if self._driver == "pycomm3":
             self.cip.close()
 
     def generic_message(self, service, class_code, instance, request_data=b''):
-        if self.plc_driver == "pylogix":
+        if self._driver == "pylogix":
             ret = self.cip.Message(cip_service=service,
                                    cip_class=class_code,
                                    cip_instance=instance,
@@ -61,7 +61,7 @@ class Driver:
             else:
                 status = ret.Status
             return Response(ret.Value[44:], None, status)
-        elif self.plc_driver == "pycomm3":
+        elif self._driver == "pycomm3":
             connected = False
             if self.is_routed_path():
                 unconnected_send = True
@@ -80,25 +80,25 @@ class Driver:
 
     @property
     def timeout(self):
-        if self.plc_driver == "pycomm3":
+        if self._driver == "pycomm3":
             return self.cip._cfg['socket_timeout']
-        if self.plc_driver == "pylogix":
+        if self._driver == "pylogix":
             return self.cip.SocketTimeout
 
     @timeout.setter
     def timeout(self, new_value):
-        if self.plc_driver == "pycomm3":
+        if self._driver == "pycomm3":
             self.cip._cfg['socket_timeout'] = new_value
 
-        if self.plc_driver == "pylogix":
+        if self._driver == "pylogix":
             self.cip.SocketTimeout = new_value
 
     def open(self):
-        if self.plc_driver== "pycomm3":
+        if self._driver== "pycomm3":
             self.cip.open()
 
     def close(self):
-        if self.plc_driver == "pycomm3":
+        if self._driver == "pycomm3":
             self.cip.close()
 
     @property
@@ -113,7 +113,7 @@ class Driver:
             return 450
 
     def is_routed_path(self):
-        if (',' in self._comms_path) or ('/' in self._comms_path):
+        if (',' in self._comms_path) or ('/' in self._comms_path) or (self._route_path is not None):
             return True
         else:
             return False
