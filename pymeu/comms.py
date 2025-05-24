@@ -13,8 +13,8 @@ except: pass
 
 class Driver:
 
-    def __init__(self, cip_path=None, driver=None):
-        self._cip_path = cip_path
+    def __init__(self, comms_path=None, driver=None):
+        self._comms_path = comms_path
 
         if not AVAILABLE_DRIVERS:
             raise ImportError("You need to install pycomm3 or pylogix")
@@ -30,9 +30,14 @@ class Driver:
             self.plc_driver = AVAILABLE_DRIVERS[0]
 
         if self.plc_driver == "pylogix":
-            self.cip = pylogix.PLC(self._cip_path)
+            self._route_path = None
+            if self.is_routed_path():
+                self._comms_path, self._route_path = self.pycomm3_path_to_pylogix_route(self._comms_path)
+
+            self.cip = pylogix.PLC(self._comms_path)
+            self.cip.Route = self._route_path
         elif self.plc_driver == "pycomm3":
-            self.cip = pycomm3.CIPDriver(self._cip_path)
+            self.cip = pycomm3.CIPDriver(self._comms_path)
             self.cip.open()
 
     def __enter__(self):
@@ -94,10 +99,41 @@ class Driver:
             return 450
 
     def is_routed_path(self):
-        if (',' in self._cip_path) or ('/' in self._cip_path):
+        if (',' in self._comms_path) or ('/' in self._comms_path):
             return True
         else:
             return False
+        
+    def pycomm3_path_to_pylogix_route(self, path: str):
+        """
+        Converts a pycomm3-style route string into a pylogix Route list.
+
+        Args:
+            path (str): A comma-separated route string, e.g., '192.168.1.20,4,192.168.2.10'
+
+        Returns:
+            tuple: (starting_ip: str, pylogix_route: list of tuples)
+        """
+        if ',' in path:
+            parts = path.split(',')
+        elif '/' in path:
+            parts = path.split('/')
+        else:
+            raise Exception(f'Failed to split path {path}.')
+
+        if len(parts) < 3 or len(parts) % 2 == 0:
+            raise ValueError("Path must have at least one routing pair (port, destination) after the start IP.")
+
+        starting_ip = parts[0]
+        route = []
+
+        # Build route: (port, value) pairs
+        for i in range(1, len(parts), 2):
+            port = int(parts[i])
+            value = parts[i + 1]
+            route.append((port, value))
+
+        return starting_ip, route
 
 
 class Response(object):

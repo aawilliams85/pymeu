@@ -148,7 +148,7 @@ def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
                               upload_list_path,
                               runtime_path)
 
-    return types.MEDeviceInfo(cip._cip_path, 
+    return types.MEDeviceInfo(cip._comms_path, 
                                helper.get_version(cip, paths, paths.helper_file),
                                me_version,
                                registry.get_version_major(cip),
