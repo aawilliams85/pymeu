@@ -25,6 +25,7 @@ class download_tests(unittest.TestCase):
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
                         f'Function: download({download_file_path}, overwrite=True)\n'
                 )
                 print(result)
@@ -42,6 +43,7 @@ class download_tests(unittest.TestCase):
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
                         f'Function: download({download_file_path}, overwrite=True)\n'
                 )
                 print(result)
@@ -60,6 +62,7 @@ class download_tests(unittest.TestCase):
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
                         f'Function: download({download_file_path}, overwrite=True, remote_file_name={device.mer_files[1]})\n'
                 )
                 print(result)
@@ -84,6 +87,7 @@ class info_tests(unittest.TestCase):
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
                         f'Function: get_terminal_info\n'
                 )
                 print(result)
@@ -97,6 +101,7 @@ class info_tests(unittest.TestCase):
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
                         f'Function: get_terminal_info(print_log=True)\n'
                 )
                 print(result)
@@ -111,6 +116,7 @@ class info_tests(unittest.TestCase):
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
                         f'Function: get_terminal_info(print_log=True, redact_log=True)\n'
                 )
                 print(result)
@@ -125,6 +131,7 @@ class info_tests(unittest.TestCase):
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
                         f'Function: get_terminal_info(print_log=True, silent_mode=True)\n'
                 )
                 print(result)
@@ -146,6 +153,7 @@ class reboot_tests(unittest.TestCase):
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
                         f'Function: reboot()\n'
                 )
                 print(result)
@@ -171,6 +179,7 @@ class upload_tests(unittest.TestCase):
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
                         f'Function: upload({upload_file_path}, overwrite=True)\n'
                 )
                 print(result)
@@ -189,6 +198,7 @@ class upload_tests(unittest.TestCase):
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
                         f'Function: upload({upload_file_path}, overwrite=True)\n'
                 )
                 print(result)
@@ -208,6 +218,7 @@ class upload_tests(unittest.TestCase):
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
                         f'Function: upload_all({UPLOAD_FOLDER_PATH}, overwrite=True)\n'
                 )
                 print(result)
@@ -225,6 +236,7 @@ class upload_tests(unittest.TestCase):
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
                         f'Function: upload({upload_file_path}, overwrite=True) with multiple instances\n'
                 )
                 print(result)

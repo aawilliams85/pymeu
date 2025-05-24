@@ -21,10 +21,11 @@ class helper_tests(unittest.TestCase):
                 with comms.Driver(device.comms_path) as cip:
                     value = terminal.helper.create_folder(cip, device.device_paths, folder_path)
                     result = (
-                          f'Device: {device.name}\n' 
-                          f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.CREATE_FOLDER} {folder_path}\n'
-                          f'Value: {value}\n'
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {device.comms_path}\n'
+                        f'Function: {terminal.helper.HelperFunctions.CREATE_FOLDER} {folder_path}\n'
+                        f'Value: {value}\n'
                     )
                     print(result)
                     self.assertEqual(value, True)
@@ -46,9 +47,10 @@ class helper_tests(unittest.TestCase):
                 folder_path = NONEXISTENT_FOLDER
                 with comms.Driver(device.comms_path) as cip:
                     result = (
-                          f'Device: {device.name}\n' 
-                          f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.CREATE_FOLDER} {folder_path}\n'
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {device.comms_path}\n'
+                        f'Function: {terminal.helper.HelperFunctions.CREATE_FOLDER} {folder_path}\n'
                     )
                     print(result)
                     with self.assertRaises(Exception):
@@ -64,10 +66,11 @@ class helper_tests(unittest.TestCase):
                 with comms.Driver(device.comms_path) as cip:
                     value = terminal.helper.get_file_exists(cip, device.device_paths, file_path)
                     result = (
-                          f'Device: {device.name}\n' 
-                          f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.GET_FILE_EXISTS} {file_path}\n'
-                          f'Value: {value}\n'
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {device.comms_path}\n'
+                        f'Function: {terminal.helper.HelperFunctions.GET_FILE_EXISTS} {file_path}\n'
+                        f'Value: {value}\n'
                     )
                     print(result)
                     self.assertEqual(value, True)
@@ -83,10 +86,11 @@ class helper_tests(unittest.TestCase):
                 with comms.Driver(device.comms_path) as cip:
                     value = terminal.helper.get_file_exists(cip, device.device_paths, file_path)
                     result = (
-                          f'Device: {device.name}\n' 
-                          f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.GET_FILE_EXISTS} {file_path}\n'
-                          f'Value: {value}\n'
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {device.comms_path}\n'
+                        f'Function: {terminal.helper.HelperFunctions.GET_FILE_EXISTS} {file_path}\n'
+                        f'Value: {value}\n'
                     )
                     print(result)
                     self.assertEqual(value, False)
@@ -102,10 +106,11 @@ class helper_tests(unittest.TestCase):
                 with comms.Driver(device.comms_path) as cip:
                     value = terminal.helper.get_file_size(cip, device.device_paths, file_path)
                     result = (
-                          f'Device: {device.name}\n' 
-                          f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.GET_FILE_SIZE} {file_path}\n'
-                          f'Value: {value}\n'
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {device.comms_path}\n'
+                        f'Function: {terminal.helper.HelperFunctions.GET_FILE_SIZE} {file_path}\n'
+                        f'Value: {value}\n'
                     )
                     print(result)
                     self.assertGreater(value, 0)
@@ -119,9 +124,10 @@ class helper_tests(unittest.TestCase):
                 file_path = NONEXISTENT_FILE
                 with comms.Driver(device.comms_path) as cip:
                     result = (
-                          f'Device: {device.name}\n' 
-                          f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.GET_FILE_SIZE} {file_path}\n'
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {device.comms_path}\n'
+                        f'Function: {terminal.helper.HelperFunctions.GET_FILE_SIZE} {file_path}\n'
                     )
                     print(result)
                     with self.assertRaises(FileNotFoundError):
@@ -136,10 +142,11 @@ class helper_tests(unittest.TestCase):
                 with comms.Driver(device.comms_path) as cip:
                     value = terminal.helper.get_folder_exists(cip, device.device_paths, folder_path)
                     result = (
-                          f'Device: {device.name}\n' 
-                          f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.GET_FOLDER_EXISTS} {folder_path}\n'
-                          f'Value: {value}\n'
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {device.comms_path}\n'
+                        f'Function: {terminal.helper.HelperFunctions.GET_FOLDER_EXISTS} {folder_path}\n'
+                        f'Value: {value}\n'
                     )
                     print(result)
                     self.assertEqual(value, True)
@@ -155,10 +162,11 @@ class helper_tests(unittest.TestCase):
                 with comms.Driver(device.comms_path) as cip:
                     value = terminal.helper.get_folder_exists(cip, device.device_paths, folder_path)
                     result = (
-                          f'Device: {device.name}\n' 
-                          f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.GET_FOLDER_EXISTS} {folder_path}\n'
-                          f'Value: {value}\n'
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {device.comms_path}\n'
+                        f'Function: {terminal.helper.HelperFunctions.GET_FOLDER_EXISTS} {folder_path}\n'
+                        f'Value: {value}\n'
                     )
                     print(result)
                     self.assertEqual(value, False)
@@ -174,10 +182,11 @@ class helper_tests(unittest.TestCase):
                 with comms.Driver(device.comms_path) as cip:
                     value = terminal.helper.get_free_space(cip, device.device_paths, folder_path)
                     result = (
-                          f'Device: {device.name}\n' 
-                          f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.GET_FREE_SPACE} {folder_path}\n'
-                          f'Value: {value}\n'
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {device.comms_path}\n'
+                        f'Function: {terminal.helper.HelperFunctions.GET_FREE_SPACE} {folder_path}\n'
+                        f'Value: {value}\n'
                     )
                     print(result)
                     self.assertGreater(value, 0)
@@ -191,9 +200,10 @@ class helper_tests(unittest.TestCase):
                 folder_path = f'{NONEXISTENT_FOLDER}\\'
                 with comms.Driver(device.comms_path) as cip:
                     result = (
-                          f'Device: {device.name}\n' 
-                          f'Driver: {driver}\n' 
-                          f'Function: {terminal.helper.HelperFunctions.GET_FREE_SPACE} {folder_path}\n'
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {device.comms_path}\n'
+                        f'Function: {terminal.helper.HelperFunctions.GET_FREE_SPACE} {folder_path}\n'
                     )
                     print(result)
                     with self.assertRaises(FileNotFoundError):
@@ -208,10 +218,11 @@ class helper_tests(unittest.TestCase):
                 with comms.Driver(device.comms_path) as cip:
                     value = terminal.helper.get_version(cip, device.device_paths, file_path)
                     result = (
-                          f'Device: {device.name}\n'
-                          f'Driver: {driver}\n'
-                          f'Function: {terminal.helper.HelperFunctions.GET_VERSION} {file_path}\n'
-                          f'Value: {value}\n'
+                        f'Device: {device.name}\n'
+                        f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
+                        f'Function: {terminal.helper.HelperFunctions.GET_VERSION} {file_path}\n'
+                        f'Value: {value}\n'
                     )
                     print(result)
                     self.assertIsNotNone(value)
@@ -225,9 +236,10 @@ class helper_tests(unittest.TestCase):
                 file_path = NONEXISTENT_FILE
                 with comms.Driver(device.comms_path) as cip:
                     result = (
-                          f'Device: {device.name}\n'
-                          f'Driver: {driver}\n'
-                          f'Function: {terminal.helper.HelperFunctions.GET_VERSION} {file_path}\n'
+                        f'Device: {device.name}\n'
+                        f'Driver: {driver}\n'
+                        f'Path: {device.comms_path}\n'
+                        f'Function: {terminal.helper.HelperFunctions.GET_VERSION} {file_path}\n'
                     )
                     print(result)
                     with self.assertRaises(FileNotFoundError):
@@ -262,10 +274,11 @@ class registry_tests(unittest.TestCase):
                             value = f'Value: {terminal.registry.get_value(cip, [key])}'
 
                         result = (
-                              f'Device: {device.name}\n'
-                              f'Driver: {driver}\n'
-                              f'Key: {key}\n'
-                              f'{value}\n'
+                            f'Device: {device.name}\n'
+                            f'Driver: {driver}\n'
+                            f'Path: {device.comms_path}\n'
+                            f'Key: {key}\n'
+                            f'{value}\n'
                         )
                         print(result)
                         kvp.append(f'{key},{value}')

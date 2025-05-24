@@ -65,10 +65,17 @@ DEVICES = [
         PVP6_Device_Paths, 
         75, 
         PVP6_MER_Files
+    ),
+    METestDevice(
+        PVP6, 
+        '192.168.40.216,4,192.168.1.20', 
+        PVP6_Device_Paths, 
+        75, 
+        PVP6_MER_Files
     )
 ]
 
 DRIVERS = [
-    'pycomm3', 
+    'pycomm3',
     'pylogix'
 ]
