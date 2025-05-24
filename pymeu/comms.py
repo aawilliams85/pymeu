@@ -13,8 +13,8 @@ except: pass
 
 class Driver:
 
-    def __init__(self, ip_address=None, driver=None):
-        self._cip_path = ip_address
+    def __init__(self, cip_path=None, driver=None):
+        self._cip_path = cip_path
 
         if not AVAILABLE_DRIVERS:
             raise ImportError("You need to install pycomm3 or pylogix")
@@ -44,7 +44,7 @@ class Driver:
         if self.plc_driver == "pycomm3":
             self.cip.close()
 
-    def generic_message(self, service, class_code, instance, request_data=b'', connected=False, route_path=None):
+    def generic_message(self, service, class_code, instance, request_data=b'', connected=False, unconnected_send=False, route_path=None):
         if self.plc_driver == "pylogix":
             ret = self.cip.Message(service, class_code, instance, None, request_data)
             if ret.Status == "Success":
@@ -56,9 +56,8 @@ class Driver:
             return self.cip.generic_message(service=service,
                                             class_code=class_code,
                                             instance=instance,
-                                            request_data=request_data,
-                                            connected=connected,
-                                            route_path=route_path)
+                                            request_data=request_data
+                                            )
 
     @property
     def timeout(self):
@@ -82,6 +81,23 @@ class Driver:
     def close(self):
         if self.plc_driver == "pycomm3":
             self.cip.close()
+
+    @property
+    def chunk_size(self):
+        # When files are transferred, this is the maximum number of bytes
+        # used per message.  Quick tests up to 2000 bytes did succeed, >2000 bytes failed.
+        if not(self.is_routed_path()):
+            # Direct path
+            return 1984
+        else:
+            # Routed path
+            return 450
+
+    def is_routed_path(self):
+        if (',' in self._cip_path) or ('/' in self._cip_path):
+            return True
+        else:
+            return False
 
 
 class Response(object):

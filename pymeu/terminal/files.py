@@ -8,10 +8,6 @@ from .. import comms
 from .. import messages
 from .. import types
 
-# When files are transferred, this is the maximum number of bytes
-# used per message.  Quick tests up to 2000 bytes did succeed, >2000 bytes failed.
-CHUNK_SIZE = 1984
-
 # Known values associated with some file services, with unclear purpose or meaning.
 # Further investigation needed.
 GET_UNK1_VALUES = {
@@ -81,7 +77,7 @@ def create_transfer_instance_download(cip: comms.Driver, file: types.MEFile, rem
         may indicate an incomplete transfer happened previously. In such cases,
         reboot the terminal and try again.
     """
-    req_header = struct.pack('<BBHI', TransferType.DOWNLOAD, int(file.overwrite_required), CHUNK_SIZE, file.get_size())
+    req_header = struct.pack('<BBHI', TransferType.DOWNLOAD, int(file.overwrite_required), cip.chunk_size, file.get_size())
     req_args = [f'{remote_path}\\{file.name}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
@@ -92,7 +88,7 @@ def create_transfer_instance_download(cip: comms.Driver, file: types.MEFile, rem
     resp_msg_instance, resp_unk1, resp_transfer_instance, resp_chunk_size = struct.unpack('<HHHH', resp.value)
     if (resp_msg_instance != 0): raise Exception(f'{resp_exception_text}.  Response message instance: {resp_msg_instance}, expected: 0.  There may be an incomplete transfer.  Reboot terminal and try again.')
     if (resp_unk1 != 0 ): raise Exception(f'{resp_exception_text}.  Response UNK1 bytes: {resp_unk1}, expected: 0.  Please file a bug report with all available information.')
-    if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {CHUNK_SIZE}.  Please file a bug report with all available information.')
+    if (resp_chunk_size != cip.chunk_size): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {cip.chunk_size}.  Please file a bug report with all available information.')
     return resp_transfer_instance
 
 def create_transfer_instance_upload(cip: comms.Driver, remote_path: str) -> int:
@@ -140,7 +136,7 @@ def create_transfer_instance_upload(cip: comms.Driver, remote_path: str) -> int:
         may indicate an incomplete transfer happened previously. In such cases,
         reboot the terminal and try again.
     """
-    req_header = struct.pack('<BBH', TransferType.UPLOAD, 0x00, CHUNK_SIZE)
+    req_header = struct.pack('<BBH', TransferType.UPLOAD, 0x00, cip.chunk_size)
     req_args = [f'{remote_path}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
@@ -151,7 +147,7 @@ def create_transfer_instance_upload(cip: comms.Driver, remote_path: str) -> int:
     resp_msg_instance, resp_unk1, resp_transfer_instance, resp_chunk_size, resp_file_size = struct.unpack('<HHHHI', resp.value)
     if (resp_msg_instance != 0): raise Exception(f'{resp_exception_text}.  Response message instance: {resp_msg_instance}, expected: 0.  There may be an incomplete transfer.  Reboot terminal and try again.')
     if (resp_unk1 != 0 ): raise Exception(f'{resp_exception_text}.  Response UNK1 bytes: {resp_unk1}, expected: 0.  Please file a bug report with all available information.')
-    if (resp_chunk_size != CHUNK_SIZE): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {CHUNK_SIZE}.  Please file a bug report with all available information.')
+    if (resp_chunk_size != cip.chunk_size): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {cip.chunk_size}.  Please file a bug report with all available information.')
     return resp_transfer_instance
 
 def delete_transfer_instance(cip: comms.Driver, transfer_instance: int):
@@ -202,7 +198,7 @@ def download(cip: comms.Driver, transfer_instance: int, source_data: bytearray) 
     req_chunk_number = 1
     req_offset = 0
     while req_offset < len(source_data):
-        req_chunk = source_data[req_offset:req_offset + CHUNK_SIZE]
+        req_chunk = source_data[req_offset:req_offset + cip.chunk_size]
         req_header = struct.pack('<IH', req_chunk_number, len(req_chunk))
         req_next_chunk_number = req_chunk_number + 1
         req_data = req_header + req_chunk

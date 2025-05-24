@@ -22,18 +22,14 @@ def create_transfer_instance(cip: comms.Driver, data):
         service=CipServices.CREATE,
         class_code=CipClasses.FILE,
         instance=0x00,
-        request_data=data,
-        connected=False,
-        route_path=None
+        request_data=data
     )
 
 def delete_transfer_instance(cip: comms.Driver, transfer_instance: int):
     return cip.generic_message(
         service=CipServices.DELETE,
         class_code=CipClasses.FILE,
-        instance=transfer_instance,
-        connected=False,
-        route_path=None
+        instance=transfer_instance
     )
 
 def read_file_chunk(cip: comms.Driver, transfer_instance: int, data):
@@ -41,9 +37,7 @@ def read_file_chunk(cip: comms.Driver, transfer_instance: int, data):
         service=CipServices.READ_FILE,
         class_code=CipClasses.FILE,
         instance=transfer_instance,
-        request_data=data,
-        connected=False,
-        route_path=None
+        request_data=data
     )
 
 def read_registry(cip: comms.Driver, data):
@@ -51,9 +45,7 @@ def read_registry(cip: comms.Driver, data):
         service=CipServices.READ_REGISTRY,
         class_code=CipClasses.REGISTRY,
         instance=0x00,
-        request_data=data,
-        connected=False,
-        route_path=None
+        request_data=data
     )
 
 def run_function(cip: comms.Driver, data):
@@ -61,9 +53,7 @@ def run_function(cip: comms.Driver, data):
         service=CipServices.EXECUTE,
         class_code=CipClasses.FUNCTION,
         instance=0x00,
-        request_data=data,
-        connected=False,
-        route_path=None
+        request_data=data
     )
 
 def write_file_chunk(cip: comms.Driver, transfer_instance: int, data):
@@ -71,9 +61,7 @@ def write_file_chunk(cip: comms.Driver, transfer_instance: int, data):
         service=CipServices.WRITE_FILE,
         class_code=CipClasses.FILE,
         instance=transfer_instance,
-        request_data=data,
-        connected=False,
-        route_path=None
+        request_data=data
     )
 
 def get_attr_unk(cip: comms.Driver, data):
@@ -81,9 +69,7 @@ def get_attr_unk(cip: comms.Driver, data):
         service=CipServices.GET_ATTRIBUTE_SINGLE,
         class_code=CipClasses.FILE,
         instance=0x00,
-        request_data=data,
-        connected=False,
-        route_path=None
+        request_data=data
     )
 
 def set_attr_unk(cip: comms.Driver, data):
@@ -91,7 +77,5 @@ def set_attr_unk(cip: comms.Driver, data):
         service=CipServices.SET_ATTRIBUTE_SINGLE,
         class_code=CipClasses.FILE,
         instance=0x01,
-        request_data=data,
-        connected=False,
-        route_path=None
+        request_data=data
     )
