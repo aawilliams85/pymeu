@@ -49,19 +49,33 @@ class Driver:
         if self.plc_driver == "pycomm3":
             self.cip.close()
 
-    def generic_message(self, service, class_code, instance, request_data=b'', connected=False, unconnected_send=False, route_path=None):
+    def generic_message(self, service, class_code, instance, request_data=b''):
         if self.plc_driver == "pylogix":
-            ret = self.cip.Message(service, class_code, instance, None, request_data)
+            ret = self.cip.Message(cip_service=service,
+                                   cip_class=class_code,
+                                   cip_instance=instance,
+                                   cip_attribute=None,
+                                   data=request_data)
             if ret.Status == "Success":
                 status = None
             else:
                 status = ret.Status
             return Response(ret.Value[44:], None, status)
         elif self.plc_driver == "pycomm3":
+            connected = False
+            if self.is_routed_path():
+                unconnected_send = True
+                route_path = True
+            else:
+                unconnected_send = False
+                route_path = False
             return self.cip.generic_message(service=service,
                                             class_code=class_code,
                                             instance=instance,
-                                            request_data=request_data
+                                            request_data=request_data,
+                                            connected=connected,
+                                            unconnected_send=unconnected_send,
+                                            route_path=route_path
                                             )
 
     @property
