@@ -18,7 +18,7 @@ class helper_tests(unittest.TestCase):
             results = []
             for driver in DRIVERS:
                 folder_path = device.device_paths.runtime
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     value = terminal.helper.create_folder(cip, device.device_paths, folder_path)
                     result = (
                         f'Device: {device.name}\n' 
@@ -45,7 +45,7 @@ class helper_tests(unittest.TestCase):
             results = []
             for driver in DRIVERS:
                 folder_path = NONEXISTENT_FOLDER
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     result = (
                         f'Device: {device.name}\n' 
                         f'Driver: {driver}\n' 
@@ -63,7 +63,7 @@ class helper_tests(unittest.TestCase):
             results = []
             for driver in DRIVERS:
                 file_path = device.device_paths.helper_file
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     value = terminal.helper.get_file_exists(cip, device.device_paths, file_path)
                     result = (
                         f'Device: {device.name}\n' 
@@ -83,7 +83,7 @@ class helper_tests(unittest.TestCase):
             results = []
             for driver in DRIVERS:
                 file_path = NONEXISTENT_FILE
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     value = terminal.helper.get_file_exists(cip, device.device_paths, file_path)
                     result = (
                         f'Device: {device.name}\n' 
@@ -103,7 +103,7 @@ class helper_tests(unittest.TestCase):
             results = []
             for driver in DRIVERS:
                 file_path = device.device_paths.helper_file
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     value = terminal.helper.get_file_size(cip, device.device_paths, file_path)
                     result = (
                         f'Device: {device.name}\n' 
@@ -122,7 +122,7 @@ class helper_tests(unittest.TestCase):
         for device in DEVICES:
             for driver in DRIVERS:
                 file_path = NONEXISTENT_FILE
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     result = (
                         f'Device: {device.name}\n' 
                         f'Driver: {driver}\n' 
@@ -139,7 +139,7 @@ class helper_tests(unittest.TestCase):
             results = []
             for driver in DRIVERS:
                 folder_path = device.device_paths.storage
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     value = terminal.helper.get_folder_exists(cip, device.device_paths, folder_path)
                     result = (
                         f'Device: {device.name}\n' 
@@ -159,7 +159,7 @@ class helper_tests(unittest.TestCase):
             results = []
             for driver in DRIVERS:
                 folder_path = NONEXISTENT_FOLDER
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     value = terminal.helper.get_folder_exists(cip, device.device_paths, folder_path)
                     result = (
                         f'Device: {device.name}\n' 
@@ -179,7 +179,7 @@ class helper_tests(unittest.TestCase):
             results = []
             for driver in DRIVERS:
                 folder_path = f'{device.device_paths.runtime}\\'
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     value = terminal.helper.get_free_space(cip, device.device_paths, folder_path)
                     result = (
                         f'Device: {device.name}\n' 
@@ -198,7 +198,7 @@ class helper_tests(unittest.TestCase):
         for device in DEVICES:
             for driver in DRIVERS:
                 folder_path = f'{NONEXISTENT_FOLDER}\\'
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     result = (
                         f'Device: {device.name}\n' 
                         f'Driver: {driver}\n' 
@@ -215,7 +215,7 @@ class helper_tests(unittest.TestCase):
             results = []
             for driver in DRIVERS:
                 file_path = device.device_paths.helper_file
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     value = terminal.helper.get_version(cip, device.device_paths, file_path)
                     result = (
                         f'Device: {device.name}\n'
@@ -234,7 +234,7 @@ class helper_tests(unittest.TestCase):
         for device in DEVICES:
             for driver in DRIVERS:
                 file_path = NONEXISTENT_FILE
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
@@ -265,7 +265,7 @@ class registry_tests(unittest.TestCase):
         for device in DEVICES:
             results = []
             for driver in DRIVERS:
-                with comms.Driver(device.comms_path) as cip:
+                with comms.Driver(device.comms_path, driver=driver) as cip:
                     kvp = []
                     for key in terminal.registry.RegKeys:
                         if device.name in self.skip_pairs and key in self.skip_pairs[device.name]:
