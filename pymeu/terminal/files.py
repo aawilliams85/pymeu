@@ -153,7 +153,7 @@ def create_transfer_instance_upload(cip: comms.Driver, remote_path: str) -> int:
 def delete_transfer_instance(cip: comms.Driver, transfer_instance: int):
     return messages.delete_transfer_instance(cip, transfer_instance)
 
-def download(cip: comms.Driver, transfer_instance: int, source_data: bytearray) -> bool:
+def execute_transfer_download(cip: comms.Driver, transfer_instance: int, source_data: bytearray) -> bool:
     """
     Downloads a file from the local device to the remote terminal.
     The transfer happens by breaking the file down into one or more
@@ -222,11 +222,7 @@ def download(cip: comms.Driver, transfer_instance: int, source_data: bytearray) 
     resp = messages.write_file_chunk(cip, transfer_instance, req_data)
     return True
 
-def download_mer(cip: comms.Driver, transfer_instance: int, file: str):
-    with open(file, 'rb') as source_file:
-        return download(cip, transfer_instance, bytearray(source_file.read()))
-
-def upload(cip: comms.Driver, transfer_instance: int) -> bytearray:
+def execute_transfer_upload(cip: comms.Driver, transfer_instance: int) -> bytearray:
     """
     Uploads a file from the remote terminal to the local device.
     The transfer happens by breaking the file down into one or more
@@ -293,17 +289,6 @@ def upload(cip: comms.Driver, transfer_instance: int) -> bytearray:
         req_chunk_number += 1
 
     return resp_binary
-
-def upload_mer(cip: comms.Driver, transfer_instance: int, file: types.MEFile):
-    resp_binary = upload(cip, transfer_instance)
-    with open(file.path, 'wb') as dest_file:
-        dest_file.write(resp_binary)
-
-def upload_list(cip: comms.Driver, transfer_instance: int):
-    resp_binary = upload(cip, transfer_instance)
-    resp_str = "".join([chr(b) for b in resp_binary if b != 0])
-    resp_list = resp_str.split(':')
-    return resp_list
 
 def is_get_unk_valid(cip: comms.Driver) -> bool:
     # I don't know what any of these three attributes are for yet.
