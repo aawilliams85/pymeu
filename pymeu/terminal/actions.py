@@ -62,16 +62,7 @@ def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, r
     device.log.append(line)
     if print_log: print(f'{line}')
 
-def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
-    # Create runtime folder
-    try:
-        helper.create_folder_runtime(cip, device.paths)
-        device.log.append(f'Create runtime directory on terminal.')
-    except Exception as e:
-        device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to create runtime directory on terminal.')
-        return False
-
+def download(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_path: str, file_data: bytearray) -> bool:
     # Get attributes
     #
     # Still no clue on what these are, or when/how they would change.
@@ -91,7 +82,7 @@ def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.
 
     # Create a transfer instance on the terminal
     try:
-        transfer_instance = files.create_transfer_instance_download(cip, file, f'{device.paths.runtime}')
+        transfer_instance = files.create_transfer_instance_download(cip, file, rem_path)
         device.log.append(f'Create transfer instance {transfer_instance} for download.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -114,10 +105,10 @@ def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.
         device.log.append(f'Failed to set UNK1 attributes on terminal.')
         continue_download = False
 
-    # Transfer *.MER chunk by chunk
+    # Transfer file chunk by chunk
     try:
         if continue_download:
-            files.download_mer(cip, transfer_instance, file.path)
+            files.execute_transfer_download(cip, transfer_instance, file_data)
             device.log.append(f'Downloaded {file.name} using transfer instance {transfer_instance}.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -130,6 +121,31 @@ def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
         device.log.append(f'Failed to delete transfer instance {transfer_instance}.')
+
+    return continue_download
+
+def download_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_path: str) -> bool:
+    with open(file.path, 'rb') as source_file:
+        return download(cip, device, file, rem_path, bytearray(source_file.read()))
+
+def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
+    # Create runtime folder
+    try:
+        helper.create_folder_runtime(cip, device.paths)
+        device.log.append(f'Create runtime directory on terminal.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to create runtime directory on terminal.')
+        return False
+
+    # Perform download
+    try:
+        continue_download = download_file(cip, device, file, device.paths.runtime)
+        device.log.append(f'Downloaded {file.path} to {device.paths.runtime}.')
+    except:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to download {file.path} to {device.paths.runtime}.')
+        return False
 
     # Set *.MER to run at startup and then reboot
     try:
@@ -144,6 +160,45 @@ def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.
         
     return continue_download
 
+def upload(cip: comms.Driver, device: types.MEDeviceInfo, rem_file_path: str) -> bytearray:
+    # Create a transfer instance on the terminal
+    try:
+        transfer_instance = files.create_transfer_instance_upload(cip, f'{rem_file_path}')
+        device.log.append(f'Create transfer instance {transfer_instance} for upload.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to create transfer instance for upload')
+        return False
+
+    # Transfer file chunk by chunk
+    try:
+        resp_binary = files.execute_transfer_upload(cip, transfer_instance)
+        device.log.append(f'Uploaded {rem_file_path} using transfer instance {transfer_instance}.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to upload {rem_file_path} using transfer instance {transfer_instance}.')
+
+    # Delete transfer instance on the terminal
+    try:
+        files.delete_transfer_instance(cip, transfer_instance)
+        device.log.append(f'Deleted transfer instance {transfer_instance}.')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to delete transfer instance {transfer_instance}.')
+
+    return resp_binary
+    
+def upload_file(cip: comms.Driver, device: types.MEDeviceInfo, local_file_path: str, rem_file_path: str):
+    resp_binary = upload(cip, device, rem_file_path)
+    with open(local_file_path, 'wb') as dest_file:
+        dest_file.write(resp_binary)
+
+def upload_list(cip: comms.Driver, transfer_instance: int, rem_file_path: str) -> list[str]:
+    resp_binary = upload(cip, transfer_instance, rem_file_path)
+    resp_str = "".join([chr(b) for b in resp_binary if b != 0])
+    resp_list = resp_str.split(':')
+    return resp_list
+
 def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_file: types.MEFile) -> bool:
     # Verify file exists on terminal
     try:
@@ -157,30 +212,15 @@ def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.M
         device.log.append(f'Failed to check if file {rem_file.name} exists on terminal.')
         return False
 
-    # Create a transfer instance on the terminal
+    # Perform upload
     try:
-        transfer_instance = files.create_transfer_instance_upload(cip, f'{device.paths.runtime}\\{rem_file.name}')
-        device.log.append(f'Create transfer instance {transfer_instance} for upload.')
-    except Exception as e:
+        rem_file_path = f'{device.paths.runtime}\\{rem_file.name}'
+        upload_file(cip, device, file.path, rem_file_path)
+        device.log.append(f'Uploaded {rem_file_path} to {file.path}.')
+    except:
         device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to create transfer instance for upload')
+        device.log.append(f'Failed to upload {rem_file_path} to {file.path}.')
         return False
-
-    # Transfer *.MER chunk by chunk
-    try:
-        files.upload_mer(cip, transfer_instance, file)
-        device.log.append(f'Uploaded {rem_file.name} to {file.path} using transfer instance {transfer_instance}.')
-    except Exception as e:
-        device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to upload {rem_file.name} to {file.path} using transfer instance {transfer_instance}.')
-
-    # Delete transfer instance on the terminal
-    try:
-        files.delete_transfer_instance(cip, transfer_instance)
-        device.log.append(f'Deleted transfer instance {transfer_instance}.')
-    except Exception as e:
-        device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to delete transfer instance {transfer_instance}.')
 
     return True
 
@@ -194,31 +234,16 @@ def upload_med_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
         device.log.append(f'Failed to create *.MED list on terminal.')
         return None
 
-    # Create transfer instance on the terminal
-    try:
-        transfer_instance = files.create_transfer_instance_upload(cip, device.paths.upload_list)
-        device.log.append(f'Create transfer instance {transfer_instance} for upload.')
-    except Exception as e:
-        device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to create transfer instance for upload')
-        return None
-
-    # Transfer list chunk by chunk
+    # Perform upload
     file_list = None
     try:
-        file_list = files.upload_list(cip, transfer_instance)
-        device.log.append(f'Uploaded *.MED list using transfer instance {transfer_instance}.')
-    except Exception as e:
+        rem_file_path = f'{device.paths.upload_list}'
+        file_list = upload_list(cip, device, rem_file_path)
+        device.log.append(f'Uploaded {rem_file_path}.')
+    except:
         device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to upload *.MED list using transfer instance {transfer_instance}.')
-
-    # Delete transfer instance on the terminal
-    try:
-        files.delete_transfer_instance(cip, transfer_instance)
-        device.log.append(f'Deleted transfer instance {transfer_instance}.')
-    except Exception as e:
-        device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to delete transfer instance {transfer_instance}.')
+        device.log.append(f'Failed to upload {rem_file_path}.')
+        return None
 
     # Delete list on the terminal
     try:
@@ -240,32 +265,17 @@ def upload_mer_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
         device.log.append(f'Failed to create *.MER list on terminal.')
         return None
 
-    # Create transfer instance on the terminal
-    try:
-        transfer_instance = files.create_transfer_instance_upload(cip, device.paths.upload_list)
-        device.log.append(f'Create transfer instance {transfer_instance} for upload.')
-    except Exception as e:
-        device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to create transfer instance for upload')
-        return None
-
-    # Transfer list chunk by chunk
+    # Perform upload
     file_list = None
     try:
-        file_list = files.upload_list(cip, transfer_instance)
+        rem_file_path = f'{device.paths.upload_list}'
+        file_list = upload_list(cip, device, rem_file_path)
         device.files = file_list
-        device.log.append(f'Uploaded *.MER list using transfer instance {transfer_instance}.')
-    except Exception as e:
+        device.log.append(f'Uploaded {rem_file_path}.')
+    except:
         device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to upload *.MED list using transfer instance {transfer_instance}.')
-
-    # Delete transfer instance on the terminal
-    try:
-        files.delete_transfer_instance(cip, transfer_instance)
-        device.log.append(f'Deleted transfer instance {transfer_instance}.')
-    except Exception as e:
-        device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to delete transfer instance {transfer_instance}.')
+        device.log.append(f'Failed to upload {rem_file_path}.')
+        return None
 
     # Delete list on the terminal
     try:
