@@ -67,6 +67,13 @@ DEVICES = [
         PVP6_MER_Files
     ),
     METestDevice(
+        PVP5, 
+        '192.168.40.104,4,192.168.1.21',
+        PVP5_Device_Paths, 
+        75, 
+        PVP5_MER_Files
+    ),
+    METestDevice(
         PVP6, 
         '192.168.40.104,4,192.168.1.20',
         PVP6_Device_Paths, 
