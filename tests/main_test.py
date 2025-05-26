@@ -34,6 +34,25 @@ class download_tests(unittest.TestCase):
                 print('')
                 self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)
 
+    def test_download_multiple(self):
+        print('')
+        for device in DEVICES:
+            for driver in DRIVERS:
+                meu = MEUtility(device.comms_path, driver=driver)
+                for mer_file in device.mer_files:
+                    download_file_path = os.path.join(DOWNLOAD_FOLDER_PATH, mer_file)
+                    result = (
+                            f'Device: {device.name}\n'
+                            f'Driver: {driver}\n'
+                            f'Path: {device.comms_path}\n'
+                            f'Function: download({download_file_path}, overwrite=True)\n'
+                    )
+                    print(result)
+                    resp = meu.download(download_file_path, overwrite=True, run_at_startup=False)
+                    for s in resp.device.log: print(s)
+                    print('')
+                    self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+
     def test_download_overwrite(self):
         print('')
         for device in DEVICES:
