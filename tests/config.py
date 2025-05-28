@@ -23,7 +23,7 @@ UPLOAD_LIST_PATH = f'{RUNTIME_PATH}\\Results.txt'
 NONEXISTENT_FILE = '\\NonexistentPath\\NonexistentFile.ext'
 NONEXISTENT_FOLDER = '\\NonexistentPath'
 
-# PanelView Plus v5 configuration
+# PanelView Plus configuration
 PVP5 = 'PVP5'
 PVP5_Device_Paths = types.MEDevicePaths(
     f'\\Storage Card\\Rockwell Software\\RSViewME\\{HELPER_FILE_NAME}',
@@ -37,7 +37,7 @@ PVP5_MER_Files = [
     'Test_v5_C.mer'
 ]
 
-# PanelView Plus v6 configuration
+# PanelView Plus 6 configuration
 PVP6 = 'PVP6'
 PVP6_Device_Paths = types.MEDevicePaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
@@ -46,6 +46,20 @@ PVP6_Device_Paths = types.MEDevicePaths(
     f'\\Application Data\\{RUNTIME_PATH}'
 )
 PVP6_MER_Files = [
+    'Test_v11_A.mer',
+    'Test_v11_B.mer',
+    'Test_v11_C.mer'
+]
+
+# PanelView Plus 7A configuration
+PVP7A = 'PVP7A'
+PVP7A_Device_Paths = types.MEDevicePaths(
+    f'\\Windows\\{HELPER_FILE_NAME}',
+    '\\Application Data',
+    f'\\Application Data\\{UPLOAD_LIST_PATH}',
+    f'\\Application Data\\{RUNTIME_PATH}'
+)
+PVP7A_MER_Files = [
     'Test_v11_A.mer',
     'Test_v11_B.mer',
     'Test_v11_C.mer'
@@ -67,6 +81,13 @@ DEVICES = [
         PVP6_MER_Files
     ),
     METestDevice(
+        PVP7A, 
+        '192.168.40.126',
+        PVP7A_Device_Paths, 
+        75, 
+        PVP7A_MER_Files
+    ),
+    METestDevice(
         PVP5, 
         '192.168.40.104,4,192.168.1.21',
         PVP5_Device_Paths, 
@@ -79,7 +100,14 @@ DEVICES = [
         PVP6_Device_Paths, 
         75, 
         PVP6_MER_Files
-    )
+    ),
+    METestDevice(
+        PVP7A, 
+        '192.168.40.104,4,192.168.1.22',
+        PVP7A_Device_Paths, 
+        75, 
+        PVP7A_MER_Files
+    ),
 ]
 
 DRIVERS = [
