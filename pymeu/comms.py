@@ -128,26 +128,31 @@ class Driver:
         Returns:
             tuple: (starting_ip: str, pylogix_route: list of tuples)
         """
-        if ',' in path:
-            parts = path.split(',')
-        elif '/' in path:
-            parts = path.split('/')
-        else:
-            raise Exception(f'Failed to split path {path}.')
-
-        if len(parts) < 3 or len(parts) % 2 == 0:
-            raise ValueError("Path must have at least one routing pair (port, destination) after the start IP.")
-
-        starting_ip = parts[0]
+        # make sure we are only working with commas, then split
+        parts = path.replace("/", ",").replace("\\", ",").split(",")
+        ip_address = parts.pop(0)
         route = []
 
-        # Build route: (port, value) pairs
-        for i in range(1, len(parts), 2):
-            port = int(parts[i])
-            value = parts[i + 1]
-            route.append((port, value))
+        if parts:
+            # make sure even number of segments
+            if len(parts) % 2:
+                raise ValueError("Path must have at least one routing pair (port, destination) after the start IP.")
+            
+            for i in range(len(parts)):
+                # try to convert each path segment to an int
+                try:
+                    parts[i] = int(parts[i])
+                except:
+                    if parts[i] == "backplane":
+                        parts[i] = 1
+                    elif parts[i] == "bp":
+                        parts[i] = 1
+                    elif parts[i] == "enet":
+                        parts[i] = 2
 
-        return starting_ip, route
+            # convert the route to pylogix format (2 item lists)
+            route = [tuple(parts[i:i+2]) for i in range(0, len(parts), 2)]
+        return ip_address, route
 
 
 class Response(object):
