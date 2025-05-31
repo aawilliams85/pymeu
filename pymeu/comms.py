@@ -1,3 +1,5 @@
+from warnings import warn
+
 # see which drivers are installed on the system
 AVAILABLE_DRIVERS = []
 try:
@@ -110,10 +112,14 @@ class Driver:
             return 1984
         else:
             # Routed path
-            return 450
+            max_size = 466
+            segments = len(self._route_path)
+            chunk_size = max_size - 2 - (2 * segments)
+            warn(f'Chunk size set to {chunk_size} but still WIP for routed paths.')
+            return chunk_size
 
     def is_routed_path(self):
-        if (',' in self._comms_path) or ('/' in self._comms_path) or (self._route_path is not None):
+        if (',' in self._comms_path) or ('/' in self._comms_path) or ('\\' in self._comms_path) or (self._route_path is not None):
             return True
         else:
             return False
