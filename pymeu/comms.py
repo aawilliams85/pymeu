@@ -32,10 +32,11 @@ class Driver:
             # no driver requested, pick the first one
             self._driver = AVAILABLE_DRIVERS[0]
 
-        if self._driver == "pylogix":
-            if self.is_routed_path():
-                self._comms_path, self._route_path = self.pycomm3_path_to_pylogix_route(self._comms_path)
+        if self.is_routed_path():
+            address, self._route_path = self.pycomm3_path_to_pylogix_route(self._comms_path)
 
+        if self._driver == "pylogix":
+            if self.is_routed_path(): self._comms_path = address
             self.cip = pylogix.PLC(self._comms_path)
             self.cip.Route = self._route_path
         elif self._driver == "pycomm3":
@@ -113,8 +114,13 @@ class Driver:
         else:
             # Routed path
             max_size = 466
-            segments = len(self._route_path)
-            chunk_size = max_size - 2 - (2 * segments)
+            working_size = max_size - 2 # Remove route path size and reserved bytes
+            for segment in self._route_path:
+                segment_size = 2 + len(str(segment[1])) # 1 control byte, 1 length byte, x path bytes
+                if segment_size % 2: segment_size += 1 # if segment length is odd, there is a pad byte
+                working_size -= segment_size
+
+            chunk_size = working_size
             warn(f'Chunk size set to {chunk_size} but still WIP for routed paths.')
             return chunk_size
 
