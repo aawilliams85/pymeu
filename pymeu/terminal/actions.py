@@ -1,6 +1,7 @@
 from collections.abc import Callable
 import os
 import time
+import traceback
 from typing import Optional
 
 from . import files
@@ -200,16 +201,14 @@ def flash_firmware_upgrade_card(cip: comms.Driver,
             time.sleep(10)
         except Exception as e:
             device.log.append(f'Exception: {str(e)}')
+            device.log.append(f'Traceback: {traceback.format_exc()}')
             device.log.append(f'Failed to upgrade terminal.')
             return False            
 
     # Prepare terminal for firmware upgrade card
     try:
-        device.log.append('1')
         if not(fuwhelper.get_folder_exists(cip, device.paths, '\\Storage Card')):
-            device.log.append('2')
             fuwhelper.create_folder(cip, device.paths, '\\Storage Card')
-        device.log.append('3')
         if not(fuwhelper.get_folder_exists(cip, device.paths, '\\Storage Card\\vfs')):
             fuwhelper.create_folder(cip, device.paths, '\\Storage Card\\vfs')
         if not(fuwhelper.get_folder_exists(cip, device.paths, '\\Storage Card\\vfs\\platform firmware')):
@@ -222,6 +221,7 @@ def flash_firmware_upgrade_card(cip: comms.Driver,
         fuwhelper.get_file_exists(cip, device.paths, '\\Windows\\useroptions.txt')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Traceback: {traceback.format_exc()}')
         device.log.append(f'Failed to upgrade terminal.')
         return False
 
@@ -237,6 +237,7 @@ def flash_firmware_upgrade_card(cip: comms.Driver,
             return False
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Traceback: {traceback.format_exc()}')
         device.log.append(f'Failed to upgrade terminal.')
         return False
 
