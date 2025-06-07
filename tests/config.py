@@ -31,8 +31,8 @@ def generate_test_combinations(devices: list[METestDevice], drivers: list[str]) 
                 combinations.append((device, driver, device.comms_paths[path_idx]))
     
     # Optional: Print combinations for debugging
-    for combo in combinations:
-        print(f"{combo[0].name}, {combo[1]}, {combo[2]}")
+    #for combo in combinations:
+    #    print(f"{combo[0].name}, {combo[1]}, {combo[2]}")
     
     return combinations
 
