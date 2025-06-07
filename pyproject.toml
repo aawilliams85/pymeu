@@ -10,8 +10,8 @@ authors = [
 dependencies = []
 
 [project.optional-dependencies]
-pycomm3 = ["pycomm3">=1.2.14]
-pylogix = ["pylogix">=1.0.7]
+pycomm3 = ["pycomm3>=1.2.14"]
+pylogix = ["pylogix>=1.0.7"]
 
 [project.urls]
 Repository = "https://github.com/aawilliams85/pymeu.git"
