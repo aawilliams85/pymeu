@@ -91,7 +91,10 @@ class Driver:
     @timeout.setter
     def timeout(self, new_value):
         if self._driver == "pycomm3":
+            self.cip._cfg['timeout'] = new_value
             self.cip._cfg['socket_timeout'] = new_value
+            self.cip.close()
+            self.cip.open()
 
         if self._driver == "pylogix":
             self.cip.SocketTimeout = new_value

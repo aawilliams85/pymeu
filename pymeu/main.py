@@ -119,12 +119,10 @@ class MEUtility(object):
                 firmware_helper_path = os.path.join(base_path, firmware_helper_path)
 
         with comms.Driver(self.comms_path, self.driver) as cip:
-            if (cip._driver != 'pylogix'): raise Exception('Driver must be pylogix to flash firmware.')
-
             # Set socket timeout first.
             # The terminal will pause at certain points and delay acknowledging messages.
             # Without this, the process will fail and the terminal will require a factory reset.
-            cip.timeout = 255
+            cip.timeout = 255.0
 
             # Validate device at this communications path is a terminal of known version.
             self.device = terminal.validation.get_terminal_info(cip)
