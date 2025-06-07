@@ -71,6 +71,32 @@ class download_tests(unittest.TestCase):
             count += 1
             if (count % len(DEVICES)) == 0: time.sleep(device.boot_time_sec)
 
+    def test_download_overwrite_progress(self):
+        print('')
+
+        def progress_callback(description: str, total_bytes: int, current_bytes: int):
+            progress = 100* current_bytes / total_bytes;
+            print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
+
+        count = 0
+        for (device, driver, comms_path) in test_combinations:
+            meu = MEUtility(comms_path, driver=driver)
+            download_file_path = os.path.join(DOWNLOAD_FOLDER_PATH, device.mer_files[0])
+            result = (
+                    f'Device: {device.name}\n'
+                    f'Driver: {driver}\n'
+                    f'Path: {comms_path}\n'
+                    f'Function: download({download_file_path}, overwrite=True)\n'
+            )
+            print(result)
+            resp = meu.download(download_file_path, progress_callback, overwrite=True, run_at_startup=False)
+            for s in resp.device.log: print(s)
+            print('')
+            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+            count += 1
+            #if (count % len(DEVICES)) == 0: time.sleep(device.boot_time_sec)
+
+
     def test_download_as_overwrite(self):
         print('')
         count = 0
@@ -223,6 +249,31 @@ class upload_tests(unittest.TestCase):
             #results.append(upload_file_path)
         #self.assertTrue(all(filecmp.cmp(results[0], x, shallow=False) for x in results))
 
+    def test_upload_overwrite_progress(self):
+        print('')
+
+        def progress_callback(description: str, total_bytes: int, current_bytes: int):
+            progress = 100* current_bytes / total_bytes;
+            print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
+
+        results = []
+        for (device, driver, comms_path) in test_combinations:
+            meu = MEUtility(comms_path, driver=driver)
+            upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, device.name, driver, device.mer_files[0])
+            result = (
+                    f'Device: {device.name}\n'
+                    f'Driver: {driver}\n'
+                    f'Path: {comms_path}\n'
+                    f'Function: upload({upload_file_path}, overwrite=True)\n'
+            )
+            print(result)
+            resp = meu.upload(upload_file_path, progress_callback, overwrite=True)
+            for s in resp.device.log: print(s)
+            print('')
+            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+            #results.append(upload_file_path)
+        #self.assertTrue(all(filecmp.cmp(results[0], x, shallow=False) for x in results))
+
     def test_upload_all_overwrite(self):
         print('')
         for (device, driver, comms_path) in test_combinations:
@@ -236,6 +287,28 @@ class upload_tests(unittest.TestCase):
             )
             print(result)
             resp = meu.upload_all(upload_folder_path, overwrite=True)
+            for s in resp.device.log: print(s)
+            print('')
+            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+
+    def test_upload_all_overwrite_progress(self):
+        print('')
+
+        def progress_callback(description: str, total_bytes: int, current_bytes: int):
+            progress = 100* current_bytes / total_bytes;
+            print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
+
+        for (device, driver, comms_path) in test_combinations:
+            meu = MEUtility(comms_path, driver=driver)
+            upload_folder_path = os.path.join(UPLOAD_FOLDER_PATH, device.name, driver)
+            result = (
+                    f'Device: {device.name}\n'
+                    f'Driver: {driver}\n'
+                    f'Path: {comms_path}\n'
+                    f'Function: upload_all({UPLOAD_FOLDER_PATH}, overwrite=True)\n'
+            )
+            print(result)
+            resp = meu.upload_all(upload_folder_path, progress_callback, overwrite=True)
             for s in resp.device.log: print(s)
             print('')
             self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
@@ -257,7 +330,7 @@ class upload_tests(unittest.TestCase):
                 # Open parallel transfer instance (normally transfer instance 1)
                 device2 = terminal.validation.get_terminal_info(cip2)
                 path2 = f'{device2.paths.runtime}\\{device.mer_files[0]}'
-                transfer_instance_2 = terminal.files.create_transfer_instance_upload(cip2, path2)
+                transfer_instance_2, transfer_size_2 = terminal.files.create_transfer_instance_upload(cip2, path2)
 
                 # Perform upload (normally transfer instance 2)
                 resp = meu.upload(upload_file_path, overwrite=True)

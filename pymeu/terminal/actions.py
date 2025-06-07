@@ -1,4 +1,6 @@
+from collections.abc import Callable
 import os
+from typing import Optional
 
 from . import files
 from . import helper
@@ -62,7 +64,7 @@ def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, r
     device.log.append(line)
     if print_log: print(f'{line}')
 
-def download(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_path: str, file_data: bytearray) -> bool:
+def download(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_path: str, file_data: bytearray, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
     # Get attributes
     #
     # Still no clue on what these are, or when/how they would change.
@@ -108,7 +110,7 @@ def download(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, 
     # Transfer file chunk by chunk
     try:
         if continue_download:
-            files.execute_transfer_download(cip, transfer_instance, file_data)
+            files.execute_transfer_download(cip, transfer_instance, file_data, progress)
             device.log.append(f'Downloaded {file.name} using transfer instance {transfer_instance}.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -124,11 +126,11 @@ def download(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, 
 
     return continue_download
 
-def download_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_path: str) -> bool:
+def download_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_path: str, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
     with open(file.path, 'rb') as source_file:
-        return download(cip, device, file, rem_path, bytearray(source_file.read()))
+        return download(cip, device, file, rem_path, bytearray(source_file.read()), progress)
 
-def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool) -> bool:
+def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
     # Create runtime folder
     try:
         helper.create_folder_runtime(cip, device.paths)
@@ -140,7 +142,7 @@ def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.
 
     # Perform download
     try:
-        continue_download = download_file(cip, device, file, device.paths.runtime)
+        continue_download = download_file(cip, device, file, device.paths.runtime, progress)
         device.log.append(f'Downloaded {file.path} to {device.paths.runtime}.')
     except:
         device.log.append(f'Exception: {str(e)}')
@@ -160,10 +162,10 @@ def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.
         
     return continue_download
 
-def upload(cip: comms.Driver, device: types.MEDeviceInfo, rem_file_path: str) -> bytearray:
+def upload(cip: comms.Driver, device: types.MEDeviceInfo, rem_file_path: str, progress: Optional[Callable[[str, int, int], None]] = None) -> bytearray:
     # Create a transfer instance on the terminal
     try:
-        transfer_instance = files.create_transfer_instance_upload(cip, f'{rem_file_path}')
+        transfer_instance, total_bytes = files.create_transfer_instance_upload(cip, f'{rem_file_path}')
         device.log.append(f'Create transfer instance {transfer_instance} for upload.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -172,7 +174,7 @@ def upload(cip: comms.Driver, device: types.MEDeviceInfo, rem_file_path: str) ->
 
     # Transfer file chunk by chunk
     try:
-        resp_binary = files.execute_transfer_upload(cip, transfer_instance)
+        resp_binary = files.execute_transfer_upload(cip, transfer_instance, total_bytes, progress)
         device.log.append(f'Uploaded {rem_file_path} using transfer instance {transfer_instance}.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -188,8 +190,8 @@ def upload(cip: comms.Driver, device: types.MEDeviceInfo, rem_file_path: str) ->
 
     return resp_binary
     
-def upload_file(cip: comms.Driver, device: types.MEDeviceInfo, local_file_path: str, rem_file_path: str):
-    resp_binary = upload(cip, device, rem_file_path)
+def upload_file(cip: comms.Driver, device: types.MEDeviceInfo, local_file_path: str, rem_file_path: str, progress: Optional[Callable[[str, int, int], None]] = None):
+    resp_binary = upload(cip, device, rem_file_path, progress)
     with open(local_file_path, 'wb') as dest_file:
         dest_file.write(resp_binary)
 
@@ -199,7 +201,7 @@ def upload_list(cip: comms.Driver, transfer_instance: int, rem_file_path: str) -
     resp_list = resp_str.split(':')
     return resp_list
 
-def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_file: types.MEFile) -> bool:
+def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_file: types.MEFile, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
     # Verify file exists on terminal
     try:
         if helper.get_file_exists_mer(cip, device.paths, rem_file.name):
@@ -215,7 +217,7 @@ def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.M
     # Perform upload
     try:
         rem_file_path = f'{device.paths.runtime}\\{rem_file.name}'
-        upload_file(cip, device, file.path, rem_file_path)
+        upload_file(cip, device, file.path, rem_file_path, progress)
         device.log.append(f'Uploaded {rem_file_path} to {file.path}.')
     except:
         device.log.append(f'Exception: {str(e)}')

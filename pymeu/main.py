@@ -1,7 +1,8 @@
+from collections.abc import Callable
 import os
-# import pycomm3
-
+from typing import Optional
 from warnings import warn
+
 from . import comms
 from . import terminal
 from . import types
@@ -26,7 +27,7 @@ class MEUtility(object):
         self.driver = kwargs.get('driver', None)
         self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
 
-    def download(self, file_path: str, **kwargs) -> types.MEResponse:
+    def download(self, file_path: str, progress: Optional[Callable[[str, int, int], None]] = None, **kwargs) -> types.MEResponse:
         """
         Downloads a *.MER file from the local device to the remote terminal.
 
@@ -87,7 +88,7 @@ class MEUtility(object):
 
             # Perform *.MER download to terminal
             try:
-                resp = terminal.actions.download_mer_file(cip, self.device, file, self.run_at_startup, self.replace_comms, self.delete_logs)
+                resp = terminal.actions.download_mer_file(cip, self.device, file, self.run_at_startup, self.replace_comms, self.delete_logs, progress)
                 if not(resp):
                     self.device.log.append(f'Failed to download to terminal.')
                     return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
@@ -156,7 +157,7 @@ class MEUtility(object):
 
         return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
 
-    def upload(self, file_path: str, **kwargs) -> types.MEResponse:
+    def upload(self, file_path: str, progress: Optional[Callable[[str, int, int], None]] = None, **kwargs) -> types.MEResponse:
         """
         Uploads a *.MER file from the remote terminal to the local device.
 
@@ -194,7 +195,7 @@ class MEUtility(object):
 
             # Perform *.MER upload from terminal
             try:
-                resp = terminal.actions.upload_mer_file(cip, self.device, file, rem_file)
+                resp = terminal.actions.upload_mer_file(cip, self.device, file, rem_file, progress)
                 if not(resp):
                     self.device.log.append(f'Failed to upload from terminal.')
                     return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
@@ -205,7 +206,7 @@ class MEUtility(object):
 
         return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
 
-    def upload_all(self, file_path: str, **kwargs):
+    def upload_all(self, file_path: str, progress: Optional[Callable[[str, int, int], None]] = None, **kwargs):
         """
         Uploads all *.MER files from the remote terminal to the local device.
 
@@ -249,7 +250,7 @@ class MEUtility(object):
                     
                     # Perform *.MER upload from terminal
                     try:
-                        resp = terminal.actions.upload_mer_file(cip, self.device, file, file)
+                        resp = terminal.actions.upload_mer_file(cip, self.device, file, file, progress)
                         if not(resp):
                             self.device.log.append(f'Failed to upload from terminal.')
                             return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)

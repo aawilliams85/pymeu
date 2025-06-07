@@ -1,7 +1,7 @@
-
-import struct
-
+from collections.abc import Callable
 from enum import IntEnum
+import struct
+from typing import Optional
 from warnings import warn
 
 from .. import comms
@@ -91,7 +91,7 @@ def create_transfer_instance_download(cip: comms.Driver, file: types.MEFile, rem
     if (resp_chunk_size != cip.chunk_size): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {cip.chunk_size}.  Please file a bug report with all available information.')
     return resp_transfer_instance
 
-def create_transfer_instance_upload(cip: comms.Driver, remote_path: str) -> int:
+def create_transfer_instance_upload(cip: comms.Driver, remote_path: str) -> tuple[int, int]:
     """
     Creates a transfer instance for uploading from the remote terminal to the local device.
 
@@ -148,12 +148,12 @@ def create_transfer_instance_upload(cip: comms.Driver, remote_path: str) -> int:
     if (resp_msg_instance != 0): raise Exception(f'{resp_exception_text}.  Response message instance: {resp_msg_instance}, expected: 0.  There may be an incomplete transfer.  Reboot terminal and try again.')
     if (resp_unk1 != 0 ): raise Exception(f'{resp_exception_text}.  Response UNK1 bytes: {resp_unk1}, expected: 0.  Please file a bug report with all available information.')
     if (resp_chunk_size != cip.chunk_size): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {cip.chunk_size}.  Please file a bug report with all available information.')
-    return resp_transfer_instance
+    return resp_transfer_instance, resp_file_size
 
 def delete_transfer_instance(cip: comms.Driver, transfer_instance: int):
     return messages.delete_transfer_instance(cip, transfer_instance)
 
-def execute_transfer_download(cip: comms.Driver, transfer_instance: int, source_data: bytearray) -> bool:
+def execute_transfer_download(cip: comms.Driver, transfer_instance: int, source_data: bytearray, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
     """
     Downloads a file from the local device to the remote terminal.
     The transfer happens by breaking the file down into one or more
@@ -197,7 +197,8 @@ def execute_transfer_download(cip: comms.Driver, transfer_instance: int, source_
     """
     req_chunk_number = 1
     req_offset = 0
-    while req_offset < len(source_data):
+    total_bytes = len(source_data)
+    while req_offset < total_bytes:
         req_chunk = source_data[req_offset:req_offset + cip.chunk_size]
         req_header = struct.pack('<IH', req_chunk_number, len(req_chunk))
         req_next_chunk_number = req_chunk_number + 1
@@ -213,6 +214,10 @@ def execute_transfer_download(cip: comms.Driver, transfer_instance: int, source_
         if (resp_chunk_number != req_chunk_number ): raise Exception(f'Response chunk number {resp_chunk_number} did not match request chunk number {req_chunk_number}.')
         if (resp_next_chunk_number != req_next_chunk_number): raise Exception(f'Response next chunk number {resp_next_chunk_number} did not match expected next chunk number {req_next_chunk_number}.')
 
+        # Update progress callback
+        current_bytes = req_offset + len(req_chunk)
+        if progress: progress('Download',total_bytes, current_bytes)
+
         # Continue to next chunk
         req_chunk_number += 1
         req_offset += len(req_chunk)
@@ -222,7 +227,7 @@ def execute_transfer_download(cip: comms.Driver, transfer_instance: int, source_
     resp = messages.write_file_chunk(cip, transfer_instance, req_data)
     return True
 
-def execute_transfer_upload(cip: comms.Driver, transfer_instance: int) -> bytearray:
+def execute_transfer_upload(cip: comms.Driver, transfer_instance: int, total_bytes: int, progress: Optional[Callable[[str, int, int], None]] = None) -> bytearray:
     """
     Uploads a file from the remote terminal to the local device.
     The transfer happens by breaking the file down into one or more
@@ -284,6 +289,9 @@ def execute_transfer_upload(cip: comms.Driver, transfer_instance: int) -> bytear
 
         # Write to mer list
         resp_binary += resp_data
+
+        # Update progress callback
+        if progress: progress('Upload',total_bytes,len(resp_binary))
 
         # Continue to next chunk
         req_chunk_number += 1
