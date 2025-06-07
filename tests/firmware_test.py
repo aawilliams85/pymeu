@@ -1,0 +1,67 @@
+import os
+import zipfile
+import unittest
+
+from pymeu import comms
+from pymeu import MEUtility
+from pymeu import terminal
+from pymeu import types
+
+from config import *
+
+# Turn off sort so that tests run in line order
+unittest.TestLoader.sortTestMethodsUsing = None
+
+class dmk_tests(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_dmk_unsupported(self):
+        print('')
+
+        for (device, driver, comms_path) in test_combinations:
+            meu = MEUtility(comms_path, driver=driver)
+            firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
+            result = (
+                    f'Device: {device.name}\n'
+                    f'Driver: {driver}\n'
+                    f'Path: {comms_path}\n'
+                    f'Function: flash_firmware({firmware_image_path})\n'
+            )
+            print(result)
+            resp = meu.flash_firmware(firmware_image_path,'')
+            for s in resp.device.log: print(s)
+            print('')
+            self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)
+
+    def tearDown(self):
+        pass
+
+class fuw_tests(unittest.TestCase):
+    def setUp(self):
+        self.ip_address = '192.168.40.123'
+        #self.ip_address = '192.168.40.104,4,192.168.1.20'
+        #self.ip_address = '192.168.1.20'
+        pass
+
+    def test_pvp6_v11(self):
+        print('')
+
+        def progress_callback(description: str, total_bytes: int, current_bytes: int):
+            progress = 100* current_bytes / total_bytes;
+            print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
+
+        self.fuw_helper_path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
+        self.fuw_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP6', 'ME_PVP6xX_11.00-20190915', 'upgrade', 'SC.IMG')
+        print(self.fuw_helper_path)
+        print(self.fuw_image_path)
+        meu = MEUtility(self.ip_address, driver='pylogix')
+        resp = meu.flash_firmware(self.fuw_image_path, self.fuw_helper_path, progress_callback)
+        for s in resp.device.log: print(s)
+        print('')
+        
+    def tearDown(self):
+        pass
+
+if __name__ == '__main__':
+    unittest.main()
