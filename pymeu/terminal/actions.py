@@ -280,10 +280,10 @@ def upload_mer_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
     # Delete list on the terminal
     try:
         helper.delete_file_list(cip, device.paths)
-        device.log.append(f'Deleted *.MED list on terminal.')
+        device.log.append(f'Deleted *.MER list on terminal.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to delete *.MED list on terminal.')
+        device.log.append(f'Failed to delete *.MER list on terminal.')
 
     return file_list
 
