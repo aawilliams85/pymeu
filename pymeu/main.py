@@ -99,6 +99,75 @@ class MEUtility(object):
 
         return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
 
+    def flash_firmware(self, 
+                       firmware_image_path: str, 
+                       firmware_helper_path: str, 
+                       progress: Optional[Callable[[str, int, int], None]] = None
+                       ) -> types.MEResponse:
+        """
+        Flashes a firmware image to the remote terminal.
+
+        Args:
+            firmware_image_path (str): The local path to the firmware image file (ex: C:\\YourFolder\\FirmwareUpgradeCard\\upgrade\\SC.IMG)
+            firmware_helper_path (str): The local path to the firmware helper file (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWhelper6xX.dll)
+            progress: Optional callback for progress indication.
+        """
+        # Use default RSView directory if one is not specified
+        if not os.path.isfile(firmware_helper_path):
+            if os.path.sep not in firmware_helper_path:
+                base_path = "C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise"
+                firmware_helper_path = os.path.join(base_path, firmware_helper_path)
+
+        with comms.Driver(self.comms_path, self.driver) as cip:
+            # Set socket timeout first.
+            # The terminal will pause at certain points and delay acknowledging messages.
+            # Without this, the process will fail and the terminal will require a factory reset.
+            cip.timeout = 255
+
+            # Validate device at this communications path is a terminal of known version.
+            self.device = terminal.validation.get_terminal_info(cip)
+            if not(terminal.validation.is_terminal_valid(self.device)):
+                if self.ignore_terminal_valid:
+                    warn('Invalid device selected, but terminal validation is set to IGNORE.')
+                else:
+                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
+
+            # Check firmware extension
+            extension = os.path.splitext(firmware_image_path)[1].upper()
+            match extension:
+                case '.DMK':
+                    # Perform firmware flash to terminal
+                    try:
+                        resp = terminal.actions.flash_dmk(cip,
+                                                          self.device,
+                                                          firmware_image_path,
+                                                          progress
+                                                          )
+                        if not(resp):
+                            self.device.log.append(f'Failed to flash terminal.')
+                            return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    except Exception as e:
+                        self.device.log.append(f'Exception: {str(e)}')
+                        self.device.log.append(f'Failed to flash terminal.')
+                        return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                case '.IMG':
+                    # Perform firmware flash to terminal
+                    try:
+                        resp = terminal.actions.flash_firmware_upgrade_card(cip, 
+                                                                            self.device, 
+                                                                            firmware_image_path, 
+                                                                            firmware_helper_path, 
+                                                                            progress)
+                        if not(resp):
+                            self.device.log.append(f'Failed to flash terminal.')
+                            return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    except Exception as e:
+                        self.device.log.append(f'Exception: {str(e)}')
+                        self.device.log.append(f'Failed to flash terminal.')
+                        return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+
+        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+
     def get_terminal_info(self, **kwargs) -> types.MEResponse:
         """
         If no upload or download are desired, where terminal info would typically be checked

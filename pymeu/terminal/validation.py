@@ -142,11 +142,13 @@ def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
     helper_file_path = f'{helper_path}\\{HELPER_FILE_NAME}'
     upload_list_path = f'{storage_path}\\{UPLOAD_LIST_PATH}'
     runtime_path = f'{storage_path}\\{RUNTIME_PATH}'
+    fuwhelper_file_path = '\\Storage Card\\FUWhelper.dll'
 
     paths = types.MEDevicePaths(helper_file_path,
                               storage_path,
                               upload_list_path,
-                              runtime_path)
+                              runtime_path,
+                              fuwhelper_file_path)
 
     return types.MEDeviceInfo(cip._comms_path, 
                                helper.get_version(cip, paths, paths.helper_file),

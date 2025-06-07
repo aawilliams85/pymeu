@@ -52,5 +52,8 @@ docs/_build/
 # Uploads from tests
 /tests/upload/*
 
+# Firmware images
+/tests/firmware/*
+
 # pypi config
 *.pypirc

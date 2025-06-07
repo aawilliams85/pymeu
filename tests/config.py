@@ -40,6 +40,7 @@ def generate_test_combinations(devices: list[METestDevice], drivers: list[str]) 
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 DOWNLOAD_FOLDER_PATH = os.path.join(BASE_PATH, 'download')
 UPLOAD_FOLDER_PATH = os.path.join(BASE_PATH, 'upload')
+FIRMWARE_FOLDER_PATH = os.path.join(BASE_PATH, 'firmware')
 
 # Shared paths - terminal
 HELPER_FILE_NAME = 'RemoteHelper.DLL'
@@ -55,7 +56,8 @@ PVP5_Device_Paths = types.MEDevicePaths(
     f'\\Storage Card\\Rockwell Software\\RSViewME\\{HELPER_FILE_NAME}',
     '\\Storage Card',
     f'\\Storage Card\\{UPLOAD_LIST_PATH}',
-    f'\\Storage Card\\{RUNTIME_PATH}'
+    f'\\Storage Card\\{RUNTIME_PATH}',
+    '\\Storage Card\\FUWhelper.dll'
 )
 PVP5_MER_Files = [
     'Test_v5_A.mer',
@@ -70,7 +72,8 @@ PVP6_Device_Paths = types.MEDevicePaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
     f'\\Application Data\\{UPLOAD_LIST_PATH}',
-    f'\\Application Data\\{RUNTIME_PATH}'
+    f'\\Application Data\\{RUNTIME_PATH}',
+    '\\Storage Card\\FUWhelper.dll'
 )
 PVP6_MER_Files = [
     'Test_v11_A.mer',
@@ -85,7 +88,8 @@ PVP7A_Device_Paths = types.MEDevicePaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
     f'\\Application Data\\{UPLOAD_LIST_PATH}',
-    f'\\Application Data\\{RUNTIME_PATH}'
+    f'\\Application Data\\{RUNTIME_PATH}',
+    '\\Storage Card\\FUWhelper.dll'
 )
 PVP7A_MER_Files = [
     'Test_v11_A.mer',

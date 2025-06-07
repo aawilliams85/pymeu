@@ -1,8 +1,10 @@
 from collections.abc import Callable
 import os
+import time
 from typing import Optional
 
 from . import files
+from . import fuwhelper
 from . import helper
 from . import registry
 from .. import comms
@@ -161,6 +163,84 @@ def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.
         device.log.append(f'Failed to set file to run at startup.')
         
     return continue_download
+
+def flash_dmk(cip: comms.Driver, 
+              device: types.MEDeviceInfo,
+              firmware_image_path: str,
+              progress: Optional[Callable[[str, int, int], None]] = None
+              ):
+    raise Exception('Firmware flash does not support *.DMK yet.')
+
+def flash_firmware_upgrade_card(cip: comms.Driver, 
+                                device: types.MEDeviceInfo, 
+                                firmware_image_path: str,
+                                firmware_helper_path: str, 
+                                progress: Optional[Callable[[str, int, int], None]] = None
+                                ):
+
+    # Determine if firmware upgrade helepr exists already
+    transfer_fuwhelper = True
+    if helper.get_file_exists(cip, device.paths, '\\Windows\\FUWhelper.dll'):
+        transfer_fuwhelper = False
+        device.paths.fuwhelper_file = '\\Windows\\FUWhelper.dll'
+        device.log.append(f'Firmware upgrade helper already present on terminal.')
+
+    # Download firmware upgrade wizard helper to terminal
+    if transfer_fuwhelper:
+        try:
+            fuw_helper_file = types.MEFile('FUWhelper.dll',
+                                        True,
+                                        True,
+                                        firmware_helper_path)
+            resp = download_file(cip, device, fuw_helper_file, '\\Storage Card', progress)
+            if not(resp):
+                device.log.append(f'Failed to upgrade terminal.')
+                return False
+            
+            time.sleep(10)
+        except Exception as e:
+            device.log.append(f'Exception: {str(e)}')
+            device.log.append(f'Failed to upgrade terminal.')
+            return False            
+
+    # Prepare terminal for firmware upgrade card
+    try:
+        device.log.append('1')
+        if not(fuwhelper.get_folder_exists(cip, device.paths, '\\Storage Card')):
+            device.log.append('2')
+            fuwhelper.create_folder(cip, device.paths, '\\Storage Card')
+        device.log.append('3')
+        if not(fuwhelper.get_folder_exists(cip, device.paths, '\\Storage Card\\vfs')):
+            fuwhelper.create_folder(cip, device.paths, '\\Storage Card\\vfs')
+        if not(fuwhelper.get_folder_exists(cip, device.paths, '\\Storage Card\\vfs\\platform firmware')):
+            fuwhelper.create_folder(cip, device.paths, '\\Storage Card\\vfs\\platform firmware')
+        if (fuwhelper.get_file_exists(cip, device.paths, '\\Storage Card\\Step2.dat')):
+            fuwhelper.delete_file(cip, device.paths, '\\Storage Card\\Step2.dat')
+        if fuwhelper.get_exe_running(cip, device.paths, 'MERuntime.exe'):
+            fuwhelper.stop_process_me(cip, device.paths)
+
+        fuwhelper.get_file_exists(cip, device.paths, '\\Windows\\useroptions.txt')
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to upgrade terminal.')
+        return False
+
+    # Download firmware upgrade card to terminal
+    try:
+        fuw_image_file = types.MEFile('SC.IMG',
+                                    True,
+                                    True,
+                                    firmware_image_path)
+        resp = download_file(cip, device, fuw_image_file, '\\vfs\\platform firmware', progress)
+        if not(resp):
+            device.log.append(f'Failed to upgrade terminal.')
+            return False
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Failed to upgrade terminal.')
+        return False
+
+    return True
 
 def upload(cip: comms.Driver, device: types.MEDeviceInfo, rem_file_path: str, progress: Optional[Callable[[str, int, int], None]] = None) -> bytearray:
     # Create a transfer instance on the terminal
