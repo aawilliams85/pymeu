@@ -57,6 +57,7 @@ class MEDeviceInfo:
     me_version: str
     version_major: int
     version_minor: int
+    vendor_id: int
     product_code: int
     product_name: str
     product_type: int
