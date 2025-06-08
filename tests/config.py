@@ -6,11 +6,12 @@ from pymeu import types
 @dataclass
 class METestDevice:
     name: str
-    comms_path: str
     comms_paths: list[str]
     device_paths: types.MEDevicePaths
     boot_time_sec: int
     mer_files: list[str]
+    local_firmware_helper_path: str
+    local_firmware_image_path: str
 
 def generate_test_combinations(devices: list[METestDevice], drivers: list[str]) -> list[tuple[METestDevice,str,str]]:
     """
@@ -48,6 +49,8 @@ RUNTIME_PATH = 'Rockwell Software\\RSViewME\\Runtime'
 UPLOAD_LIST_PATH = f'{RUNTIME_PATH}\\Results.txt'
 NONEXISTENT_FILE = '\\NonexistentPath\\NonexistentFile.ext'
 NONEXISTENT_FOLDER = '\\NonexistentPath'
+MERUNTIME_PROCESS = 'MERuntime.exe'
+NONEXISTENT_PROCESS = 'NonexistentProcess.exe'
 
 # PanelView Plus configuration
 PVP5 = 'PVP5'
@@ -75,6 +78,7 @@ PVP6_Device_Paths = types.MEDevicePaths(
     f'\\Application Data\\{RUNTIME_PATH}',
     '\\Storage Card\\FUWhelper.dll'
 )
+PVP6_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
 PVP6_MER_Files = [
     'Test_v11_A.mer',
     'Test_v11_B.mer',
@@ -100,27 +104,30 @@ PVP7A_MER_Files = [
 DEVICES = [
     METestDevice(
         PVP5, 
-        '192.168.40.124',
         PVP5_Comms_Paths,
         PVP5_Device_Paths, 
         75, 
-        PVP5_MER_Files
+        PVP5_MER_Files,
+        '',
+        ''
     ),
     METestDevice(
         PVP6, 
-        '192.168.40.123',
         PVP6_Comms_Paths,
         PVP6_Device_Paths, 
         75, 
-        PVP6_MER_Files
+        PVP6_MER_Files,
+        PVP6_Local_Firmware_Helper_Path,
+        ''
     ),
     METestDevice(
         PVP7A, 
-        '192.168.40.126',
         PVP7A_Comms_Paths,
         PVP7A_Device_Paths, 
         75, 
-        PVP7A_MER_Files
+        PVP7A_MER_Files,
+        '',
+        ''
     ),
 ]
 
