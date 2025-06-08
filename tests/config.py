@@ -101,6 +101,25 @@ PVP7A_MER_Files = [
     'Test_v11_C.mer'
 ]
 
+#PanelView Plus 7B configuration
+PVP7B = 'PVP7B'
+PVP7B_Comms_Paths = []
+PVP7B_Device_Paths = types.MEDevicePaths(
+    f'\\Windows\\{HELPER_FILE_NAME}',
+    '\\Application Data',
+    f'\\Application Data\\{UPLOAD_LIST_PATH}',
+    f'\\Application Data\\{RUNTIME_PATH}',
+    '\\Storage Card\\FUWhelper.dll'
+)
+PVP7B_Local_Firmware_Image_Paths = [
+    os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
+]
+PVP7B_MER_Files = [
+    'Test_v11_A.mer',
+    'Test_v11_B.mer',
+    'Test_v11_C.mer'
+]
+
 DEVICES = [
     METestDevice(
         PVP5, 

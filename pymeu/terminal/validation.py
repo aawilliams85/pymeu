@@ -155,6 +155,7 @@ def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
                                me_version,
                                registry.get_version_major(cip),
                                registry.get_version_minor(cip),
+                               registry.get_vendor_id(cip),
                                registry.get_product_code(cip),
                                registry.get_product_name(cip),
                                registry.get_product_type(cip),

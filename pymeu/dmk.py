@@ -57,4 +57,16 @@ def process_dmk(dmk_file_path: str):
             config.read_string(raw_file)
 
     dmk_config = deserialize_dmk_content_file(config)
-    print(dmk_config)
+    #print(dmk_config)
+    return dmk_config
+
+def masked_equals(mask: int, a: int, b: int) -> bool:
+    return (mask & a) == (mask & b)
+
+def validate_dmk_for_terminal(device: types.MEDeviceInfo, content: types.DMKContentFile) -> bool:
+    for catalog in content.catalogs:
+        if not(masked_equals(catalog.vendor_id_mask, catalog.vendor_id, device.vendor_id)): continue
+        if not(masked_equals(catalog.product_type_mask, catalog.product_type, device.product_type)): continue
+        if not(masked_equals(catalog.product_code_mask, catalog.product_code, device.product_code)): continue
+        return True # Device matches this catalog
+    return False # Device doesn't match any catalogs

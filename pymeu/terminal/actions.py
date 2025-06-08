@@ -12,6 +12,7 @@ from .. import comms
 from .. import types
 
 def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, redact_log: bool, silent_mode: bool):
+    if print_log: print(f'Terminal vendor ID: {device.vendor_id}.')
     if print_log: print(f'Terminal product type: {device.product_type}.')
     if print_log: print(f'Terminal product code: {device.product_code}.')
     if print_log: print(f'Terminal product name: {device.product_name}.')

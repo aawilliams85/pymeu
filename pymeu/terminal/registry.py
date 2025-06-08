@@ -11,7 +11,7 @@ class RegKeys(StrEnum):
     CIP_PRODUCT_NAME = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\ProductName'                    # ex: PanelView Plus_6 1500
     CIP_PRODUCT_TYPE = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\ProductType'                    # ex: 24
     CIP_SERIAL_NUMBER = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\SerialNumber'                  # ex: 1234567
-    CIP_VENDOR = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\Vendor'                               # ex: 1
+    CIP_VENDOR_ID = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSLinxNG\CIP Identity\Vendor'                               # ex: 1
     ME_VERSION = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSView Enterprise\MEVersion'                                # ex: 11.00.25.230
     ME_STARTUP_APP = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSViewME\Startup Options\CurrentApp'                    # ex: \Application Data\Rockwell Software\RSViewME\Runtime\{FileName}.mer
     ME_STARTUP_DELETE_LOGS = 'HKEY_LOCAL_MACHINE\SOFTWARE\Rockwell Software\RSViewME\Startup Options\DeleteLogFiles'        # ex: 0
@@ -207,3 +207,15 @@ def get_version_minor(cip: comms.Driver) -> int:
         For example, a v5.10 PanelView returned version 3.x.
     """
     return int(get_value(cip, [RegKeys.CIP_VERSION_MINOR]))
+
+def get_vendor_id(cip: comms.Driver) -> int:
+    """
+    Gets the CIP Vendor ID from the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        int: The vendor id.
+    """
+    return int(get_value(cip, [RegKeys.CIP_VENDOR_ID]))

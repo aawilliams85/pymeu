@@ -23,6 +23,17 @@ class dmk_tests(unittest.TestCase):
         dmk.process_dmk(firmware_image_path)
         print('')
 
+    def test_dmk_validate(self):
+        print('')
+        with comms.Driver(PVP7A_Comms_Paths[0]) as cip:
+            self.device = terminal.validation.get_terminal_info(cip)
+
+            firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
+            self.dmk_content = dmk.process_dmk(firmware_image_path)
+
+            print(dmk.validate_dmk_for_terminal(self.device, self.dmk_content))
+        print('')
+
     def test_dmk_unsupported(self):
         print('')
         for (device, driver, comms_path) in test_combinations:
