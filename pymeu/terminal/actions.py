@@ -215,7 +215,7 @@ def flash_firmware_upgrade_card(cip: comms.Driver,
             fuwhelper.create_folder(cip, device.paths, '\\Storage Card\\vfs\\platform firmware')
         if (fuwhelper.get_file_exists(cip, device.paths, '\\Storage Card\\Step2.dat')):
             fuwhelper.delete_file(cip, device.paths, '\\Storage Card\\Step2.dat')
-        if fuwhelper.get_exe_running(cip, device.paths, 'MERuntime.exe'):
+        if fuwhelper.get_process_running(cip, device.paths, 'MERuntime.exe'):
             fuwhelper.stop_process_me(cip, device.paths)
 
         fuwhelper.get_file_exists(cip, device.paths, '\\Windows\\useroptions.txt')

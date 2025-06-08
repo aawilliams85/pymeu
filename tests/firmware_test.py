@@ -79,5 +79,78 @@ class fuw_tests(unittest.TestCase):
     def tearDown(self):
         pass
 
+class fuwhelper_tests(unittest.TestCase):
+    def setUp(self):
+        print('')
+        for (device, driver, comms_path) in test_combinations:
+            with comms.Driver(comms_path, driver=driver) as cip:
+                device2 = terminal.validation.get_terminal_info(cip)
+                if device.local_firmware_helper_path:
+                    fuw_helper_file = types.MEFile('FUWhelper.dll',
+                                                True,
+                                                True,
+                                                device.local_firmware_helper_path)
+                    resp = terminal.actions.download_file(cip, device2, fuw_helper_file, '\\Storage Card')
+
+    def test_get_process_running(self):
+        print('')
+        results = []
+        for (device, driver, comms_path) in test_combinations:
+            with comms.Driver(comms_path, driver=driver) as cip:
+                if device.local_firmware_helper_path:
+                    value = terminal.fuwhelper.get_process_running(cip, device.device_paths, MERUNTIME_PROCESS)
+                    result = (
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {comms_path}\n'
+                        f'Function: {terminal.fuwhelper.FuwHelperFunctions.GET_PROCESS_RUNNING}\n'
+                        f'Value: {value}\n'
+                    )
+                    print(result)
+                    self.assertEqual(value, True)
+                    results.append(value)
+        self.assertTrue(all(x == results[0] for x in results))
+
+    def test_get_process_running_nonexistent(self):
+        print('')
+        results = []
+        for (device, driver, comms_path) in test_combinations:
+            with comms.Driver(comms_path, driver=driver) as cip:
+                if device.local_firmware_helper_path:
+                    value = terminal.fuwhelper.get_process_running(cip, device.device_paths, NONEXISTENT_PROCESS)
+                    result = (
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {comms_path}\n'
+                        f'Function: {terminal.fuwhelper.FuwHelperFunctions.GET_PROCESS_RUNNING}\n'
+                        f'Value: {value}\n'
+                    )
+                    print(result)
+                    self.assertEqual(value, False)
+                    results.append(value)
+        self.assertTrue(all(x == results[0] for x in results))
+
+    def test_stop_me(self):
+        print('')
+        results = []
+        for (device, driver, comms_path) in test_combinations:
+            with comms.Driver(comms_path, driver=driver) as cip:
+                if device.local_firmware_helper_path:
+                    value = terminal.fuwhelper.stop_process_me(cip, device.device_paths)
+                    result = (
+                        f'Device: {device.name}\n' 
+                        f'Driver: {driver}\n' 
+                        f'Path: {comms_path}\n'
+                        f'Function: {terminal.fuwhelper.FuwHelperFunctions.STOP_PROCESS_ME}\n'
+                        f'Value: {value}\n'
+                    )
+                    print(result)
+                    self.assertEqual(value, True)
+                    results.append(value)
+        self.assertTrue(all(x == results[0] for x in results))
+
+    def tearDown(self):
+        pass
+
 if __name__ == '__main__':
     unittest.main()
