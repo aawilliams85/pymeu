@@ -3,6 +3,32 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 @dataclass
+class DMKContentHeader:
+    dmk_type: str
+    family_name: str
+    revision: str
+    number_catalogs: int
+
+@dataclass
+class DMKContentCatalog:
+    catalog: str
+    revision: str
+    vendor_id: int
+    vendor_id_mask: int
+    product_type: int
+    product_type_mask: int
+    product_code: int
+    product_code_mask: int
+    device_instance: int
+    disable_sub_minor: int
+    driver_name: str
+
+@dataclass
+class DMKContentFile:
+    header: DMKContentHeader
+    catalogs: list[DMKContentCatalog]
+
+@dataclass
 class MEFile:
     name: str
     overwrite_requested: bool

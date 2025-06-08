@@ -4,6 +4,7 @@ from typing import Optional
 from warnings import warn
 
 from . import comms
+from . import dmk
 from . import terminal
 from . import types
 

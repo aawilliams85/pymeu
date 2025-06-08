@@ -3,6 +3,7 @@ import zipfile
 import unittest
 
 from pymeu import comms
+from pymeu import dmk
 from pymeu import MEUtility
 from pymeu import terminal
 from pymeu import types
@@ -16,9 +17,14 @@ class dmk_tests(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_dmk_unsupported(self):
+    def test_dmk_unpack(self):
+        print('')
+        firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
+        dmk.process_dmk(firmware_image_path)
         print('')
 
+    def test_dmk_unsupported(self):
+        print('')
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
             firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
