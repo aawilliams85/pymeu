@@ -29,6 +29,41 @@ class DMKContentFile:
     catalogs: list[DMKContentCatalog]
 
 @dataclass
+class DMKNvsHeader:
+    description: str
+    programming_protocol: str
+    disable_sub_minor: int
+    new_revision: str
+    number_updates: int
+    connection_type: str
+    max_power_up_seconds: int
+    number_identities: int
+    family_name: str
+    release_notes_file_name: str
+
+@dataclass
+class DMKNvsUpdate:
+    nvs_instance: int
+    major_revision: int
+    minor_revision: int
+    tftp_timeout_seconds: int
+    max_timeout_seconds: int
+    starting_location: int
+    file_size: int
+    data_file_name: str
+    rename_data_file: str
+    update_reset: int
+    auto_reset_on_error: int
+    first_transfer_delay: int
+    last_transfer_delay: int
+    error_instructions: str
+
+@dataclass
+class DMKNvsFile:
+    header: DMKNvsHeader
+    updates: list[DMKNvsUpdate]
+
+@dataclass
 class MEFile:
     name: str
     overwrite_requested: bool
