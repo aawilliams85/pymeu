@@ -102,22 +102,31 @@ def deserialize_dmk_nvs_file(config: configparser) -> types.DMKNvsFile:
         updates=updates
     )
 
+def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
+    with zipfile.ZipFile(dmk_file_path, 'r') as zf:
+        for update in nvs.updates:
+            actual_size = zf.getinfo(update.data_file_name).file_size
+            with zf.open(update.data_file_name) as file:
+                if (actual_size != update.file_size):
+                    raise Exception(f'File: {update.data_file_name}, Expected Size: {update.file_size}, Actual Size: {actual_size}')
+
 def process_dmk(dmk_file_path: str):
-    config1 = configparser.ConfigParser(allow_unnamed_section=True)
-    config2 = configparser.ConfigParser(allow_unnamed_section=True, allow_no_value=True)
+    config_content = configparser.ConfigParser(allow_unnamed_section=True)
+    config_nvs = configparser.ConfigParser(allow_unnamed_section=True, allow_no_value=True)
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
         with zf.open('Content.txt') as file:
             raw_file = file.read().decode('utf-8')
-            config1.read_string(raw_file)
+            config_content.read_string(raw_file)
         with zf.open('RA_PVPApps_FTviewME_AllRegions.nvs') as file:
             raw_file = file.read().decode('utf-8', errors='ignore')
-            config2.read_string(raw_file)
+            config_nvs.read_string(raw_file)
 
-    dmk_content = deserialize_dmk_content_file(config1)
-    dmk_nvs = deserialize_dmk_nvs_file(config2)
-    print(dmk_nvs)
-    #print(dmk_config)
-    return dmk_content
+    dmk_file = types.DMKFile(
+        content=deserialize_dmk_content_file(config_content),
+        nvs=deserialize_dmk_nvs_file(config_nvs)
+    )
+    validate_update_size(dmk_file_path, dmk_file.nvs)
+    return dmk_file
 
 def masked_equals(mask: int, a: int, b: int) -> bool:
     return (mask & a) == (mask & b)
