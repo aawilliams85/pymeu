@@ -64,6 +64,11 @@ class DMKNvsFile:
     updates: list[DMKNvsUpdate]
 
 @dataclass
+class DMKFile:
+    content: DMKContentFile
+    nvs: DMKNvsFile
+
+@dataclass
 class MEFile:
     name: str
     overwrite_requested: bool
