@@ -20,7 +20,8 @@ class dmk_tests(unittest.TestCase):
     def test_dmk_unpack(self):
         print('')
         firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
-        dmk.process_dmk(firmware_image_path)
+        with comms.Driver('192.168.40.124') as cip:
+            dmk.process_dmk(cip, firmware_image_path)
         print('')
 
     def test_dmk_validate(self):
