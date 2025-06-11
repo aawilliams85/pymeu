@@ -1,13 +1,13 @@
+from collections.abc import Callable
 import configparser
 import struct
+from typing import Optional
 from warnings import warn
 import zipfile
 
 from . import comms
 from . import messages
 from . import types
-
-DMK_CONTENT_FILE_NAME = 'Content.txt'
 
 def deserialize_dmk_content_header(config: configparser) -> types.DMKContentHeader:
     section_name = 'Content'
@@ -143,21 +143,47 @@ def send_dmk_update_preamble(cip: comms.Driver, file_size: int) -> int:
     warn('Preamble using static values')
     req_data = struct.pack('<QBBBBBBBB', file_size, 0x07, 0x00, 0x01, 0x00, 0xA5, 0x06, 0x35, 0x01)
     resp = messages.dmk_preamble(cip, req_data)
+    if not resp: raise Exception(f'Failed to write file preamble to terminal.')
     resp_unk1, resp_chunk_size, resp_unk2 = struct.unpack('<III', resp.value)
     assert(resp_unk1 == 0)
     assert(resp_unk2 == 0)
     assert(resp_chunk_size > 0)
     return resp_chunk_size
 
-def send_dmk_update_file(cip: comms.Driver, chunk_size: int, source_file: bytearray) -> bool:
-    pass
+def send_dmk_update_file(cip: comms.Driver, chunk_size: int, source_data: bytearray, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
+    req_chunk_number = 1
+    req_offset = 0
+    total_bytes = len(source_data)
+    while req_offset < total_bytes:
+        req_chunk = source_data[req_offset:req_offset + chunk_size]
+        req_header = struct.pack('<I', req_offset)
+        req_next_chunk_number = req_chunk_number + 1
+        req_data = req_header + req_chunk
 
-def send_dmk_updates(cip: comms.Driver, dmk_file_path: str, nvs: types.DMKNvsFile):
+        # End of file
+        if not req_chunk: break
+
+        resp = messages.dmk_chunk(cip, req_data)
+
+        if not resp: raise Exception(f'Failed to write chunk {req_chunk_number} to terminal.')
+        resp_offset_last, resp_offset_this, resp_code = struct.unpack('<IIH', resp.value)
+        assert((resp_offset_this == req_offset) or (resp_offset_this == 0xFFFFFFFF))
+        assert(resp_code == 0x02)
+
+        # Update progress callback
+        current_bytes = req_offset + len(req_chunk)
+        if progress: progress('Download',total_bytes, current_bytes)
+
+        # Continue to next chunk
+        req_chunk_number += 1
+        req_offset += len(req_chunk)
+
+def send_dmk_updates(cip: comms.Driver, dmk_file_path: str, nvs: types.DMKNvsFile, progress: Optional[Callable[[str, int, int], None]] = None):
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
         for update in nvs.updates:
             chunk_size = send_dmk_update_preamble(cip, update.file_size)
             with zf.open(update.data_file_name) as file:
-                send_dmk_update_file(cip, chunk_size, bytearray(file.read()))
+                send_dmk_update_file(cip, chunk_size, bytearray(file.read()), progress)
 
 def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
@@ -167,7 +193,7 @@ def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
                 if (actual_size != update.file_size):
                     raise Exception(f'File: {update.data_file_name}, Expected Size: {update.file_size}, Actual Size: {actual_size}')
 
-def process_dmk(cip: comms.Driver, dmk_file_path: str):
+def process_dmk(cip: comms.Driver, dmk_file_path: str, progress: Optional[Callable[[str, int, int], None]] = None):
     config_content = configparser.ConfigParser(allow_unnamed_section=True)
     config_nvs = configparser.ConfigParser(allow_unnamed_section=True, allow_no_value=True)
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
@@ -183,7 +209,7 @@ def process_dmk(cip: comms.Driver, dmk_file_path: str):
         nvs=deserialize_dmk_nvs_file(config_nvs)
     )
     validate_update_size(dmk_file_path, dmk_file.nvs)
-    send_dmk_updates(cip, dmk_file_path, dmk_file.nvs)
+    send_dmk_updates(cip, dmk_file_path, dmk_file.nvs, progress)
     return dmk_file
 
 def masked_equals(mask: int, a: int, b: int) -> bool:
