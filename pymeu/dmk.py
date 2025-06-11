@@ -1,6 +1,9 @@
 import configparser
+import struct
 import zipfile
 
+from . import comms
+from . import messages
 from . import types
 
 DMK_CONTENT_FILE_NAME = 'Content.txt'
@@ -102,6 +105,58 @@ def deserialize_dmk_nvs_file(config: configparser) -> types.DMKNvsFile:
         updates=updates
     )
 
+def send_dmk_update_preamble(cip: comms.Driver, file_size: int) -> int:
+    """
+    Sends a DMK CAB file preamble message to the remote terminal.
+    It responds with the chunk size to use for the actual file
+    transfer.
+
+    Args:
+        cip (comms.Driver): CIP driver to communicate with the terminal
+        file_size (int): File size in byte to that will be transferred
+
+    Returns:
+        int: The chunk size to use with DMK file transfer.
+
+    Raises:
+        Exception: If the file transfer fails or if the response contains
+        unexpected values, indicating potential issues with the transfer.
+
+    Request Format:
+        The request consists of the following byte structure:
+
+        | Byte Range    | Description                                         |
+        |---------------|-----------------------------------------------------|
+        | Bytes 0->7    | File size in bytes                                  |
+        | Bytes 8->15   | Unknown purpose                                     |
+
+    Response Format:
+        The response consists of the following byte structure:
+
+        | Byte Range    | Description                                         |
+        |---------------|-----------------------------------------------------|
+        | Bytes 0->3    | Unknown purpose                                     |
+        | Bytes 4->7    | Chunk size in bytes                                 |
+        | Bytes 8->11   | Unknown purpose                                     |
+    """
+    req_data = struct.pack('<IQ', 0, file_size)
+    resp = messages.dmk_preamble(cip, req_data)
+    resp_unk1, resp_chunk_size, resp_unk2 = struct.unpack('<III', resp.value)
+    assert(resp_unk1 == 0)
+    assert(resp_unk2 == 0)
+    assert(resp_chunk_size > 0)
+    return resp_chunk_size
+
+def send_dmk_update_file(cip: comms.Driver, chunk_size: int, source_file: bytearray) -> bool:
+    pass
+
+def send_dmk_updates(cip: comms.Driver, dmk_file_path: str, nvs: types.DMKNvsFile):
+    with zipfile.ZipFile(dmk_file_path, 'r') as zf:
+        for update in nvs.updates:
+            chunk_size = send_dmk_update_preamble(cip, update.file_size)
+            with zf.open(update.data_file_name) as file:
+                send_dmk_update_file(cip, chunk_size, bytearray(file.read()))
+
 def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
         for update in nvs.updates:
@@ -110,7 +165,7 @@ def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
                 if (actual_size != update.file_size):
                     raise Exception(f'File: {update.data_file_name}, Expected Size: {update.file_size}, Actual Size: {actual_size}')
 
-def process_dmk(dmk_file_path: str):
+def process_dmk(cip: comms.Driver, dmk_file_path: str):
     config_content = configparser.ConfigParser(allow_unnamed_section=True)
     config_nvs = configparser.ConfigParser(allow_unnamed_section=True, allow_no_value=True)
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
@@ -126,6 +181,7 @@ def process_dmk(dmk_file_path: str):
         nvs=deserialize_dmk_nvs_file(config_nvs)
     )
     validate_update_size(dmk_file_path, dmk_file.nvs)
+    send_dmk_updates(cip, dmk_file_path, dmk_file.nvs)
     return dmk_file
 
 def masked_equals(mask: int, a: int, b: int) -> bool:
