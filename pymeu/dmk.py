@@ -1,5 +1,6 @@
 import configparser
 import struct
+from warnings import warn
 import zipfile
 
 from . import comms
@@ -139,7 +140,8 @@ def send_dmk_update_preamble(cip: comms.Driver, file_size: int) -> int:
         | Bytes 4->7    | Chunk size in bytes                                 |
         | Bytes 8->11   | Unknown purpose                                     |
     """
-    req_data = struct.pack('<IQ', 0, file_size)
+    warn('Preamble using static values')
+    req_data = struct.pack('<QBBBBBBBB', file_size, 0x07, 0x00, 0x01, 0x00, 0xA5, 0x06, 0x35, 0x01)
     resp = messages.dmk_preamble(cip, req_data)
     resp_unk1, resp_chunk_size, resp_unk2 = struct.unpack('<III', resp.value)
     assert(resp_unk1 == 0)
