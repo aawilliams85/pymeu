@@ -1,6 +1,7 @@
 from collections.abc import Callable
 import configparser
 import struct
+import time
 from typing import Optional
 from warnings import warn
 import zipfile
@@ -184,6 +185,7 @@ def send_dmk_updates(cip: comms.Driver, dmk_file_path: str, nvs: types.DMKNvsFil
             chunk_size = send_dmk_update_preamble(cip, update.file_size)
             with zf.open(update.data_file_name) as file:
                 send_dmk_update_file(cip, chunk_size, bytearray(file.read()), progress)
+                time.sleep(update.max_timeout_seconds)
 
 def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
