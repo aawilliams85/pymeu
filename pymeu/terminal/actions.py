@@ -372,7 +372,7 @@ def upload_mer_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
     return file_list
 
 def reboot(cip: comms.Driver, device: types.MEDeviceInfo):
-    cip1 = comms.Driver(cip._comms_path)
+    cip1 = comms.Driver(cip._original_path)
     cip1.timeout = 0.25
     cip1.open()
     try:

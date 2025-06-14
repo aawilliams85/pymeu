@@ -16,8 +16,7 @@ except: pass
 class Driver:
 
     def __init__(self, comms_path=None, driver=None):
-        self._comms_path = comms_path
-        self._route_path = None
+        self._original_path = comms_path
 
         if not AVAILABLE_DRIVERS:
             raise ImportError("You need to install pycomm3 or pylogix")
@@ -32,15 +31,19 @@ class Driver:
             # no driver requested, pick the first one
             self._driver = AVAILABLE_DRIVERS[0]
 
-        if self.is_routed_path():
-            address, self._route_path = self.pycomm3_path_to_pylogix_route(self._comms_path)
+        # Split originally supplied path into IP address and route if needed
+        if is_routed_path(self._original_path):
+            self._ip_address, self._route_path = convert_path_pycomm3_to_pylogix(self._original_path)
+        else:
+            self._ip_address = self._original_path
+            self._route_path = None
 
+        # Configure driver
         if self._driver == "pylogix":
-            if self.is_routed_path(): self._comms_path = address
-            self.cip = pylogix.PLC(self._comms_path)
+            self.cip = pylogix.PLC(self._ip_address)
             self.cip.Route = self._route_path
         elif self._driver == "pycomm3":
-            self.cip = pycomm3.CIPDriver(self._comms_path)
+            self.cip = pycomm3.CIPDriver(self._original_path)
             self.cip.open()
 
     def __enter__(self):
@@ -66,7 +69,7 @@ class Driver:
             return Response(ret.Value[44:], None, status)
         elif self._driver == "pycomm3":
             connected = False
-            if self.is_routed_path():
+            if is_routed_path(self._original_path):
                 unconnected_send = True
                 route_path = True
             else:
@@ -109,65 +112,80 @@ class Driver:
 
     @property
     def chunk_size(self):
-        # When files are transferred, this is the maximum number of bytes
-        # used per message.  Quick tests up to 2000 bytes did succeed, >2000 bytes failed.
-        if not(self.is_routed_path()):
-            # Direct path
-            return 1984
-        else:
-            # Routed path
-            max_size = 466
-            working_size = max_size - 2 # Remove route path size and reserved bytes
-            for segment in self._route_path:
-                segment_size = 2 + len(str(segment[1])) # 1 control byte, 1 length byte, x path bytes
+        return get_me_chunk_size(self._original_path)
+
+def get_me_chunk_size(path: str) -> int:
+    # When files are transferred using ME services, this is the maximum
+    # number of bytes used per one message.
+    if is_routed_path(path):
+        # Routed path through one or more other devices (ex: through CLX rack and then to terminal)
+        ip_address, route_path = convert_path_pycomm3_to_pylogix(path)
+
+        max_size = 466
+        working_size = max_size - 2 # Remove route path size and reserved bytes
+        for segment in route_path:
+            port = segment[0]
+            try:
+                path = int(segment[1])
+                path_size = 1
+                segment_size = 1 # 1 control byte
+            except:
+                path = str(segment[1])
+                path_size = len(path)
+                segment_size = 2 + path_size # 1 control byte, 1 length byte, X path bytes
                 if segment_size % 2: segment_size += 1 # if segment length is odd, there is a pad byte
-                working_size -= segment_size
 
-            chunk_size = working_size
-            warn(f'Chunk size set to {chunk_size} but still WIP for routed paths.')
-            return chunk_size
+            working_size -= segment_size
 
-    def is_routed_path(self):
-        if (',' in self._comms_path) or ('/' in self._comms_path) or ('\\' in self._comms_path) or (self._route_path is not None):
-            return True
-        else:
-            return False
+        chunk_size = working_size
+        warn(f'Chunk size set to {chunk_size} but still WIP for routed paths.')
+        return chunk_size
+    else:
+        # Direct path
+        # Tests up to 2000 bytes did succeed, >2000 bytes failed.
+        return 1984
+
+def is_routed_path(path: str) -> bool:
+    if (',' in path) or ('/' in path) or ('\\' in path):
+        return True
+    else:
+        return False
         
-    def pycomm3_path_to_pylogix_route(self, path: str):
-        """
-        Converts a pycomm3-style route string into a pylogix Route list.
+def convert_path_pycomm3_to_pylogix(path: str):
+    """
+    Converts a pycomm3-style route string into a pylogix Route list.
 
-        Args:
-            path (str): A comma-separated route string, e.g., '192.168.1.20,4,192.168.2.10'
+    Args:
+        path (str): A route string, e.g., '192.168.2.10/bp/3/enet/192.168.1.20'
 
-        Returns:
-            tuple: (starting_ip: str, pylogix_route: list of tuples)
-        """
-        # make sure we are only working with commas, then split
-        parts = path.replace("/", ",").replace("\\", ",").split(",")
-        ip_address = parts.pop(0)
-        route = []
+    Returns:
+        tuple: (starting_ip: str, pylogix_route: list of tuples)
+    """
+    # make sure we are only working with commas, then split
+    parts = path.replace("/", ",").replace("\\", ",").split(",")
+    ip_address = parts.pop(0)
+    route = []
 
-        if parts:
-            # make sure even number of segments
-            if len(parts) % 2:
-                raise ValueError("Path must have at least one routing pair (port, destination) after the start IP.")
-            
-            for i in range(len(parts)):
-                # try to convert each path segment to an int
-                try:
-                    parts[i] = int(parts[i])
-                except:
-                    if parts[i] == "backplane":
-                        parts[i] = 1
-                    elif parts[i] == "bp":
-                        parts[i] = 1
-                    elif parts[i] == "enet":
-                        parts[i] = 2
+    if parts:
+        # make sure even number of segments
+        if len(parts) % 2:
+            raise ValueError("Path must have at least one routing pair (port, destination) after the start IP.")
+        
+        for i in range(len(parts)):
+            # try to convert each path segment to an int
+            try:
+                parts[i] = int(parts[i])
+            except:
+                if parts[i] == "backplane":
+                    parts[i] = 1
+                elif parts[i] == "bp":
+                    parts[i] = 1
+                elif parts[i] == "enet":
+                    parts[i] = 2
 
-            # convert the route to pylogix format (2 item lists)
-            route = [tuple(parts[i:i+2]) for i in range(0, len(parts), 2)]
-        return ip_address, route
+        # convert the route to pylogix format (2 item lists)
+        route = [tuple(parts[i:i+2]) for i in range(0, len(parts), 2)]
+    return ip_address, route
 
 
 class Response(object):
