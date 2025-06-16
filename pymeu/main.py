@@ -3,10 +3,12 @@ import os
 from typing import Optional
 from warnings import warn
 
+from . import actions
 from . import comms
 from . import dmk
 from . import terminal
 from . import types
+from . import validation
 
 class MEUtility(object):
     def __init__(self, comms_path: str, **kwargs):
@@ -67,8 +69,8 @@ class MEUtility(object):
             file = types.MEFile(self.remote_file_name, self.overwrite, False, file_path)
 
             # Validate device at this communications path is a terminal of known version.
-            self.device = terminal.validation.get_terminal_info(cip)
-            if not(terminal.validation.is_terminal_valid(self.device)):
+            self.device = validation.get_terminal_info(cip)
+            if not(validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
@@ -76,7 +78,7 @@ class MEUtility(object):
                 
             # Validate that all starting conditions for downnload to terminal are good
             try:
-                resp = terminal.validation.is_download_valid(cip, self.device, file)
+                resp = validation.is_download_valid(cip, self.device, file)
                 if resp:
                     self.device.log.append(f'Validated download for {file.name}.')
                 else:
@@ -89,7 +91,7 @@ class MEUtility(object):
 
             # Perform *.MER download to terminal
             try:
-                resp = terminal.actions.download_mer_file(cip, self.device, file, self.run_at_startup, self.replace_comms, self.delete_logs, progress)
+                resp = actions.download_mer_file(cip, self.device, file, self.run_at_startup, self.replace_comms, self.delete_logs, progress)
                 if not(resp):
                     self.device.log.append(f'Failed to download to terminal.')
                     return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
@@ -103,6 +105,7 @@ class MEUtility(object):
     def flash_firmware(self, 
                        firmware_image_path: str, 
                        firmware_helper_path: str, 
+                       dry_run: Optional[bool] = False,
                        progress: Optional[Callable[[str, int, int], None]] = None
                        ) -> types.MEResponse:
         """
@@ -126,8 +129,8 @@ class MEUtility(object):
             cip.timeout = 255.0
 
             # Validate device at this communications path is a terminal of known version.
-            self.device = terminal.validation.get_terminal_info(cip)
-            if not(terminal.validation.is_terminal_valid(self.device)):
+            self.device = validation.get_terminal_info(cip)
+            if not(validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
@@ -139,11 +142,12 @@ class MEUtility(object):
                 case '.DMK':
                     # Perform firmware flash to terminal
                     try:
-                        resp = terminal.actions.flash_dmk(cip,
-                                                          self.device,
-                                                          firmware_image_path,
-                                                          progress
-                                                          )
+                        #resp = terminal.actions.flash_dmk(cip,
+                        #                                  self.device,
+                        #                                  firmware_image_path,
+                        #                                  progress
+                        #                                  )
+                        resp = dmk.process_dmk(cip, firmware_image_path, progress)
                         if not(resp):
                             self.device.log.append(f'Failed to flash terminal.')
                             return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
@@ -154,7 +158,7 @@ class MEUtility(object):
                 case '.IMG':
                     # Perform firmware flash to terminal
                     try:
-                        resp = terminal.actions.flash_firmware_upgrade_card(cip, 
+                        resp = actions.flash_firmware_upgrade_card(cip, 
                                                                             self.device, 
                                                                             firmware_image_path, 
                                                                             firmware_helper_path, 
@@ -190,15 +194,15 @@ class MEUtility(object):
         self.redact_log = kwargs.get('redact_log', False)
         self.silent_mode = kwargs.get('silent_mode', False)
         with comms.Driver(self.comms_path, self.driver) as cip:
-            self.device = terminal.validation.get_terminal_info(cip)
-            if not(terminal.validation.is_terminal_valid(self.device)):
+            self.device = validation.get_terminal_info(cip)
+            if not(validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
             try:
-                terminal.actions.create_log(cip, self.device, self.print_log, self.redact_log, self.silent_mode)
+                actions.create_log(cip, self.device, self.print_log, self.redact_log, self.silent_mode)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to get terminal info.')
@@ -211,16 +215,16 @@ class MEUtility(object):
         Reboots the remote terminal now.
         """
         with comms.Driver(self.comms_path, self.driver) as cip:
-            self.device = terminal.validation.get_terminal_info(cip)
+            self.device = validation.get_terminal_info(cip)
 
-            if not(terminal.validation.is_terminal_valid(self.device)):
+            if not(validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
             try:
-                terminal.actions.reboot(cip, self.device)
+                actions.reboot(cip, self.device)
             except Exception as e:
                 self.device.log.append(f'Failed to reboot terminal.')
                 return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
@@ -251,8 +255,8 @@ class MEUtility(object):
 
         with comms.Driver(self.comms_path, self.driver) as cip:
             # Validate device at this communications path is a terminal of known version.
-            self.device = terminal.validation.get_terminal_info(cip)
-            if not(terminal.validation.is_terminal_valid(self.device)):
+            self.device = validation.get_terminal_info(cip)
+            if not(validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
@@ -265,7 +269,7 @@ class MEUtility(object):
 
             # Perform *.MER upload from terminal
             try:
-                resp = terminal.actions.upload_mer_file(cip, self.device, file, rem_file, progress)
+                resp = actions.upload_mer_file(cip, self.device, file, rem_file, progress)
                 if not(resp):
                     self.device.log.append(f'Failed to upload from terminal.')
                     return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
@@ -294,15 +298,15 @@ class MEUtility(object):
 
         with comms.Driver(self.comms_path, self.driver) as cip:
             # Validate device at this communications path is a terminal of known version.
-            self.device = terminal.validation.get_terminal_info(cip)
-            if not(terminal.validation.is_terminal_valid(self.device)):
+            self.device = validation.get_terminal_info(cip)
+            if not(validation.is_terminal_valid(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
             try:
-                mer_list = terminal.actions.upload_mer_list(cip, self.device)
+                mer_list = actions.upload_mer_list(cip, self.device)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to upload *.MER list from terminal.')
@@ -320,7 +324,7 @@ class MEUtility(object):
                     
                     # Perform *.MER upload from terminal
                     try:
-                        resp = terminal.actions.upload_mer_file(cip, self.device, file, file, progress)
+                        resp = actions.upload_mer_file(cip, self.device, file, file, progress)
                         if not(resp):
                             self.device.log.append(f'Failed to upload from terminal.')
                             return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)

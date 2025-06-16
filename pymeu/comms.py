@@ -12,7 +12,6 @@ try:
     AVAILABLE_DRIVERS.append("pylogix")
 except: pass
 
-
 class Driver:
 
     def __init__(self, comms_path=None, driver=None):
@@ -55,12 +54,12 @@ class Driver:
         if self._driver == "pycomm3":
             self.cip.close()
 
-    def generic_message(self, service, class_code, instance, request_data=b''):
+    def generic_message(self, service, class_code, instance, attribute, request_data=b''):
         if self._driver == "pylogix":
             ret = self.cip.Message(cip_service=service,
                                    cip_class=class_code,
                                    cip_instance=instance,
-                                   cip_attribute=None,
+                                   cip_attribute=attribute,
                                    data=request_data)
             if ret.Status == "Success":
                 status = None
@@ -78,6 +77,7 @@ class Driver:
             return self.cip.generic_message(service=service,
                                             class_code=class_code,
                                             instance=instance,
+                                            attribute=attribute,
                                             request_data=request_data,
                                             connected=connected,
                                             unconnected_send=unconnected_send,
