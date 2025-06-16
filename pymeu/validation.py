@@ -1,8 +1,10 @@
+import struct
 
-from . import helper
-from . import registry
-from .. import comms
-from .. import types
+from .terminal import helper
+from .terminal import registry
+from . import comms
+from . import messages
+from . import types
 
 # Known RemoteHelper file version numbers, used to help check that device is a valid terminal.
 HELPER_VERSIONS = {
@@ -128,7 +130,25 @@ HELPER_FILE_NAME = 'RemoteHelper.DLL'
 RUNTIME_PATH = 'Rockwell Software\\RSViewME\\Runtime'
 UPLOAD_LIST_PATH = f'{RUNTIME_PATH}\\Results.txt'
 
+def get_identity(cip: comms.Driver) -> types.CIPIdentity:
+    resp = messages.get_identity(cip)
+    vendor_id, device_type, product_code, major_rev, minor_rev, status, serial_number = struct.unpack('<HHHBBHL', resp.value[:14])
+    product_name_length = resp.value[13]
+    product_name = resp.value[14:14 + product_name_length].decode('utf-8', errors='ignore')
+
+    return types.CIPIdentity(
+        vendor_id=vendor_id,
+        device_type=device_type,
+        product_code=product_code,
+        major_rev=major_rev,
+        minor_rev=minor_rev,
+        status=status,
+        serial_number=serial_number,
+        product_name=product_name
+    )
+
 def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
+    cip_identity = get_identity(cip)
     me_version = registry.get_me_version(cip)
     major_rev = int(me_version.split(".")[0])
 
@@ -150,20 +170,22 @@ def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
                               runtime_path,
                               fuwhelper_file_path)
 
-    return types.MEDeviceInfo(cip._original_path, 
-                               helper.get_version(cip, paths, paths.helper_file),
-                               me_version,
-                               registry.get_version_major(cip),
-                               registry.get_version_minor(cip),
-                               registry.get_vendor_id(cip),
-                               registry.get_product_code(cip),
-                               registry.get_product_name(cip),
-                               registry.get_product_type(cip),
-                               [],
-                               [],
-                               '',
-                               '',
-                               paths)
+    return types.MEDeviceInfo(
+        comms_path=cip._original_path,
+        identity=cip_identity,
+        helper_version=helper.get_version(cip, paths, paths.helper_file),
+        me_version=me_version,
+        version_major=registry.get_version_major(cip),
+        version_minor=registry.get_version_minor(cip),
+        vendor_id=registry.get_vendor_id(cip),
+        product_code=registry.get_product_code(cip),
+        product_name=registry.get_product_name(cip),
+        product_type=registry.get_product_type(cip),
+        log=[],
+        files=[],
+        running_med_file=None,
+        startup_mer_file=None,
+        paths=paths)
 
 def extract_version_prefix(version: str) -> str:
     """Extracts the major and minor version (e.g., '12.00') from a version string."""

@@ -6,6 +6,7 @@ from pymeu import comms
 from pymeu import MEUtility
 from pymeu import terminal
 from pymeu import types
+from pymeu import validation
 
 from config import *
 
@@ -75,7 +76,7 @@ class download_tests(unittest.TestCase):
         print('')
 
         def progress_callback(description: str, total_bytes: int, current_bytes: int):
-            progress = 100* current_bytes / total_bytes;
+            progress = 100* current_bytes / total_bytes
             print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
 
         count = 0
@@ -253,7 +254,7 @@ class upload_tests(unittest.TestCase):
         print('')
 
         def progress_callback(description: str, total_bytes: int, current_bytes: int):
-            progress = 100* current_bytes / total_bytes;
+            progress = 100* current_bytes / total_bytes
             print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
 
         results = []
@@ -295,7 +296,7 @@ class upload_tests(unittest.TestCase):
         print('')
 
         def progress_callback(description: str, total_bytes: int, current_bytes: int):
-            progress = 100* current_bytes / total_bytes;
+            progress = 100* current_bytes / total_bytes
             print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
 
         for (device, driver, comms_path) in test_combinations:
@@ -328,7 +329,7 @@ class upload_tests(unittest.TestCase):
 
             with comms.Driver(comms_path, driver=driver) as cip2:
                 # Open parallel transfer instance (normally transfer instance 1)
-                device2 = terminal.validation.get_terminal_info(cip2)
+                device2 = validation.get_terminal_info(cip2)
                 path2 = f'{device2.paths.runtime}\\{device.mer_files[0]}'
                 transfer_instance_2, transfer_size_2 = terminal.files.create_transfer_instance_upload(cip2, path2)
 

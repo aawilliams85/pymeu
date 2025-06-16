@@ -1,7 +1,6 @@
 import unittest
 
 from pymeu import comms
-from pymeu import MEUtility
 
 from config import *
 

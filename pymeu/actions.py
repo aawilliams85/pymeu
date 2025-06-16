@@ -4,12 +4,12 @@ import time
 import traceback
 from typing import Optional
 
-from . import files
-from . import fuwhelper
-from . import helper
-from . import registry
-from .. import comms
-from .. import types
+from .terminal import files
+from .terminal import fuwhelper
+from .terminal import helper
+from .terminal import registry
+from . import comms
+from . import types
 
 def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, redact_log: bool, silent_mode: bool):
     if print_log: print(f'Terminal vendor ID: {device.vendor_id}.')

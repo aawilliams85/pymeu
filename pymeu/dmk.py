@@ -107,7 +107,7 @@ def deserialize_dmk_nvs_file(config: configparser) -> types.DMKNvsFile:
         updates=updates
     )
 
-def send_dmk_update_preamble(cip: comms.Driver, file_size: int) -> int:
+def send_dmk_update_preamble(cip: comms.Driver, serial_number: str, file_size: int) -> int:
     """
     Sends a DMK CAB file preamble message to the remote terminal.
     It responds with the chunk size to use for the actual file
@@ -130,7 +130,8 @@ def send_dmk_update_preamble(cip: comms.Driver, file_size: int) -> int:
         | Byte Range    | Description                                         |
         |---------------|-----------------------------------------------------|
         | Bytes 0->7    | File size in bytes                                  |
-        | Bytes 8->15   | Unknown purpose                                     |
+        | Bytes 8->11   | Unknown purpose                                     |
+        | Bytes 12->15  | Target device serial number                         |
 
     Response Format:
         The response consists of the following byte structure:
@@ -141,8 +142,10 @@ def send_dmk_update_preamble(cip: comms.Driver, file_size: int) -> int:
         | Bytes 4->7    | Chunk size in bytes                                 |
         | Bytes 8->11   | Unknown purpose                                     |
     """
-    warn('Preamble using static values')
-    req_data = struct.pack('<QBBBBBBBB', file_size, 0x07, 0x00, 0x01, 0x00, 0xA5, 0x06, 0x35, 0x01)
+    warn('Preamble using static UNK1 values')
+    req_unk1 = 0x00010007
+    req_serial_number = int(serial_number, 16)
+    req_data = struct.pack('<QII', file_size, req_unk1, req_serial_number)
     resp = messages.dmk_preamble(cip, req_data)
     if not resp: raise Exception(f'Failed to write file preamble to terminal.')
     resp_unk1, resp_chunk_size, resp_unk2 = struct.unpack('<III', resp.value)

@@ -3,6 +3,17 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 @dataclass
+class CIPIdentity:
+    vendor_id: int
+    device_type: int
+    product_code: int
+    major_rev: int
+    minor_rev: int
+    status: int
+    serial_number: int
+    product_name: str
+
+@dataclass
 class DMKContentHeader:
     dmk_type: str
     family_name: str
@@ -93,6 +104,7 @@ class MEDevicePaths:
 @dataclass
 class MEDeviceInfo:
     comms_path: str
+    identity: CIPIdentity
     helper_version: str
     me_version: str
     version_major: int

@@ -11,7 +11,7 @@ class METestDevice:
     boot_time_sec: int
     mer_files: list[str]
     local_firmware_helper_path: str
-    local_firmware_image_path: str
+    local_firmware_image_paths: list[str]
 
 def generate_test_combinations(devices: list[METestDevice], drivers: list[str]) -> list[tuple[METestDevice,str,str]]:
     """
@@ -54,7 +54,7 @@ NONEXISTENT_PROCESS = 'NonexistentProcess.exe'
 
 # PanelView Plus configuration
 PVP5 = 'PVP5'
-PVP5_Comms_Paths = ['192.168.40.124','192.168.40.104,4,192.168.1.21']
+PVP5_Comms_Paths = ['192.168.40.20','192.168.40.104,4,192.168.1.20']
 PVP5_Device_Paths = types.MEDevicePaths(
     f'\\Storage Card\\Rockwell Software\\RSViewME\\{HELPER_FILE_NAME}',
     '\\Storage Card',
@@ -70,7 +70,7 @@ PVP5_MER_Files = [
 
 # PanelView Plus 6 configuration
 PVP6 = 'PVP6'
-PVP6_Comms_Paths = ['192.168.40.123','192.168.40.104,4,192.168.1.20']
+PVP6_Comms_Paths = ['192.168.40.21','192.168.40.104,4,192.168.1.21']
 PVP6_Device_Paths = types.MEDevicePaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
@@ -87,7 +87,7 @@ PVP6_MER_Files = [
 
 # PanelView Plus 7A configuration
 PVP7A = 'PVP7A'
-PVP7A_Comms_Paths = ['192.168.40.126','192.168.40.104,4,192.168.1.22']
+PVP7A_Comms_Paths = ['192.168.40.22','192.168.40.104,4,192.168.1.22']
 PVP7A_Device_Paths = types.MEDevicePaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
@@ -103,7 +103,7 @@ PVP7A_MER_Files = [
 
 #PanelView Plus 7B configuration
 PVP7B = 'PVP7B'
-PVP7B_Comms_Paths = []
+PVP7B_Comms_Paths = ['192.168.40.23','192.168.40.104,4,192.168.1.23']
 PVP7B_Device_Paths = types.MEDevicePaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
@@ -128,7 +128,7 @@ DEVICES = [
         75, 
         PVP5_MER_Files,
         '',
-        ''
+        []
     ),
     METestDevice(
         PVP6, 
@@ -137,7 +137,7 @@ DEVICES = [
         75, 
         PVP6_MER_Files,
         PVP6_Local_Firmware_Helper_Path,
-        ''
+        []
     ),
     METestDevice(
         PVP7A, 
@@ -146,7 +146,7 @@ DEVICES = [
         75, 
         PVP7A_MER_Files,
         '',
-        ''
+        []
     ),
 ]
 

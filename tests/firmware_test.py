@@ -4,6 +4,7 @@ import unittest
 
 from pymeu import comms
 from pymeu import dmk
+from pymeu import messages
 from pymeu import MEUtility
 from pymeu import terminal
 from pymeu import types
@@ -19,9 +20,18 @@ class dmk_tests(unittest.TestCase):
 
     def test_dmk_unpack(self):
         print('')
-        firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
-        with comms.Driver('192.168.40.124') as cip:
-            dmk.process_dmk(cip, firmware_image_path)
+
+        def progress_callback(description: str, total_bytes: int, current_bytes: int):
+            progress = 100* current_bytes / total_bytes;
+            print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
+
+#        firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
+        firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PVP7_Performance_12.104.dmk')
+        meu = MEUtility('192.168.40.23')
+        meu.flash_firmware(firmware_image_path, '', progress_callback)
+        #with comms.Driver('192.168.40.23', driver='pycomm3') as cip:
+        #    print(messages.get_identity(cip))
+        #    dmk.process_dmk(cip, firmware_image_path, progress_callback)
         print('')
 
     def test_dmk_validate(self):
