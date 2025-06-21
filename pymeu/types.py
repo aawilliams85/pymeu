@@ -4,14 +4,14 @@ from enum import StrEnum
 
 @dataclass
 class CIPIdentity:
-    vendor_id: int
     device_type: int
-    product_code: int
     major_rev: int
     minor_rev: int
-    status: int
-    serial_number: int
+    product_code: int
     product_name: str
+    serial_number: int
+    status: int
+    vendor_id: int
 
 @dataclass
 class DMKContentHeader:
@@ -94,7 +94,18 @@ class MEFile:
         return os.path.getsize(self.path)
     
 @dataclass
-class MEDevicePaths:
+class MEIdentity:
+    helper_version: str
+    me_version: str
+    major_rev: int
+    minor_rev: int
+    product_code: int
+    product_name: str
+    product_type: int
+    vendor_id: int
+
+@dataclass
+class MEPaths:
     helper_file: str
     storage: str
     upload_list: str
@@ -104,20 +115,13 @@ class MEDevicePaths:
 @dataclass
 class MEDeviceInfo:
     comms_path: str
-    identity: CIPIdentity
-    helper_version: str
-    me_version: str
-    version_major: int
-    version_minor: int
-    vendor_id: int
-    product_code: int
-    product_name: str
-    product_type: int
+    cip_identity: CIPIdentity
+    me_identity: MEIdentity
     log: list[str]
     files: list[str]
     running_med_file: str
     startup_mer_file: str
-    paths: MEDevicePaths
+    paths: MEPaths
 
 @dataclass
 class MEResponse(object):

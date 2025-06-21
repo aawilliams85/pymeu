@@ -130,25 +130,46 @@ HELPER_FILE_NAME = 'RemoteHelper.DLL'
 RUNTIME_PATH = 'Rockwell Software\\RSViewME\\Runtime'
 UPLOAD_LIST_PATH = f'{RUNTIME_PATH}\\Results.txt'
 
-def get_identity(cip: comms.Driver) -> types.CIPIdentity:
+def get_cip_identity(cip: comms.Driver) -> types.CIPIdentity:
     resp = messages.get_identity(cip)
     vendor_id, device_type, product_code, major_rev, minor_rev, status, serial_number = struct.unpack('<HHHBBHL', resp.value[:14])
     product_name_length = resp.value[13]
     product_name = resp.value[14:14 + product_name_length].decode('utf-8', errors='ignore')
 
     return types.CIPIdentity(
-        vendor_id=vendor_id,
         device_type=device_type,
-        product_code=product_code,
         major_rev=major_rev,
         minor_rev=minor_rev,
-        status=status,
+        product_code=product_code,
+        product_name=product_name,
         serial_number=serial_number,
-        product_name=product_name
+        status=status,
+        vendor_id=vendor_id
     )
 
-def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
-    cip_identity = get_identity(cip)
+def get_me_identity(cip: comms.Driver, paths: types.MEPaths) -> types.MEIdentity:
+    me_version = registry.get_me_version(cip)
+    helper_version = helper.get_version(cip, paths, paths.helper_file)
+
+    major_rev = registry.get_version_major(cip)
+    minor_rev = registry.get_version_minor(cip)
+    product_code = registry.get_product_code(cip)
+    product_name = registry.get_product_name(cip)
+    product_type = registry.get_product_type(cip)
+    vendor_id = registry.get_vendor_id(cip)
+
+    return types.MEIdentity(
+        helper_version=helper_version,
+        me_version=me_version,
+        major_rev=major_rev,
+        minor_rev=minor_rev,
+        product_code=product_code,
+        product_name=product_name,
+        product_type=product_type,
+        vendor_id=vendor_id
+    )
+
+def get_me_paths(cip: comms.Driver) -> types.MEPaths:
     me_version = registry.get_me_version(cip)
     major_rev = int(me_version.split(".")[0])
 
@@ -159,33 +180,32 @@ def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
         helper_path = '\\Windows'
         storage_path = '\\Application Data'
 
-    helper_file_path = f'{helper_path}\\{HELPER_FILE_NAME}'
-    upload_list_path = f'{storage_path}\\{UPLOAD_LIST_PATH}'
-    runtime_path = f'{storage_path}\\{RUNTIME_PATH}'
     fuwhelper_file_path = '\\Storage Card\\FUWhelper.dll'
+    helper_file_path = f'{helper_path}\\{HELPER_FILE_NAME}'
+    runtime_path = f'{storage_path}\\{RUNTIME_PATH}'
+    upload_list_path = f'{storage_path}\\{UPLOAD_LIST_PATH}'
 
-    paths = types.MEDevicePaths(helper_file_path,
-                              storage_path,
-                              upload_list_path,
-                              runtime_path,
-                              fuwhelper_file_path)
+    return types.MEPaths(
+        helper_file=helper_file_path,
+        storage=storage_path,
+        upload_list=upload_list_path,
+        runtime=runtime_path,
+        fuwhelper_file=fuwhelper_file_path)
 
+def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
+    cip_identity = get_cip_identity(cip)
+    me_paths = get_me_paths(cip)
+    me_identity = get_me_identity(cip, me_paths)
+        
     return types.MEDeviceInfo(
         comms_path=cip._original_path,
-        identity=cip_identity,
-        helper_version=helper.get_version(cip, paths, paths.helper_file),
-        me_version=me_version,
-        version_major=registry.get_version_major(cip),
-        version_minor=registry.get_version_minor(cip),
-        vendor_id=registry.get_vendor_id(cip),
-        product_code=registry.get_product_code(cip),
-        product_name=registry.get_product_name(cip),
-        product_type=registry.get_product_type(cip),
+        cip_identity=cip_identity,
+        me_identity=me_identity,
         log=[],
         files=[],
         running_med_file=None,
         startup_mer_file=None,
-        paths=paths)
+        paths=me_paths)
 
 def extract_version_prefix(version: str) -> str:
     """Extracts the major and minor version (e.g., '12.00') from a version string."""
@@ -197,10 +217,10 @@ def is_version_matched(device_version: str, known_versions: set) -> bool:
     return any(extract_version_prefix(known_version) == device_version_prefix for known_version in known_versions)
 
 def is_terminal_valid(device: types.MEDeviceInfo) -> bool:
-    if device.product_type not in PRODUCT_TYPES: return False
-    if device.product_code not in PRODUCT_CODES: return False
-    if not is_version_matched(device.helper_version, HELPER_VERSIONS): return False
-    if not is_version_matched(device.me_version, ME_VERSIONS): return False
+    if device.me_identity.product_type not in PRODUCT_TYPES: return False
+    if device.me_identity.product_code not in PRODUCT_CODES: return False
+    if not is_version_matched(device.me_identity.helper_version, HELPER_VERSIONS): return False
+    if not is_version_matched(device.me_identity.me_version, ME_VERSIONS): return False
     return True
 
 def is_download_valid(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile) -> bool:
