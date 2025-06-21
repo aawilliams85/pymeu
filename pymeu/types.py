@@ -1,15 +1,15 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 @dataclass
 class CIPIdentity:
-    device_type: int
     major_rev: int
     minor_rev: int
     product_code: int
     product_name: str
-    serial_number: int
+    product_type: int
+    serial_number: int = field(repr=False)
     status: int
     vendor_id: int
 
@@ -102,6 +102,7 @@ class MEIdentity:
     product_code: int
     product_name: str
     product_type: int
+    serial_number: int = field(repr=False)
     vendor_id: int
 
 @dataclass
@@ -121,7 +122,7 @@ class MEDeviceInfo:
     files: list[str]
     running_med_file: str
     startup_mer_file: str
-    paths: MEPaths
+    me_paths: MEPaths
 
 @dataclass
 class MEResponse(object):

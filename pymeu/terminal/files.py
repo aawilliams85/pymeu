@@ -77,7 +77,7 @@ def create_transfer_instance_download(cip: comms.Driver, file: types.MEFile, rem
         may indicate an incomplete transfer happened previously. In such cases,
         reboot the terminal and try again.
     """
-    req_header = struct.pack('<BBHI', TransferType.DOWNLOAD, int(file.overwrite_required), cip.chunk_size, file.get_size())
+    req_header = struct.pack('<BBHI', TransferType.DOWNLOAD, int(file.overwrite_required), cip.me_chunk_size, file.get_size())
     req_args = [f'{remote_path}\\{file.name}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
@@ -88,7 +88,7 @@ def create_transfer_instance_download(cip: comms.Driver, file: types.MEFile, rem
     resp_msg_instance, resp_unk1, resp_transfer_instance, resp_chunk_size = struct.unpack('<HHHH', resp.value)
     if (resp_msg_instance != 0): raise Exception(f'{resp_exception_text}.  Response message instance: {resp_msg_instance}, expected: 0.  There may be an incomplete transfer.  Reboot terminal and try again.')
     if (resp_unk1 != 0 ): raise Exception(f'{resp_exception_text}.  Response UNK1 bytes: {resp_unk1}, expected: 0.  Please file a bug report with all available information.')
-    if (resp_chunk_size != cip.chunk_size): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {cip.chunk_size}.  Please file a bug report with all available information.')
+    if (resp_chunk_size != cip.me_chunk_size): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {cip.me_chunk_size}.  Please file a bug report with all available information.')
     return resp_transfer_instance
 
 def create_transfer_instance_upload(cip: comms.Driver, remote_path: str) -> tuple[int, int]:
@@ -136,7 +136,7 @@ def create_transfer_instance_upload(cip: comms.Driver, remote_path: str) -> tupl
         may indicate an incomplete transfer happened previously. In such cases,
         reboot the terminal and try again.
     """
-    req_header = struct.pack('<BBH', TransferType.UPLOAD, 0x00, cip.chunk_size)
+    req_header = struct.pack('<BBH', TransferType.UPLOAD, 0x00, cip.me_chunk_size)
     req_args = [f'{remote_path}']
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
@@ -147,7 +147,7 @@ def create_transfer_instance_upload(cip: comms.Driver, remote_path: str) -> tupl
     resp_msg_instance, resp_unk1, resp_transfer_instance, resp_chunk_size, resp_file_size = struct.unpack('<HHHHI', resp.value)
     if (resp_msg_instance != 0): raise Exception(f'{resp_exception_text}.  Response message instance: {resp_msg_instance}, expected: 0.  There may be an incomplete transfer.  Reboot terminal and try again.')
     if (resp_unk1 != 0 ): raise Exception(f'{resp_exception_text}.  Response UNK1 bytes: {resp_unk1}, expected: 0.  Please file a bug report with all available information.')
-    if (resp_chunk_size != cip.chunk_size): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {cip.chunk_size}.  Please file a bug report with all available information.')
+    if (resp_chunk_size != cip.me_chunk_size): raise Exception(f'{resp_exception_text}.  Response chunk size: {resp_chunk_size}, expected: {cip.me_chunk_size}.  Please file a bug report with all available information.')
     return resp_transfer_instance, resp_file_size
 
 def delete_transfer_instance(cip: comms.Driver, transfer_instance: int):
@@ -199,7 +199,7 @@ def execute_transfer_download(cip: comms.Driver, transfer_instance: int, source_
     req_offset = 0
     total_bytes = len(source_data)
     while req_offset < total_bytes:
-        req_chunk = source_data[req_offset:req_offset + cip.chunk_size]
+        req_chunk = source_data[req_offset:req_offset + cip.me_chunk_size]
         req_header = struct.pack('<IH', req_chunk_number, len(req_chunk))
         req_next_chunk_number = req_chunk_number + 1
         req_data = req_header + req_chunk
