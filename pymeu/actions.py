@@ -176,6 +176,10 @@ def flash_firmware_upgrade_card(cip: comms.Driver,
         transfer_fuwhelper = False
         device.me_paths.fuwhelper_file = '\\Windows\\FUWhelper.dll'
         device.log.append(f'Firmware upgrade helper already present on terminal.')
+    else:
+        if helper.get_file_exists(cip, device.me_paths, device.me_paths.fuwhelper_file):
+            transfer_fuwhelper = False
+            device.log.append(f'Firmware upgrade helper already present on terminal.')
 
     # Download firmware upgrade wizard helper to terminal
     if transfer_fuwhelper:
