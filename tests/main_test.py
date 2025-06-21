@@ -74,11 +74,6 @@ class download_tests(unittest.TestCase):
 
     def test_download_overwrite_progress(self):
         print('')
-
-        def progress_callback(description: str, total_bytes: int, current_bytes: int):
-            progress = 100* current_bytes / total_bytes
-            print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
-
         count = 0
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
@@ -252,11 +247,6 @@ class upload_tests(unittest.TestCase):
 
     def test_upload_overwrite_progress(self):
         print('')
-
-        def progress_callback(description: str, total_bytes: int, current_bytes: int):
-            progress = 100* current_bytes / total_bytes
-            print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
-
         results = []
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
@@ -294,11 +284,6 @@ class upload_tests(unittest.TestCase):
 
     def test_upload_all_overwrite_progress(self):
         print('')
-
-        def progress_callback(description: str, total_bytes: int, current_bytes: int):
-            progress = 100* current_bytes / total_bytes
-            print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
-
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
             upload_folder_path = os.path.join(UPLOAD_FOLDER_PATH, device.name, driver)
