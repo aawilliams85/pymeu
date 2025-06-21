@@ -37,6 +37,10 @@ def generate_test_combinations(devices: list[METestDevice], drivers: list[str]) 
     
     return combinations
 
+def progress_callback(description: str, total_bytes: int, current_bytes: int):
+    progress = 100* current_bytes / total_bytes
+    print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
+
 # Shared paths - computer
 BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 DOWNLOAD_FOLDER_PATH = os.path.join(BASE_PATH, 'download')
