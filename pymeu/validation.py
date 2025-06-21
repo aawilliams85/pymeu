@@ -132,16 +132,15 @@ UPLOAD_LIST_PATH = f'{RUNTIME_PATH}\\Results.txt'
 
 def get_cip_identity(cip: comms.Driver) -> types.CIPIdentity:
     resp = messages.get_identity(cip)
-    vendor_id, device_type, product_code, major_rev, minor_rev, status, serial_number = struct.unpack('<HHHBBHL', resp.value[:14])
-    product_name_length = resp.value[13]
-    product_name = resp.value[14:14 + product_name_length].decode('utf-8', errors='ignore')
+    vendor_id, product_type, product_code, major_rev, minor_rev, status, serial_number, product_name_length = struct.unpack('<HHHBBHLB', resp.value[:15])
+    product_name = resp.value[15:15 + product_name_length].decode('utf-8', errors='ignore')
 
     return types.CIPIdentity(
-        device_type=device_type,
         major_rev=major_rev,
         minor_rev=minor_rev,
         product_code=product_code,
         product_name=product_name,
+        product_type=product_type,
         serial_number=serial_number,
         status=status,
         vendor_id=vendor_id
@@ -156,6 +155,7 @@ def get_me_identity(cip: comms.Driver, paths: types.MEPaths) -> types.MEIdentity
     product_code = registry.get_product_code(cip)
     product_name = registry.get_product_name(cip)
     product_type = registry.get_product_type(cip)
+    serial_number = registry.get_serial_number(cip)
     vendor_id = registry.get_vendor_id(cip)
 
     return types.MEIdentity(
@@ -166,6 +166,7 @@ def get_me_identity(cip: comms.Driver, paths: types.MEPaths) -> types.MEIdentity
         product_code=product_code,
         product_name=product_name,
         product_type=product_type,
+        serial_number=serial_number,
         vendor_id=vendor_id
     )
 
@@ -205,7 +206,7 @@ def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
         files=[],
         running_med_file=None,
         startup_mer_file=None,
-        paths=me_paths)
+        me_paths=me_paths)
 
 def extract_version_prefix(version: str) -> str:
     """Extracts the major and minor version (e.g., '12.00') from a version string."""
@@ -230,13 +231,13 @@ def is_download_valid(cip: comms.Driver, device: types.MEDeviceInfo, file: types
         return False
 
     # Check that storage folder exists
-    resp_storage_exists = helper.get_folder_exists(cip, device.paths, device.paths.storage)
+    resp_storage_exists = helper.get_folder_exists(cip, device.me_paths, device.me_paths.storage)
     if not(resp_storage_exists):
         device.log.append(f'Storage folder does not exist on terminal')
         return False
 
     # Check free space
-    resp_free_space = helper.get_free_space_runtime(cip, device.paths)
+    resp_free_space = helper.get_free_space_runtime(cip, device.me_paths)
     if (resp_free_space > file.get_size()):
         device.log.append(f'File {file.name} requires {file.get_size()} byes.  Free space on terminal {resp_free_space} bytes.')
     else:
@@ -244,7 +245,7 @@ def is_download_valid(cip: comms.Driver, device: types.MEDeviceInfo, file: types
         return False
 
     # Check if file name already exists
-    resp_file_exists = helper.get_file_exists_mer(cip, device.paths, file.name)
+    resp_file_exists = helper.get_file_exists_mer(cip, device.me_paths, file.name)
     file.overwrite_required = False
     if (resp_file_exists and file.overwrite_requested):
         device.log.append(f'File {file.name} already exists on terminal, and overwrite was requested.  Setting overwrite to required.')
@@ -257,7 +258,7 @@ def is_download_valid(cip: comms.Driver, device: types.MEDeviceInfo, file: types
 
     # Check space consumed by file if it exists
     if resp_file_exists:
-        resp_file_size = helper.get_file_size_mer(cip, device.paths, file.name)
+        resp_file_size = helper.get_file_size_mer(cip, device.me_paths, file.name)
         device.log.append(f'File {file.name} on terminal is {resp_file_size} bytes.')
 
     return True

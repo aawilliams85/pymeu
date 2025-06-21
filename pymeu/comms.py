@@ -111,8 +111,19 @@ class Driver:
             self.cip.close()
 
     @property
-    def chunk_size(self):
+    def me_chunk_size(self):
         return get_me_chunk_size(self._original_path)
+    
+    @property
+    def dmk_chunk_size(self):
+        return get_dmk_chunk_size(self._original_path)
+
+def get_dmk_chunk_size(path: str) -> int:
+    if is_routed_path(path):
+        raise NotImplementedError()
+    else:
+        # Direct path
+        return 1350
 
 def get_me_chunk_size(path: str) -> int:
     # When files are transferred using ME services, this is the maximum

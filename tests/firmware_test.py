@@ -2,12 +2,14 @@ import os
 import zipfile
 import unittest
 
+from pymeu import actions
 from pymeu import comms
 from pymeu import dmk
 from pymeu import messages
 from pymeu import MEUtility
 from pymeu import terminal
 from pymeu import types
+from pymeu import validation
 
 from config import *
 
@@ -37,7 +39,7 @@ class dmk_tests(unittest.TestCase):
     def test_dmk_validate(self):
         print('')
         with comms.Driver(PVP7A_Comms_Paths[0]) as cip:
-            self.device = terminal.validation.get_terminal_info(cip)
+            self.device = validation.get_terminal_info(cip)
 
             firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
             self.dmk_content = dmk.process_dmk(firmware_image_path)
@@ -112,13 +114,13 @@ class fuwhelper_tests(unittest.TestCase):
         print('')
         for (device, driver, comms_path) in test_combinations:
             with comms.Driver(comms_path, driver=driver) as cip:
-                device2 = terminal.validation.get_terminal_info(cip)
+                device2 = validation.get_terminal_info(cip)
                 if device.local_firmware_helper_path:
                     fuw_helper_file = types.MEFile('FUWhelper.dll',
                                                 True,
                                                 True,
                                                 device.local_firmware_helper_path)
-                    resp = terminal.actions.download_file(cip, device2, fuw_helper_file, '\\Storage Card')
+                    resp = actions.download_file(cip, device2, fuw_helper_file, '\\Storage Card')
 
     def test_get_process_running(self):
         print('')

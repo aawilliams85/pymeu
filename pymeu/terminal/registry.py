@@ -114,6 +114,18 @@ def get_product_type(cip: comms.Driver) -> int:
     """
     return int(get_value(cip, [RegKeys.CIP_PRODUCT_TYPE]))
 
+def get_serial_number(cip: comms.Driver) -> int:
+    """
+    Gets the serial number on the remote terminal.
+
+    Args:
+        cip (pycomm3.CIPDriver): CIPDriver to communicate with the terminal
+
+    Returns:
+        str: Serial Number value
+    """
+    return str(get_value(cip, [RegKeys.CIP_SERIAL_NUMBER]))
+
 def get_startup_delete_logs(cip: comms.Driver) -> bool:
     """
     Gets the startup setting for Delete Logs on the remote terminal.

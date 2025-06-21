@@ -12,21 +12,12 @@ from . import comms
 from . import types
 
 def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, redact_log: bool, silent_mode: bool):
-    if print_log: print(f'Terminal vendor ID: {device.me_identity.vendor_id}.')
-    if print_log: print(f'Terminal product type: {device.me_identity.product_type}.')
-    if print_log: print(f'Terminal product code: {device.me_identity.product_code}.')
-    if print_log: print(f'Terminal product name: {device.me_identity.product_name}.')
-    if print_log: print(f'Terminal helper version: {device.me_identity.helper_version}.')
-    if print_log: print(f'Terminal ME version: {device.me_identity.me_version}.')
-    if print_log: print(f'Terminal major version: {device.me_identity.major_rev}.')
-    if print_log: print(f'Terminal minor version: {device.me_identity.minor_rev}.')
-    if print_log: print(f'Terminal helper path: {device.paths.helper_file}.')
-    if print_log: print(f'Terminal storage path: {device.paths.storage}.')
-    if print_log: print(f'Terminal upload list path: {device.paths.upload_list}.')
-    if print_log: print(f'Terminal runtime path: {device.paths.runtime}.')
+    if print_log: print(f'Terminal CIP identity: {device.cip_identity}.')
+    if print_log: print(f'Terminal ME identity: {device.me_identity}.')
+    if print_log: print(f'Terminal ME paths: {device.me_paths}.')
 
     try:
-        line = f'Terminal has {helper.get_free_space_runtime(cip, device.paths)} free bytes.'
+        line = f'Terminal has {helper.get_free_space_runtime(cip, device.me_paths)} free bytes.'
     except:
         line = f'Failed to get free space on terminal.'
     device.log.append(line)
@@ -58,8 +49,7 @@ def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, r
         line = f'Terminal startup file: {file}.'
         if file.lower().endswith('.mer'): device.startup_mer_file = file.split('\\')[-1]
     except:
-        major_rev = int(device.me_identity.me_version.split(".")[0])
-        if major_rev <= 5:
+        if device.cip_identity.major_rev < 6:
             # For PanelView Plus 5.10 and earlier this registry key appears to be unavailable.
             line = f'Terminal startup file: could not be determined due to hardware version.'
         else:
@@ -137,7 +127,7 @@ def download_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEF
 def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
     # Create runtime folder
     try:
-        helper.create_folder_runtime(cip, device.paths)
+        helper.create_folder_runtime(cip, device.me_paths)
         device.log.append(f'Create runtime directory on terminal.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -146,18 +136,18 @@ def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.
 
     # Perform download
     try:
-        continue_download = download_file(cip, device, file, device.paths.runtime, progress)
-        device.log.append(f'Downloaded {file.path} to {device.paths.runtime}.')
+        continue_download = download_file(cip, device, file, device.me_paths.runtime, progress)
+        device.log.append(f'Downloaded {file.path} to {device.me_paths.runtime}.')
     except:
         device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Failed to download {file.path} to {device.paths.runtime}.')
+        device.log.append(f'Failed to download {file.path} to {device.me_paths.runtime}.')
         return False
 
     # Set *.MER to run at startup and then reboot
     try:
         if continue_download:
             if run_at_startup:
-                helper.create_me_shortcut(cip, device.paths, file.name, replace_comms, delete_logs)
+                helper.create_me_shortcut(cip, device.me_paths, file.name, replace_comms, delete_logs)
                 device.log.append(f'Set file: {file.name} to run at startup with Replace Comms: {replace_comms}, Delete Logs: {delete_logs}.')
                 reboot(cip, device)
     except Exception as e:
@@ -182,9 +172,9 @@ def flash_firmware_upgrade_card(cip: comms.Driver,
 
     # Determine if firmware upgrade helepr exists already
     transfer_fuwhelper = True
-    if helper.get_file_exists(cip, device.paths, '\\Windows\\FUWhelper.dll'):
+    if helper.get_file_exists(cip, device.me_paths, '\\Windows\\FUWhelper.dll'):
         transfer_fuwhelper = False
-        device.paths.fuwhelper_file = '\\Windows\\FUWhelper.dll'
+        device.me_paths.fuwhelper_file = '\\Windows\\FUWhelper.dll'
         device.log.append(f'Firmware upgrade helper already present on terminal.')
 
     # Download firmware upgrade wizard helper to terminal
@@ -208,18 +198,18 @@ def flash_firmware_upgrade_card(cip: comms.Driver,
 
     # Prepare terminal for firmware upgrade card
     try:
-        if not(fuwhelper.get_folder_exists(cip, device.paths, '\\Storage Card')):
-            fuwhelper.create_folder(cip, device.paths, '\\Storage Card')
-        if not(fuwhelper.get_folder_exists(cip, device.paths, '\\Storage Card\\vfs')):
-            fuwhelper.create_folder(cip, device.paths, '\\Storage Card\\vfs')
-        if not(fuwhelper.get_folder_exists(cip, device.paths, '\\Storage Card\\vfs\\platform firmware')):
-            fuwhelper.create_folder(cip, device.paths, '\\Storage Card\\vfs\\platform firmware')
-        if (fuwhelper.get_file_exists(cip, device.paths, '\\Storage Card\\Step2.dat')):
-            fuwhelper.delete_file(cip, device.paths, '\\Storage Card\\Step2.dat')
-        if fuwhelper.get_process_running(cip, device.paths, 'MERuntime.exe'):
-            fuwhelper.stop_process_me(cip, device.paths)
+        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card')):
+            fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card')
+        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\vfs')):
+            fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card\\vfs')
+        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\vfs\\platform firmware')):
+            fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card\\vfs\\platform firmware')
+        if (fuwhelper.get_file_exists(cip, device.me_paths, '\\Storage Card\\Step2.dat')):
+            fuwhelper.delete_file(cip, device.me_paths, '\\Storage Card\\Step2.dat')
+        if fuwhelper.get_process_running(cip, device.me_paths, 'MERuntime.exe'):
+            fuwhelper.stop_process_me(cip, device.me_paths)
 
-        fuwhelper.get_file_exists(cip, device.paths, '\\Windows\\useroptions.txt')
+        fuwhelper.get_file_exists(cip, device.me_paths, '\\Windows\\useroptions.txt')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
         device.log.append(f'Traceback: {traceback.format_exc()}')
@@ -286,7 +276,7 @@ def upload_list(cip: comms.Driver, transfer_instance: int, rem_file_path: str) -
 def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_file: types.MEFile, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
     # Verify file exists on terminal
     try:
-        if helper.get_file_exists_mer(cip, device.paths, rem_file.name):
+        if helper.get_file_exists_mer(cip, device.me_paths, rem_file.name):
             device.log.append(f'File {rem_file.name} exists on terminal.')
         else:
             device.log.append(f'File {rem_file.name} does not exist on terminal.')
@@ -298,7 +288,7 @@ def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.M
 
     # Perform upload
     try:
-        rem_file_path = f'{device.paths.runtime}\\{rem_file.name}'
+        rem_file_path = f'{device.me_paths.runtime}\\{rem_file.name}'
         upload_file(cip, device, file.path, rem_file_path, progress)
         device.log.append(f'Uploaded {rem_file_path} to {file.path}.')
     except:
@@ -311,7 +301,7 @@ def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.M
 def upload_med_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
     # Create list on the terminal
     try:
-        helper.create_file_list_med(cip, device.paths)
+        helper.create_file_list_med(cip, device.me_paths)
         device.log.append(f'Created *.MED list on terminal.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -321,7 +311,7 @@ def upload_med_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
     # Perform upload
     file_list = None
     try:
-        rem_file_path = f'{device.paths.upload_list}'
+        rem_file_path = f'{device.me_paths.upload_list}'
         file_list = upload_list(cip, device, rem_file_path)
         device.log.append(f'Uploaded {rem_file_path}.')
     except:
@@ -331,7 +321,7 @@ def upload_med_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
 
     # Delete list on the terminal
     try:
-        helper.delete_file_list(cip, device.paths)
+        helper.delete_file_list(cip, device.me_paths)
         device.log.append(f'Deleted *.MED list on terminal.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -342,7 +332,7 @@ def upload_med_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
 def upload_mer_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
     # Create *.MER list
     try:
-        helper.create_file_list_mer(cip, device.paths)
+        helper.create_file_list_mer(cip, device.me_paths)
         device.log.append(f'Created *.MER list on terminal.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -352,7 +342,7 @@ def upload_mer_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
     # Perform upload
     file_list = None
     try:
-        rem_file_path = f'{device.paths.upload_list}'
+        rem_file_path = f'{device.me_paths.upload_list}'
         file_list = upload_list(cip, device, rem_file_path)
         device.files = file_list
         device.log.append(f'Uploaded {rem_file_path}.')
@@ -363,7 +353,7 @@ def upload_mer_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
 
     # Delete list on the terminal
     try:
-        helper.delete_file_list(cip, device.paths)
+        helper.delete_file_list(cip, device.me_paths)
         device.log.append(f'Deleted *.MER list on terminal.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -378,7 +368,7 @@ def reboot(cip: comms.Driver, device: types.MEDeviceInfo):
     try:
         # Execute reboot
         device.log.append(f'Rebooting terminal.')
-        helper.reboot(cip1, device.paths)
+        helper.reboot(cip1, device.me_paths)
 
         # If we made it here... the reboot function didn't throw
         # an exception, which means it didn't reboot.
@@ -407,11 +397,11 @@ def reboot(cip: comms.Driver, device: types.MEDeviceInfo):
         delete_logs = registry.get_startup_delete_logs(cip)
         replace_comms = registry.get_startup_replace_comms(cip)
         device.log.append(f'Setting file: {startup_file} to run at startup with Replace Comms: {replace_comms}, Delete Logs: {delete_logs}.')
-        helper.create_me_shortcut(cip, device.paths, startup_file, replace_comms, delete_logs)
+        helper.create_me_shortcut(cip, device.me_paths, startup_file, replace_comms, delete_logs)
 
         # Execute reboot
         device.log.append(f'Rebooting terminal.')
-        helper.reboot(cip1, device.paths)
+        helper.reboot(cip1, device.me_paths)
     except Exception as e:
         # Unlike most CIP messages, this one is expected to
         # create an exception.  When it is received by the terminal,

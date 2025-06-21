@@ -330,7 +330,7 @@ class upload_tests(unittest.TestCase):
             with comms.Driver(comms_path, driver=driver) as cip2:
                 # Open parallel transfer instance (normally transfer instance 1)
                 device2 = validation.get_terminal_info(cip2)
-                path2 = f'{device2.paths.runtime}\\{device.mer_files[0]}'
+                path2 = f'{device2.me_paths.runtime}\\{device.mer_files[0]}'
                 transfer_instance_2, transfer_size_2 = terminal.files.create_transfer_instance_upload(cip2, path2)
 
                 # Perform upload (normally transfer instance 2)
