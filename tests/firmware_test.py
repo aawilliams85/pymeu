@@ -69,9 +69,8 @@ class dmk_tests(unittest.TestCase):
 
 class fuw_tests(unittest.TestCase):
     def setUp(self):
-        self.ip_address = '192.168.40.123'
-        #self.ip_address = '192.168.40.104,4,192.168.1.20'
-        #self.ip_address = '192.168.1.20'
+        self.ip_address = '192.168.40.21'
+        #self.ip_address = '192.168.40.104,4,192.168.1.21'
         pass
 
     def test_pvp6_v11(self):
@@ -86,7 +85,11 @@ class fuw_tests(unittest.TestCase):
         print(self.fuw_helper_path)
         print(self.fuw_image_path)
         meu = MEUtility(self.ip_address, driver='pycomm3')
-        resp = meu.flash_firmware(self.fuw_image_path, self.fuw_helper_path, progress_callback)
+        resp = meu.flash_firmware(
+            firmware_image_path=self.fuw_image_path,
+            firmware_helper_path=self.fuw_helper_path,
+            dry_run=False,
+            progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
 
@@ -102,7 +105,11 @@ class fuw_tests(unittest.TestCase):
         print(self.fuw_helper_path)
         print(self.fuw_image_path)
         meu = MEUtility(self.ip_address, driver='pylogix')
-        resp = meu.flash_firmware(self.fuw_image_path, self.fuw_helper_path, progress_callback)
+        resp = meu.flash_firmware(
+            firmware_image_path=self.fuw_image_path,
+            firmware_helper_path=self.fuw_helper_path,
+            dry_run=False,
+            progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
 
