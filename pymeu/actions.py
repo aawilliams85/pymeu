@@ -12,14 +12,14 @@ from . import comms
 from . import types
 
 def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, redact_log: bool, silent_mode: bool):
-    if print_log: print(f'Terminal vendor ID: {device.vendor_id}.')
-    if print_log: print(f'Terminal product type: {device.product_type}.')
-    if print_log: print(f'Terminal product code: {device.product_code}.')
-    if print_log: print(f'Terminal product name: {device.product_name}.')
-    if print_log: print(f'Terminal helper version: {device.helper_version}.')
-    if print_log: print(f'Terminal ME version: {device.me_version}.')
-    if print_log: print(f'Terminal major version: {device.version_major}.')
-    if print_log: print(f'Terminal minor version: {device.version_minor}.')
+    if print_log: print(f'Terminal vendor ID: {device.me_identity.vendor_id}.')
+    if print_log: print(f'Terminal product type: {device.me_identity.product_type}.')
+    if print_log: print(f'Terminal product code: {device.me_identity.product_code}.')
+    if print_log: print(f'Terminal product name: {device.me_identity.product_name}.')
+    if print_log: print(f'Terminal helper version: {device.me_identity.helper_version}.')
+    if print_log: print(f'Terminal ME version: {device.me_identity.me_version}.')
+    if print_log: print(f'Terminal major version: {device.me_identity.major_rev}.')
+    if print_log: print(f'Terminal minor version: {device.me_identity.minor_rev}.')
     if print_log: print(f'Terminal helper path: {device.paths.helper_file}.')
     if print_log: print(f'Terminal storage path: {device.paths.storage}.')
     if print_log: print(f'Terminal upload list path: {device.paths.upload_list}.')
@@ -58,7 +58,7 @@ def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, r
         line = f'Terminal startup file: {file}.'
         if file.lower().endswith('.mer'): device.startup_mer_file = file.split('\\')[-1]
     except:
-        major_rev = int(device.me_version.split(".")[0])
+        major_rev = int(device.me_identity.me_version.split(".")[0])
         if major_rev <= 5:
             # For PanelView Plus 5.10 and earlier this registry key appears to be unavailable.
             line = f'Terminal startup file: could not be determined due to hardware version.'
@@ -392,7 +392,7 @@ def reboot(cip: comms.Driver, device: types.MEDeviceInfo):
         # Application is set to load at startup
         # ME Station is set to run application at startup
         # Current App is defined
-        if ((device.version_major < 12) or ((device.version_major == 12) and (device.version_minor < 108))):
+        if ((device.me_identity.major_rev < 12) or ((device.me_identity.major_rev == 12) and (device.me_identity.minor_rev < 108))):
             device.log.append(f'Did not attempt additional reboot because terminal is below minimum applicable version.')
             return
         if (registry.get_startup_options(cip) != 1):

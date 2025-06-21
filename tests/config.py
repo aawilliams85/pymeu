@@ -7,7 +7,7 @@ from pymeu import types
 class METestDevice:
     name: str
     comms_paths: list[str]
-    device_paths: types.MEDevicePaths
+    device_paths: types.MEPaths
     boot_time_sec: int
     mer_files: list[str]
     local_firmware_helper_path: str
@@ -55,7 +55,7 @@ NONEXISTENT_PROCESS = 'NonexistentProcess.exe'
 # PanelView Plus configuration
 PVP5 = 'PVP5'
 PVP5_Comms_Paths = ['192.168.40.20','192.168.40.104,4,192.168.1.20']
-PVP5_Device_Paths = types.MEDevicePaths(
+PVP5_Device_Paths = types.MEPaths(
     f'\\Storage Card\\Rockwell Software\\RSViewME\\{HELPER_FILE_NAME}',
     '\\Storage Card',
     f'\\Storage Card\\{UPLOAD_LIST_PATH}',
@@ -71,7 +71,7 @@ PVP5_MER_Files = [
 # PanelView Plus 6 configuration
 PVP6 = 'PVP6'
 PVP6_Comms_Paths = ['192.168.40.21','192.168.40.104,4,192.168.1.21']
-PVP6_Device_Paths = types.MEDevicePaths(
+PVP6_Device_Paths = types.MEPaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
     f'\\Application Data\\{UPLOAD_LIST_PATH}',
@@ -88,7 +88,7 @@ PVP6_MER_Files = [
 # PanelView Plus 7A configuration
 PVP7A = 'PVP7A'
 PVP7A_Comms_Paths = ['192.168.40.22','192.168.40.104,4,192.168.1.22']
-PVP7A_Device_Paths = types.MEDevicePaths(
+PVP7A_Device_Paths = types.MEPaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
     f'\\Application Data\\{UPLOAD_LIST_PATH}',
@@ -104,7 +104,7 @@ PVP7A_MER_Files = [
 #PanelView Plus 7B configuration
 PVP7B = 'PVP7B'
 PVP7B_Comms_Paths = ['192.168.40.23','192.168.40.104,4,192.168.1.23']
-PVP7B_Device_Paths = types.MEDevicePaths(
+PVP7B_Device_Paths = types.MEPaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
     f'\\Application Data\\{UPLOAD_LIST_PATH}',
