@@ -25,7 +25,7 @@ class dmk_tests(unittest.TestCase):
 #        firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
         firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PVP7_Performance_12.104.dmk')
         meu = MEUtility('192.168.40.23')
-        meu.flash_firmware(firmware_image_path, '', progress_callback)
+        meu.flash_firmware_me(firmware_image_path, '', progress_callback)
         #with comms.Driver('192.168.40.23', driver='pycomm3') as cip:
         #    print(messages.get_identity(cip))
         #    dmk.process_dmk(cip, firmware_image_path, progress_callback)
@@ -54,7 +54,7 @@ class dmk_tests(unittest.TestCase):
                     f'Function: flash_firmware({firmware_image_path})\n'
             )
             print(result)
-            resp = meu.flash_firmware(firmware_image_path,'')
+            resp = meu.flash_firmware_me(firmware_image_path,'')
             for s in resp.device.log: print(s)
             print('')
             self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)
@@ -81,7 +81,7 @@ class fuw_tests(unittest.TestCase):
                     f'Function: flash_firmware({firmware_image_path})\n'
             )
             print(result)
-            resp = meu.flash_firmware(
+            resp = meu.flash_firmware_me(
                 firmware_image_path=firmware_image_path,
                 firmware_helper_path=firmware_helper_path,
                 dry_run=False,
@@ -107,7 +107,7 @@ class fuw_tests(unittest.TestCase):
                 f'Function: flash_firmware({firmware_image_path})\n'
         )
         print(result)
-        resp = meu.flash_firmware(
+        resp = meu.flash_firmware_me(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
             dry_run=False,
@@ -133,7 +133,7 @@ class fuw_tests(unittest.TestCase):
                 f'Function: flash_firmware({firmware_image_path})\n'
         )
         print(result)
-        resp = meu.flash_firmware(
+        resp = meu.flash_firmware_me(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
             dry_run=False,
@@ -159,7 +159,7 @@ class fuw_tests(unittest.TestCase):
                 f'Function: flash_firmware({firmware_image_path})\n'
         )
         print(result)
-        resp = meu.flash_firmware(
+        resp = meu.flash_firmware_me(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
             dry_run=False,
@@ -185,7 +185,7 @@ class fuw_tests(unittest.TestCase):
                 f'Function: flash_firmware({firmware_image_path})\n'
         )
         print(result)
-        resp = meu.flash_firmware(
+        resp = meu.flash_firmware_me(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
             dry_run=False,
