@@ -84,7 +84,8 @@ PVP6_Device_Paths = types.MEPaths(
 )
 PVP6_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
 PVP6_Local_Firmware_Image_Paths = [
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP6', 'ME_PVP6xX_11.00-20190915', 'upgrade', 'SC.IMG')
+    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP6', 'ME_PVP6xX_11.00-20190915', 'upgrade', 'SC.IMG'),
+    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP6', 'ME_PVP6xX_12.00-20200922', 'upgrade', 'SC.IMG'),
 ]
 PVP6_MER_Files = [
     'Test_v11_A.mer',
@@ -128,39 +129,54 @@ PVP7B_MER_Files = [
     'Test_v11_C.mer'
 ]
 
+DEVICE_PVP5 = METestDevice(
+    PVP5, 
+    PVP5_Comms_Paths,
+    PVP5_Device_Paths, 
+    75, 
+    PVP5_MER_Files,
+    '',
+    [])
+
+DEVICE_PVP6 = METestDevice(
+    PVP6, 
+    PVP6_Comms_Paths,
+    PVP6_Device_Paths, 
+    75, 
+    PVP6_MER_Files,
+    PVP6_Local_Firmware_Helper_Path,
+    PVP6_Local_Firmware_Image_Paths)
+
+DEVICE_PVP7A = METestDevice(
+    PVP7A, 
+    PVP7A_Comms_Paths,
+    PVP7A_Device_Paths, 
+    75, 
+    PVP7A_MER_Files,
+    PVP7A_Local_Firmware_Helper_Path,
+    [])
+
+DEVICE_PVP7B = METestDevice(
+    PVP7B, 
+    PVP7B_Comms_Paths,
+    PVP7B_Device_Paths, 
+    75, 
+    PVP7B_MER_Files,
+    '',
+    [])
+
 DEVICES = [
-    METestDevice(
-        PVP5, 
-        PVP5_Comms_Paths,
-        PVP5_Device_Paths, 
-        75, 
-        PVP5_MER_Files,
-        '',
-        []
-    ),
-    METestDevice(
-        PVP6, 
-        PVP6_Comms_Paths,
-        PVP6_Device_Paths, 
-        75, 
-        PVP6_MER_Files,
-        PVP6_Local_Firmware_Helper_Path,
-        PVP6_Local_Firmware_Image_Paths
-    ),
-    METestDevice(
-        PVP7A, 
-        PVP7A_Comms_Paths,
-        PVP7A_Device_Paths, 
-        75, 
-        PVP7A_MER_Files,
-        PVP7A_Local_Firmware_Helper_Path,
-        []
-    ),
+    DEVICE_PVP5,
+    DEVICE_PVP6,
+    DEVICE_PVP7A,
+    DEVICE_PVP7B    
 ]
 
+DRIVER_PYCOMM3 = 'pycomm3'
+DRIVER_PYLOGIX = 'pylogix'
 DRIVERS = [
-    'pycomm3',
-    'pylogix'
+    DRIVER_PYCOMM3,
+    DRIVER_PYLOGIX
 ]
 
 test_combinations = generate_test_combinations(DEVICES, DRIVERS)
