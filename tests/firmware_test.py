@@ -1,5 +1,5 @@
 import os
-import zipfile
+import time
 import unittest
 
 from pymeu import actions
@@ -64,39 +64,136 @@ class dmk_tests(unittest.TestCase):
 
 class fuw_tests(unittest.TestCase):
     def setUp(self):
-        self.ip_address = '192.168.40.21'
-        #self.ip_address = '192.168.40.104,4,192.168.1.21'
         pass
 
-    def test_pvp6_v11(self):
+    def test_flash_pvp6(self):
         print('')
-        self.fuw_helper_path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
-        self.fuw_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP6', 'ME_PVP6xX_11.00-20190915', 'upgrade', 'SC.IMG')
-        print(self.fuw_helper_path)
-        print(self.fuw_image_path)
-        meu = MEUtility(self.ip_address, driver='pycomm3')
-        resp = meu.flash_firmware(
-            firmware_image_path=self.fuw_image_path,
-            firmware_helper_path=self.fuw_helper_path,
-            dry_run=False,
-            progress=progress_callback)
-        for s in resp.device.log: print(s)
-        print('')
+        for (device, driver, comms_path) in test_combinations:
+            if (device.name != PVP6): continue #Only flash PVP6 in this test
 
-    def test_pvp6_v12(self):
+            meu = MEUtility(comms_path, driver=driver)
+            firmware_image_path = device.local_firmware_image_paths[0]   
+            firmware_helper_path = device.local_firmware_helper_path         
+            result = (
+                    f'Device: {device.name}\n'
+                    f'Driver: {driver}\n'
+                    f'Path: {comms_path}\n'
+                    f'Function: flash_firmware({firmware_image_path})\n'
+            )
+            print(result)
+            resp = meu.flash_firmware(
+                firmware_image_path=firmware_image_path,
+                firmware_helper_path=firmware_helper_path,
+                dry_run=False,
+                progress=progress_callback)
+            for s in resp.device.log: print(s)
+            print('')
+            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+            time.sleep(device.boot_time_sec)
+
+    def test_flash_pvp6_direct_pycomm3(self):
         print('')
-        self.fuw_helper_path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
-        self.fuw_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP6', 'ME_PVP6xX_12.00-20200922', 'upgrade', 'SC.IMG')
-        print(self.fuw_helper_path)
-        print(self.fuw_image_path)
-        meu = MEUtility(self.ip_address, driver='pylogix')
+        driver = DRIVER_PYCOMM3
+        device = DEVICE_PVP6
+        comms_path = device.comms_paths[0]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        firmware_helper_path = device.local_firmware_helper_path         
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware({firmware_image_path})\n'
+        )
+        print(result)
         resp = meu.flash_firmware(
-            firmware_image_path=self.fuw_image_path,
-            firmware_helper_path=self.fuw_helper_path,
+            firmware_image_path=firmware_image_path,
+            firmware_helper_path=firmware_helper_path,
             dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
+        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        time.sleep(device.boot_time_sec)
+
+    def test_flash_pvp6_direct_pylogix(self):
+        print('')
+        driver = DRIVER_PYLOGIX
+        device = DEVICE_PVP6
+        comms_path = device.comms_paths[0]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        firmware_helper_path = device.local_firmware_helper_path         
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware({firmware_image_path})\n'
+        )
+        print(result)
+        resp = meu.flash_firmware(
+            firmware_image_path=firmware_image_path,
+            firmware_helper_path=firmware_helper_path,
+            dry_run=False,
+            progress=progress_callback)
+        for s in resp.device.log: print(s)
+        print('')
+        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        time.sleep(device.boot_time_sec)
+
+    def test_flash_pvp6_routed_pycomm3(self):
+        print('')
+        driver = DRIVER_PYCOMM3
+        device = DEVICE_PVP6
+        comms_path = device.comms_paths[1]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        firmware_helper_path = device.local_firmware_helper_path         
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware({firmware_image_path})\n'
+        )
+        print(result)
+        resp = meu.flash_firmware(
+            firmware_image_path=firmware_image_path,
+            firmware_helper_path=firmware_helper_path,
+            dry_run=False,
+            progress=progress_callback)
+        for s in resp.device.log: print(s)
+        print('')
+        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        time.sleep(device.boot_time_sec)
+
+    def test_flash_pvp6_routed_pylogix(self):
+        print('')
+        driver = DRIVER_PYLOGIX
+        device = DEVICE_PVP6
+        comms_path = device.comms_paths[1]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        firmware_helper_path = device.local_firmware_helper_path         
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware({firmware_image_path})\n'
+        )
+        print(result)
+        resp = meu.flash_firmware(
+            firmware_image_path=firmware_image_path,
+            firmware_helper_path=firmware_helper_path,
+            dry_run=False,
+            progress=progress_callback)
+        for s in resp.device.log: print(s)
+        print('')
+        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        time.sleep(device.boot_time_sec)
 
     def tearDown(self):
         pass
