@@ -9,7 +9,7 @@ class CIPIdentity:
     product_code: int
     product_name: str
     product_type: int
-    serial_number: int = field(repr=False)
+    serial_number: str = field(repr=False)
     status: int
     vendor_id: int
 
@@ -102,7 +102,7 @@ class MEIdentity:
     product_code: int
     product_name: str
     product_type: int
-    serial_number: int = field(repr=False)
+    serial_number: str = field(repr=False)
     vendor_id: int
 
 @dataclass

@@ -133,6 +133,7 @@ class MEUtility(object):
             try:
                 resp = dmk.process_dmk(
                     cip=cip,
+                    device=self.device,
                     dmk_file_path=firmware_image_path,
                     dry_run=dry_run,
                     progress=progress)                    

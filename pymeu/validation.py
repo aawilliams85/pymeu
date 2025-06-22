@@ -134,6 +134,7 @@ def get_cip_identity(cip: comms.Driver) -> types.CIPIdentity:
     resp = messages.get_identity(cip)
     vendor_id, product_type, product_code, major_rev, minor_rev, status, serial_number, product_name_length = struct.unpack('<HHHBBHLB', resp.value[:15])
     product_name = resp.value[15:15 + product_name_length].decode('utf-8', errors='ignore')
+    serial_number_str = f'{serial_number:08x}'
 
     return types.CIPIdentity(
         major_rev=major_rev,
@@ -141,7 +142,7 @@ def get_cip_identity(cip: comms.Driver) -> types.CIPIdentity:
         product_code=product_code,
         product_name=product_name,
         product_type=product_type,
-        serial_number=serial_number,
+        serial_number=serial_number_str,
         status=status,
         vendor_id=vendor_id
     )
