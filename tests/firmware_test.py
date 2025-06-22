@@ -19,6 +19,28 @@ class dmk_tests(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_flash_pvp7b_dryrun(self):
+        print('')
+        for (device, driver, comms_path) in test_combinations:
+            if (device != DEVICE_PVP7B): continue # Only check PVP7B in this test
+
+            for firmware_image_path in device.local_firmware_image_paths:
+                meu = MEUtility(comms_path, driver=driver)
+                result = (
+                        f'Device: {device.name}\n'
+                        f'Driver: {driver}\n'
+                        f'Path: {comms_path}\n'
+                        f'Function: flash_firmware_dmk({firmware_image_path, True})\n'
+                )
+                print(result)
+                resp = meu.flash_firmware_dmk(
+                    firmware_image_path=firmware_image_path,
+                    dry_run=True,
+                    progress=progress_callback)
+                for s in resp.device.log: print(s)
+                print('')
+                self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+
     def test_dmk_unpack(self):
         print('')
 
@@ -115,7 +137,6 @@ class fuw_tests(unittest.TestCase):
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
-        time.sleep(device.boot_time_sec)
 
     def test_flash_pvp6_direct_pylogix(self):
         print('')
@@ -141,7 +162,6 @@ class fuw_tests(unittest.TestCase):
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
-        time.sleep(device.boot_time_sec)
 
     def test_flash_pvp6_routed_pycomm3(self):
         print('')
@@ -167,7 +187,6 @@ class fuw_tests(unittest.TestCase):
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
-        time.sleep(device.boot_time_sec)
 
     def test_flash_pvp6_routed_pylogix(self):
         print('')
@@ -193,7 +212,106 @@ class fuw_tests(unittest.TestCase):
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
-        time.sleep(device.boot_time_sec)
+
+    def test_flash_pvp7a_direct_pycomm3(self):
+        print('')
+        driver = DRIVER_PYCOMM3
+        device = DEVICE_PVP7A
+        comms_path = device.comms_paths[0]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        firmware_helper_path = device.local_firmware_helper_path         
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware({firmware_image_path})\n'
+        )
+        print(result)
+        resp = meu.flash_firmware_me(
+            firmware_image_path=firmware_image_path,
+            firmware_helper_path=firmware_helper_path,
+            dry_run=False,
+            progress=progress_callback)
+        for s in resp.device.log: print(s)
+        print('')
+        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+
+    def test_flash_pvp7a_direct_pylogix(self):
+        print('')
+        driver = DRIVER_PYLOGIX
+        device = DEVICE_PVP7A
+        comms_path = device.comms_paths[0]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        firmware_helper_path = device.local_firmware_helper_path         
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware({firmware_image_path})\n'
+        )
+        print(result)
+        resp = meu.flash_firmware_me(
+            firmware_image_path=firmware_image_path,
+            firmware_helper_path=firmware_helper_path,
+            dry_run=False,
+            progress=progress_callback)
+        for s in resp.device.log: print(s)
+        print('')
+        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+
+    def test_flash_pvp7a_routed_pycomm3(self):
+        print('')
+        driver = DRIVER_PYCOMM3
+        device = DEVICE_PVP7A
+        comms_path = device.comms_paths[1]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        firmware_helper_path = device.local_firmware_helper_path         
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware({firmware_image_path})\n'
+        )
+        print(result)
+        resp = meu.flash_firmware_me(
+            firmware_image_path=firmware_image_path,
+            firmware_helper_path=firmware_helper_path,
+            dry_run=False,
+            progress=progress_callback)
+        for s in resp.device.log: print(s)
+        print('')
+        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+
+    def test_flash_pvp7a_routed_pylogix(self):
+        print('')
+        driver = DRIVER_PYLOGIX
+        device = DEVICE_PVP7A
+        comms_path = device.comms_paths[1]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        firmware_helper_path = device.local_firmware_helper_path         
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware({firmware_image_path})\n'
+        )
+        print(result)
+        resp = meu.flash_firmware_me(
+            firmware_image_path=firmware_image_path,
+            firmware_helper_path=firmware_helper_path,
+            dry_run=False,
+            progress=progress_callback)
+        for s in resp.device.log: print(s)
+        print('')
+        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
 
     def tearDown(self):
         pass

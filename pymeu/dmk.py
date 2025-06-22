@@ -198,7 +198,7 @@ def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
                 if (actual_size != update.file_size):
                     raise Exception(f'File: {update.data_file_name}, Expected Size: {update.file_size}, Actual Size: {actual_size}')
 
-def process_dmk(cip: comms.Driver, dmk_file_path: str, progress: Optional[Callable[[str, int, int], None]] = None):
+def process_dmk(cip: comms.Driver, dmk_file_path: str, dry_run: bool, progress: Optional[Callable[[str, int, int], None]] = None):
     config_content = configparser.ConfigParser(allow_unnamed_section=True)
     config_nvs = configparser.ConfigParser(allow_unnamed_section=True, allow_no_value=True)
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
@@ -214,7 +214,7 @@ def process_dmk(cip: comms.Driver, dmk_file_path: str, progress: Optional[Callab
         nvs=deserialize_dmk_nvs_file(config_nvs)
     )
     validate_update_size(dmk_file_path, dmk_file.nvs)
-    send_dmk_updates(cip, dmk_file_path, dmk_file.nvs, progress)
+    if not(dry_run): send_dmk_updates(cip, dmk_file_path, dmk_file.nvs, progress)
     return dmk_file
 
 def masked_equals(mask: int, a: int, b: int) -> bool:
