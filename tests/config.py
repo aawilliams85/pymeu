@@ -104,6 +104,10 @@ PVP7A_Device_Paths = types.MEPaths(
     '\\Storage Card\\FUWhelper.dll'
 )
 PVP7A_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
+PVP7A_Local_Firmware_Image_Paths = [
+    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP7A', 'ME_PVP7xX_11.00-20190916', 'upgrade', 'SC.IMG'),
+    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP7A', 'ME_PVP7xX_15.00-20240926', 'upgrade', 'SC.IMG'),
+]
 PVP7A_MER_Files = [
     'Test_v11_A.mer',
     'Test_v11_B.mer',
@@ -154,7 +158,7 @@ DEVICE_PVP7A = METestDevice(
     75, 
     PVP7A_MER_Files,
     PVP7A_Local_Firmware_Helper_Path,
-    [])
+    PVP7A_Local_Firmware_Image_Paths)
 
 DEVICE_PVP7B = METestDevice(
     PVP7B, 
@@ -163,7 +167,7 @@ DEVICE_PVP7B = METestDevice(
     75, 
     PVP7B_MER_Files,
     '',
-    [])
+    PVP7B_Local_Firmware_Image_Paths)
 
 DEVICES = [
     DEVICE_PVP5,

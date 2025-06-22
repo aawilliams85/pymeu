@@ -134,6 +134,7 @@ class MEUtility(object):
                 resp = dmk.process_dmk(
                     cip=cip,
                     dmk_file_path=firmware_image_path,
+                    dry_run=dry_run,
                     progress=progress)                    
                 if not(resp):
                     self.device.log.append(f'Failed to flash terminal.')
@@ -148,7 +149,6 @@ class MEUtility(object):
     def flash_firmware_me(self, 
                        firmware_image_path: str, 
                        firmware_helper_path: str, 
-                       dry_run: Optional[bool] = False,
                        progress: Optional[Callable[[str, int, int], None]] = None
                        ) -> types.MEResponse:
         """
