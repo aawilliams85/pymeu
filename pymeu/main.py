@@ -70,7 +70,7 @@ class MEUtility(object):
 
             # Validate device at this communications path is a terminal of known version.
             self.device = validation.get_terminal_info(cip)
-            if not(validation.is_terminal_valid(self.device)):
+            if not(validation.is_valid_me_terminal(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
@@ -78,7 +78,7 @@ class MEUtility(object):
                 
             # Validate that all starting conditions for downnload to terminal are good
             try:
-                resp = validation.is_download_valid(cip, self.device, file)
+                resp = validation.is_valid_download(cip, self.device, file)
                 if resp:
                     self.device.log.append(f'Validated download for {file.name}.')
                 else:
@@ -102,7 +102,50 @@ class MEUtility(object):
 
         return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
 
-    def flash_firmware(self, 
+    def flash_firmware_dmk(self, 
+                       firmware_image_path: str, 
+                       dry_run: Optional[bool] = False,
+                       progress: Optional[Callable[[str, int, int], None]] = None
+                       ) -> types.MEResponse:
+        """
+        Flashes a firmware image to the remote terminal.
+
+        Args:
+            firmware_image_path (str): The local path to the firmware image file (ex: C:\\YourFolder\\\\FirmwareImage.DMK)
+            progress: Optional callback for progress indication.
+        """
+
+        with comms.Driver(self.comms_path, self.driver) as cip:
+            # Set socket timeout first.
+            # The terminal will pause at certain points and delay acknowledging messages.
+            # Without this, the process will fail and the terminal will require a factory reset.
+            cip.timeout = 255.0
+
+            # Validate device at this communications path is a terminal of known version.
+            self.device = validation.get_terminal_info(cip)
+            if not(validation.is_valid_dmk_terminal(self.device)):
+                if self.ignore_terminal_valid:
+                    warn('Invalid device selected, but terminal validation is set to IGNORE.')
+                else:
+                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
+
+            # Perform firmware flash to terminal
+            try:
+                resp = dmk.process_dmk(
+                    cip=cip,
+                    dmk_file_path=firmware_image_path,
+                    progress=progress)                    
+                if not(resp):
+                    self.device.log.append(f'Failed to flash terminal.')
+                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+            except Exception as e:
+                self.device.log.append(f'Exception: {str(e)}')
+                self.device.log.append(f'Failed to flash terminal.')
+                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+
+        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+    
+    def flash_firmware_me(self, 
                        firmware_image_path: str, 
                        firmware_helper_path: str, 
                        dry_run: Optional[bool] = False,
@@ -130,46 +173,28 @@ class MEUtility(object):
 
             # Validate device at this communications path is a terminal of known version.
             self.device = validation.get_terminal_info(cip)
-            if not(validation.is_terminal_valid(self.device)):
+            if not(validation.is_valid_me_terminal(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
-            # Check firmware extension
-            extension = os.path.splitext(firmware_image_path)[1].upper()
-            match extension:
-                case '.DMK':
-                    # Perform firmware flash to terminal
-                    try:
-                        #resp = terminal.actions.flash_dmk(cip,
-                        #                                  self.device,
-                        #                                  firmware_image_path,
-                        #                                  progress
-                        #                                  )
-                        resp = dmk.process_dmk(cip, firmware_image_path, progress)
-                        if not(resp):
-                            self.device.log.append(f'Failed to flash terminal.')
-                            return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
-                    except Exception as e:
-                        self.device.log.append(f'Exception: {str(e)}')
-                        self.device.log.append(f'Failed to flash terminal.')
-                        return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
-                case '.IMG':
-                    # Perform firmware flash to terminal
-                    try:
-                        resp = actions.flash_firmware_upgrade_card(cip, 
-                                                                            self.device, 
-                                                                            firmware_image_path, 
-                                                                            firmware_helper_path, 
-                                                                            progress)
-                        if not(resp):
-                            self.device.log.append(f'Failed to flash terminal.')
-                            return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
-                    except Exception as e:
-                        self.device.log.append(f'Exception: {str(e)}')
-                        self.device.log.append(f'Failed to flash terminal.')
-                        return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+            # Perform firmware flash to terminal
+            try:
+                resp = actions.flash_firmware_upgrade_card(
+                    cip=cip,
+                    device=self.device,
+                    firmware_image_path=firmware_image_path,
+                    firmware_helper_path=firmware_helper_path,
+                    progress=progress)
+
+                if not(resp):
+                    self.device.log.append(f'Failed to flash terminal.')
+                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+            except Exception as e:
+                self.device.log.append(f'Exception: {str(e)}')
+                self.device.log.append(f'Failed to flash terminal.')
+                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
 
         return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
 
@@ -195,7 +220,7 @@ class MEUtility(object):
         self.silent_mode = kwargs.get('silent_mode', False)
         with comms.Driver(self.comms_path, self.driver) as cip:
             self.device = validation.get_terminal_info(cip)
-            if not(validation.is_terminal_valid(self.device)):
+            if not((validation.is_valid_me_terminal(self.device) or validation.is_valid_dmk_terminal(self.device))):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
@@ -217,7 +242,7 @@ class MEUtility(object):
         with comms.Driver(self.comms_path, self.driver) as cip:
             self.device = validation.get_terminal_info(cip)
 
-            if not(validation.is_terminal_valid(self.device)):
+            if not(validation.is_valid_me_terminal(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
@@ -256,7 +281,7 @@ class MEUtility(object):
         with comms.Driver(self.comms_path, self.driver) as cip:
             # Validate device at this communications path is a terminal of known version.
             self.device = validation.get_terminal_info(cip)
-            if not(validation.is_terminal_valid(self.device)):
+            if not(validation.is_valid_me_terminal(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
@@ -299,7 +324,7 @@ class MEUtility(object):
         with comms.Driver(self.comms_path, self.driver) as cip:
             # Validate device at this communications path is a terminal of known version.
             self.device = validation.get_terminal_info(cip)
-            if not(validation.is_terminal_valid(self.device)):
+            if not(validation.is_valid_me_terminal(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:

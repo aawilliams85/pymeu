@@ -2,11 +2,35 @@ import unittest
 
 from pymeu import comms
 from pymeu import terminal
+from pymeu import validation
 
 from config import *
 
 # Turn off sort so that tests run in line order
 unittest.TestLoader.sortTestMethodsUsing = None
+
+class cip_tests(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_cip_identity(self):
+        print('')
+        results = []
+        for (device, driver, comms_path) in test_combinations:
+            with comms.Driver(comms_path, driver=driver) as cip:
+                value = validation.get_cip_identity(cip)
+                result = (
+                    f'Device: {device.name}\n' 
+                    f'Driver: {driver}\n' 
+                    f'Path: {comms_path}\n'
+                    f'Function: validation.get_cip_identity(cip)\n'
+                    f'Value: {value}\n'
+                )
+                print(result)
+                results.append(value)
+
+    def tearDown(self):
+        pass
 
 class helper_tests(unittest.TestCase):
     def setUp(self):

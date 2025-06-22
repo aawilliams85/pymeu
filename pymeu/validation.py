@@ -195,8 +195,12 @@ def get_me_paths(cip: comms.Driver) -> types.MEPaths:
 
 def get_terminal_info(cip: comms.Driver) -> types.MEDeviceInfo:
     cip_identity = get_cip_identity(cip)
-    me_paths = get_me_paths(cip)
-    me_identity = get_me_identity(cip, me_paths)
+    try:
+        me_paths = get_me_paths(cip)
+        me_identity = get_me_identity(cip, me_paths)
+    except:
+        me_paths = types.MEPaths(None,None,None,None,None)
+        me_identity = types.MEIdentity(None,None,None,None,None,None,None,None,None)
         
     return types.MEDeviceInfo(
         comms_path=cip._original_path,
@@ -217,14 +221,20 @@ def is_version_matched(device_version: str, known_versions: set) -> bool:
     device_version_prefix = extract_version_prefix(device_version)
     return any(extract_version_prefix(known_version) == device_version_prefix for known_version in known_versions)
 
-def is_terminal_valid(device: types.MEDeviceInfo) -> bool:
+def is_valid_me_terminal(device: types.MEDeviceInfo) -> bool:
     if device.me_identity.product_type not in PRODUCT_TYPES: return False
     if device.me_identity.product_code not in PRODUCT_CODES: return False
     if not is_version_matched(device.me_identity.helper_version, HELPER_VERSIONS): return False
     if not is_version_matched(device.me_identity.me_version, ME_VERSIONS): return False
     return True
 
-def is_download_valid(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile) -> bool:
+def is_valid_dmk_terminal(device: types.MEDeviceInfo) -> bool:
+    if device.cip_identity.product_type not in PRODUCT_TYPES: return False
+    if device.cip_identity.product_code not in PRODUCT_CODES: return False
+    if (device.cip_identity.minor_rev < 100): return False
+    return True
+
+def is_valid_download(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile) -> bool:
     # Check that file is correct extension
     if (file.get_ext() != '.mer'):
         device.log.append(f'File {file.name} is not a *.mer file')
