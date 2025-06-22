@@ -129,7 +129,6 @@ class fuw_tests(unittest.TestCase):
             resp = meu.flash_firmware_me(
                 firmware_image_path=firmware_image_path,
                 firmware_helper_path=firmware_helper_path,
-                dry_run=False,
                 progress=progress_callback)
             for s in resp.device.log: print(s)
             print('')
@@ -155,7 +154,6 @@ class fuw_tests(unittest.TestCase):
         resp = meu.flash_firmware_me(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
-            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -180,7 +178,6 @@ class fuw_tests(unittest.TestCase):
         resp = meu.flash_firmware_me(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
-            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -205,7 +202,6 @@ class fuw_tests(unittest.TestCase):
         resp = meu.flash_firmware_me(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
-            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -230,7 +226,6 @@ class fuw_tests(unittest.TestCase):
         resp = meu.flash_firmware_me(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
-            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -255,7 +250,6 @@ class fuw_tests(unittest.TestCase):
         resp = meu.flash_firmware_me(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
-            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -280,7 +274,6 @@ class fuw_tests(unittest.TestCase):
         resp = meu.flash_firmware_me(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
-            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -305,7 +298,6 @@ class fuw_tests(unittest.TestCase):
         resp = meu.flash_firmware_me(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
-            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -330,7 +322,6 @@ class fuw_tests(unittest.TestCase):
         resp = meu.flash_firmware_me(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
-            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
