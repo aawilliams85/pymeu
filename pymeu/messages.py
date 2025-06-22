@@ -45,7 +45,7 @@ def dmk_preamble(cip: comms.Driver, data):
     return cip.generic_message(
         service=DMKServices.FIRMWARE_PREAMBLE,
         class_code=DMKClasses.FIRMWARE_FLASH,
-        instance=0x00,
+        instance=0x01,
         attribute=None,
         request_data=data
     )
@@ -54,7 +54,7 @@ def dmk_chunk(cip: comms.Driver, data):
     return cip.generic_message(
         service=DMKServices.FIRMWARE_CHUNK,
         class_code=DMKClasses.FIRMWARE_FLASH,
-        instance=0x00,
+        instance=0x01,
         attribute=None,
         request_data=data
     )
