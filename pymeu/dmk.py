@@ -159,7 +159,7 @@ def send_dmk_update_preamble(cip: comms.Driver, serial_number: str, file_size: i
     assert(resp_chunk_size > 0)
     return resp_chunk_size
 
-def send_dmk_update_file(cip: comms.Driver, chunk_size: int, source_data: bytearray, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
+def send_dmk_update_file(cip: comms.Driver, chunk_size: int, source_data: bytearray, description: str, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
     req_chunk_number = 1
     req_offset = 0
     total_bytes = len(source_data)
@@ -175,13 +175,13 @@ def send_dmk_update_file(cip: comms.Driver, chunk_size: int, source_data: bytear
         resp = messages.dmk_chunk(cip, req_data)
 
         if not resp: raise Exception(f'Failed to write chunk {req_chunk_number} to terminal.')
-        resp_offset_last, resp_offset_this, resp_code = struct.unpack('<IIH', resp.value)
-        assert((resp_offset_this == req_offset) or (resp_offset_this == 0xFFFFFFFF))
-        assert(resp_code == 0x02)
+        resp_offset, resp_offset_next, resp_code = struct.unpack('<IIH', resp.value)
+        if ((resp_offset != req_offset) and (resp_offset != 0xFFFFFFFF)): raise Exception(f'Response offset: {resp_offset} does not match request offset: {req_offset}.  Update failed.')
+        if (resp_code != 0x02): raise Exception(f'Response code: {resp_code}.  Update failed.')
 
         # Update progress callback
         current_bytes = req_offset + len(req_chunk)
-        if progress: progress('Download',total_bytes, current_bytes)
+        if progress: progress(f'{description}',total_bytes, current_bytes)
 
         # Continue to next chunk
         req_chunk_number += 1
@@ -192,7 +192,13 @@ def send_dmk_updates(cip: comms.Driver, device: types.MEDeviceInfo, dmk_file_pat
         for update in nvs.updates:
             chunk_size = send_dmk_update_preamble(cip, device.cip_identity.serial_number, update.file_size)
             with zf.open(update.data_file_name) as file:
-                send_dmk_update_file(cip, chunk_size, bytearray(file.read()), progress)
+                send_dmk_update_file(
+                    cip=cip,
+                    chunk_size=chunk_size,
+                    source_data=bytearray(file.read()),
+                    description=f'Updating {file.name}',
+                    progress=progress
+                )
                 time.sleep(update.max_timeout_seconds)
 
 def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
@@ -219,7 +225,14 @@ def process_dmk(cip: comms.Driver, device: types.MEDeviceInfo, dmk_file_path: st
         nvs=deserialize_dmk_nvs_file(config_nvs)
     )
     validate_update_size(dmk_file_path, dmk_file.nvs)
-    if not(dry_run): send_dmk_updates(cip, device, dmk_file_path, dmk_file.nvs, progress)
+    if not(dry_run):
+        send_dmk_updates(
+            cip=cip,
+            device=device,
+            dmk_file_path=dmk_file_path,
+            nvs=dmk_file.nvs,
+            progress=progress
+        )
     return dmk_file
 
 def masked_equals(mask: int, a: int, b: int) -> bool:
