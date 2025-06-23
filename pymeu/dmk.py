@@ -115,6 +115,7 @@ def send_dmk_update_preamble(cip: comms.Driver, serial_number: str, file_size: i
 
     Args:
         cip (comms.Driver): CIP driver to communicate with the terminal
+        serial_number (str): The terminal serial number as an 8-character hex string 'FFFFFFFF'
         file_size (int): File size in byte to that will be transferred
 
     Returns:
@@ -129,7 +130,8 @@ def send_dmk_update_preamble(cip: comms.Driver, serial_number: str, file_size: i
 
         | Byte Range    | Description                                         |
         |---------------|-----------------------------------------------------|
-        | Bytes 0->7    | File size in bytes                                  |
+        | Bytes 0->3    | File size in bytes                                  |
+        | Bytes 4->7    | Unknown purpose (reserved?)                         |
         | Bytes 8->11   | Unknown purpose                                     |
         | Bytes 12->15  | Target device serial number                         |
 
@@ -143,45 +145,48 @@ def send_dmk_update_preamble(cip: comms.Driver, serial_number: str, file_size: i
         | Bytes 8->11   | Unknown purpose                                     |
     """
     warn('Preamble using static UNK1 values')
-    req_unk1 = 0x00010007
+    req_unk1 = 0
+    req_unk2 = 0x00010007
     req_serial_number = int(serial_number, 16)
-    req_data = struct.pack('<QII', file_size, req_unk1, req_serial_number)
-
-    hex_string = req_data.hex()
-    formatted_hex = f"{hex_string[:16]} {hex_string[16:24]} {hex_string[24:]}"
-    print(f"Formatted Hex: {formatted_hex}")
+    req_data = struct.pack('<IIII', file_size, req_unk1, req_unk2, req_serial_number)
 
     resp = messages.dmk_preamble(cip, req_data)
     if not resp.value: raise Exception(f'Failed to write file preamble to terminal.')
     resp_unk1, resp_chunk_size, resp_unk2 = struct.unpack('<III', resp.value)
-    assert(resp_unk1 == 0)
-    assert(resp_unk2 == 0)
-    assert(resp_chunk_size > 0)
+    if (resp_unk1 != 0): raise Exception(f'Response UNK1: {resp_unk1}.  Update failed.')
+    if (resp_chunk_size <= 0): raise Exception(f'Response chunk size: {resp_chunk_size}.  Update failed.')
+    if (resp_unk2 != 0): raise Exception(f'Response UNK2: {resp_unk2}.  Update failed.')
     return resp_chunk_size
 
-def send_dmk_update_file(cip: comms.Driver, chunk_size: int, source_data: bytearray, description: str, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
+def send_dmk_update_file(cip: comms.Driver, chunk_size: int, source_data: bytearray, description: str, progress: Optional[Callable[[str, int, int], None]] = None):
     req_chunk_number = 1
     req_offset = 0
+    current_bytes = 0
     total_bytes = len(source_data)
-    while req_offset < total_bytes:
+    while current_bytes < total_bytes:
         req_chunk = source_data[req_offset:req_offset + chunk_size]
         req_header = struct.pack('<I', req_offset)
-        req_next_chunk_number = req_chunk_number + 1
         req_data = req_header + req_chunk
 
         # End of file
-        if not req_chunk: break
+        if not req_chunk: return
 
+        print(req_data)
+        print(len(req_chunk))
         resp = messages.dmk_chunk(cip, req_data)
+        print(resp.value)
 
         if not resp: raise Exception(f'Failed to write chunk {req_chunk_number} to terminal.')
         resp_offset, resp_offset_next, resp_code = struct.unpack('<IIH', resp.value)
-        if ((resp_offset != req_offset) and (resp_offset != 0xFFFFFFFF)): raise Exception(f'Response offset: {resp_offset} does not match request offset: {req_offset}.  Update failed.')
+        if (resp_offset != req_offset): raise Exception(f'Response offset: {resp_offset} does not match request offset: {req_offset}.  Update failed.')
         if (resp_code != 0x02): raise Exception(f'Response code: {resp_code}.  Update failed.')
 
         # Update progress callback
         current_bytes = req_offset + len(req_chunk)
         if progress: progress(f'{description}',total_bytes, current_bytes)
+
+        # End of file
+        if (resp_offset_next == 0xFFFFFFFF): return
 
         # Continue to next chunk
         req_chunk_number += 1
