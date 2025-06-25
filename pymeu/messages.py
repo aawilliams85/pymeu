@@ -47,7 +47,8 @@ def dmk_preamble(cip: comms.Driver, data):
         class_code=DMKClasses.FIRMWARE_FLASH,
         instance=0x01,
         attribute=None,
-        request_data=data
+        request_data=data,
+        connected=True
     )
 
 def dmk_chunk(cip: comms.Driver, data):
@@ -56,7 +57,8 @@ def dmk_chunk(cip: comms.Driver, data):
         class_code=DMKClasses.FIRMWARE_FLASH,
         instance=0x01,
         attribute=None,
-        request_data=data
+        request_data=data,
+        connected=True
     )
 
 def get_identity(cip: comms.Driver):
