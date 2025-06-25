@@ -41,9 +41,9 @@ class dmk_tests(unittest.TestCase):
                 print('')
                 self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
 
-    def test_flash_pvp7b_direct_pylogix(self):
+    def test_flash_pvp7b_direct_pycomm3(self):
         print('')
-        driver = DRIVER_PYLOGIX
+        driver = DRIVER_PYCOMM3
         device = DEVICE_PVP7B
         comms_path = device.comms_paths[0]
 
@@ -63,18 +63,6 @@ class dmk_tests(unittest.TestCase):
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
-
-    def test_dmk_unpack(self):
-        print('')
-
-#        firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
-        firmware_image_path = os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PVP7_Performance_12.104.dmk')
-        meu = MEUtility('192.168.40.23')
-        meu.flash_firmware_me(firmware_image_path, '', progress_callback)
-        #with comms.Driver('192.168.40.23', driver='pycomm3') as cip:
-        #    print(messages.get_identity(cip))
-        #    dmk.process_dmk(cip, firmware_image_path, progress_callback)
-        print('')
 
     def test_dmk_validate(self):
         print('')
@@ -99,7 +87,7 @@ class dmk_tests(unittest.TestCase):
                     f'Function: flash_firmware({firmware_image_path})\n'
             )
             print(result)
-            resp = meu.flash_firmware_me(firmware_image_path,'')
+            resp = meu.flash_firmware_dmk(firmware_image_path, False)
             for s in resp.device.log: print(s)
             print('')
             self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)

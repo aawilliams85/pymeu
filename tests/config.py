@@ -116,7 +116,8 @@ PVP7A_MER_Files = [
 
 #PanelView Plus 7B configuration
 PVP7B = 'PVP7B'
-PVP7B_Comms_Paths = ['192.168.40.23','192.168.40.104,4,192.168.1.23']
+#PVP7B_Comms_Paths = ['192.168.40.23','192.168.40.104,4,192.168.1.23']
+PVP7B_Comms_Paths = ['192.168.1.23', '192.168.1.23']
 PVP7B_Device_Paths = types.MEPaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',

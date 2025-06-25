@@ -150,7 +150,16 @@ def send_dmk_update_preamble(cip: comms.Driver, serial_number: str, file_size: i
     req_serial_number = int(serial_number, 16)
     req_data = struct.pack('<IIII', file_size, req_unk1, req_unk2, req_serial_number)
 
+    #hex_string = req_data.hex()
+    #formatted_hex = f"{hex_string[:8]} {hex_string[8:]}"
+    #print(f"Formatted Hex: {formatted_hex}")
+
     resp = messages.dmk_preamble(cip, req_data)
+
+    #hex_string = resp.value.hex()
+    #formatted_hex = f"{hex_string[:8]} {hex_string[8:16]} {hex_string[16:]}"
+    #print(f"Formatted Hex: {formatted_hex}")
+
     if not resp.value: raise Exception(f'Failed to write file preamble to terminal.')
     resp_unk1, resp_chunk_size, resp_unk2 = struct.unpack('<III', resp.value)
     if (resp_unk1 != 0): raise Exception(f'Response UNK1: {resp_unk1}.  Update failed.')
@@ -159,52 +168,65 @@ def send_dmk_update_preamble(cip: comms.Driver, serial_number: str, file_size: i
     return resp_chunk_size
 
 def send_dmk_update_file(cip: comms.Driver, chunk_size: int, source_data: bytearray, description: str, progress: Optional[Callable[[str, int, int], None]] = None):
-    req_chunk_number = 1
     req_offset = 0
     current_bytes = 0
     total_bytes = len(source_data)
+    if progress: progress(f'{description}',total_bytes, current_bytes)
     while current_bytes < total_bytes:
         req_chunk = source_data[req_offset:req_offset + chunk_size]
         req_header = struct.pack('<I', req_offset)
         req_data = req_header + req_chunk
 
-        # End of file
-        if not req_chunk: return
+        #print(len(req_data))
+        #print(f"req_offset: {req_offset}, req_chunk_len: {len(req_chunk)}, req_data_len: {len(req_data)}")
 
-        print(req_data)
-        print(len(req_chunk))
+        #hex_string = req_data.hex()
+        #formatted_hex = f"{hex_string[:8]} {hex_string[8:]}"
+        #print(f"Formatted Hex: {formatted_hex}")
+
         resp = messages.dmk_chunk(cip, req_data)
-        print(resp.value)
 
-        if not resp: raise Exception(f'Failed to write chunk {req_chunk_number} to terminal.')
+        #hex_string = resp.value.hex()
+        #formatted_hex = f"{hex_string[:8]} {hex_string[8:16]} {hex_string[16:]}"
+        #print(f"Formatted Hex: {formatted_hex}")
+
+        if not resp: raise Exception(f'Failed to write chunk to terminal.')
         resp_offset, resp_offset_next, resp_code = struct.unpack('<IIH', resp.value)
         if (resp_offset != req_offset): raise Exception(f'Response offset: {resp_offset} does not match request offset: {req_offset}.  Update failed.')
         if (resp_code != 0x02): raise Exception(f'Response code: {resp_code}.  Update failed.')
 
+        if (resp_offset_next == 0xFFFFFFFF):
+            # End of file
+            current_bytes = total_bytes
+        else:
+            # Next chunk
+            current_bytes = resp_offset_next
+
         # Update progress callback
-        current_bytes = req_offset + len(req_chunk)
         if progress: progress(f'{description}',total_bytes, current_bytes)
-
-        # End of file
-        if (resp_offset_next == 0xFFFFFFFF): return
-
+            
         # Continue to next chunk
-        req_chunk_number += 1
-        req_offset += len(req_chunk)
+        req_offset = resp_offset_next
+        #req_offset += len(req_chunk)
 
 def send_dmk_updates(cip: comms.Driver, device: types.MEDeviceInfo, dmk_file_path: str, nvs: types.DMKNvsFile, progress: Optional[Callable[[str, int, int], None]] = None):
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
         for update in nvs.updates:
-            chunk_size = send_dmk_update_preamble(cip, device.cip_identity.serial_number, update.file_size)
-            with zf.open(update.data_file_name) as file:
-                send_dmk_update_file(
-                    cip=cip,
-                    chunk_size=chunk_size,
-                    source_data=bytearray(file.read()),
-                    description=f'Updating {file.name}',
-                    progress=progress
+            with comms.Driver(comms_path=cip._original_path, driver=cip._driver) as cip2:
+                chunk_size = send_dmk_update_preamble(
+                    cip=cip2,
+                    serial_number=device.cip_identity.serial_number,
+                    file_size=update.file_size
                 )
-                time.sleep(update.max_timeout_seconds)
+                with zf.open(update.data_file_name) as file:
+                    send_dmk_update_file(
+                        cip=cip2,
+                        chunk_size=chunk_size,
+                        source_data=bytearray(file.read()),
+                        description=f'Updating {file.name}',
+                        progress=progress
+                    )
+            time.sleep(max(30, update.max_timeout_seconds))
 
 def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:

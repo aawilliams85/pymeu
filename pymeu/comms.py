@@ -54,7 +54,7 @@ class Driver:
         if self._driver == "pycomm3":
             self.cip.close()
 
-    def generic_message(self, service, class_code, instance, attribute, request_data=b''):
+    def generic_message(self, service, class_code, instance, attribute, request_data=b'', connected=False):
         if self._driver == "pylogix":
             ret = self.cip.Message(cip_service=service,
                                    cip_class=class_code,
@@ -67,7 +67,6 @@ class Driver:
                 status = ret.Status
             return Response(ret.Value[44:], None, status)
         elif self._driver == "pycomm3":
-            connected = False
             if is_routed_path(self._original_path):
                 unconnected_send = True
                 route_path = True
@@ -85,6 +84,22 @@ class Driver:
                                             )
 
     @property
+    def connection_size(self):
+        if self._driver == "pycomm3":
+            raise self.cip.connection_size
+        if self._driver == "pylogix":
+            return self.cip.ConnectionSize
+
+    @connection_size.setter
+    def connection_size(self, new_value):
+        if self._driver == "pycomm3":
+            self.cip._cfg['connection_size'] = new_value
+            self.cip.close()
+            self.cip.open()
+        if self._driver == "pylogix":
+            self.cip.ConnectionSize = new_value
+
+    @property
     def timeout(self):
         if self._driver == "pycomm3":
             return self.cip._cfg['socket_timeout']
@@ -98,7 +113,6 @@ class Driver:
             self.cip._cfg['socket_timeout'] = new_value
             self.cip.close()
             self.cip.open()
-
         if self._driver == "pylogix":
             self.cip.SocketTimeout = new_value
 
