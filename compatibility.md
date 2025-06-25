@@ -20,7 +20,7 @@ v9.00      | N/A                 | Tested            | Tested                   
 v10.00     | N/A                 | Tested            | Tested                    | N/A
 v11.00     | N/A                 | Tested<sup>1</sup>| Tested                    | N/A
 v12.00     | N/A                 | Tested            | Tested                    | Tested<sup>4</sup>
-v13.00     | N/A                 | N/A               | N/A                       | Tested<sup>4</sup>
+v13.00     | N/A                 | N/A               | N/A                       | N/A
 v14.00     | N/A                 | N/A               | Tested                    | Tested<sup>4</sup>
 v15.00     | N/A                 | N/A               | Tested<sup>3</sup>        | Tested<sup>3,4</sup>
 
