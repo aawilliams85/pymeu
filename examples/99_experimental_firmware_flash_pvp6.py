@@ -2,10 +2,8 @@
 Warning - Firmware upgrade is experimental!
 If anything fails during this process, the terminal will require a factory reset.
 
-Warning - This example is for PanelView Plus 6 only!
+Warning - This example is for PanelView Plus 6 and PanelView Plus 7 Series A terminals only!
 PanelView Plus (v5 hardware) is not compatible and will require additional development.
-PanelView Plus 7 Series A may work, but more testing is required.
-PanelView Plus 7 Series B is not compatible and will require additional development.
 
 First, use the ME Firmware Upgrade Wizard utility to create a
 Firmware Upgrade Card for the desired terminal type + version.
