@@ -203,7 +203,7 @@ def send_dmk_reset(cip: comms.Driver):
     """
     req_data = struct.pack('<B', 0x00)
     resp = messages.reset(cip, req_data)
-    if not resp.value: raise Exception(f'Failed to reset terminal.')
+    if not resp: raise Exception(f'Failed to reset terminal.')
 
 def send_dmk_updates(cip: comms.Driver, device: types.MEDeviceInfo, dmk_file_path: str, nvs: types.DMKNvsFile, progress: Optional[Callable[[str, int, int], None]] = None):
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
