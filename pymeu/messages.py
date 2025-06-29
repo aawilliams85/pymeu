@@ -41,21 +41,21 @@ def delete_transfer_instance(cip: comms.Driver, transfer_instance: int):
         attribute=None
     )
 
-def dmk_preamble(cip: comms.Driver, data):
+def dmk_preamble(cip: comms.Driver, instance: int, data):
     return cip.generic_message(
         service=DMKServices.FIRMWARE_PREAMBLE,
         class_code=DMKClasses.FIRMWARE_FLASH,
-        instance=0x01,
+        instance=instance,
         attribute=None,
         request_data=data,
         connected=True
     )
 
-def dmk_chunk(cip: comms.Driver, data):
+def dmk_chunk(cip: comms.Driver, instance: int, data):
     return cip.generic_message(
         service=DMKServices.FIRMWARE_CHUNK,
         class_code=DMKClasses.FIRMWARE_FLASH,
-        instance=0x01,
+        instance=instance,
         attribute=None,
         request_data=data,
         connected=True
@@ -67,6 +67,15 @@ def get_identity(cip: comms.Driver):
         class_code=0x01,
         instance=0x01,
         attribute=None
+    )
+
+def reset(cip: comms.Driver, data):
+    return cip.generic_message(
+        service=0x05,
+        class_code=0x01,
+        instance=0x01,
+        attribute=None,
+        request_data=data
     )
 
 def read_file_chunk(cip: comms.Driver, transfer_instance: int, data):

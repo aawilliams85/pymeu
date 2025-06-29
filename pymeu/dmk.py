@@ -10,6 +10,9 @@ from . import comms
 from . import messages
 from . import types
 
+FILE_NANE_CONTENT = 'Content.txt'
+FILE_NAME_NVS = 'RA_PVPApps_FTviewME_AllRegions.nvs'
+
 def deserialize_dmk_content_header(config: configparser) -> types.DMKContentHeader:
     section_name = 'Content'
     if section_name not in config:
@@ -107,7 +110,7 @@ def deserialize_dmk_nvs_file(config: configparser) -> types.DMKNvsFile:
         updates=updates
     )
 
-def send_dmk_update_preamble(cip: comms.Driver, serial_number: str, file_size: int) -> int:
+def send_dmk_update_preamble(cip: comms.Driver, instance: int, serial_number: str, file_size: int) -> int:
     """
     Sends a DMK CAB file preamble message to the remote terminal.
     It responds with the chunk size to use for the actual file
@@ -115,6 +118,7 @@ def send_dmk_update_preamble(cip: comms.Driver, serial_number: str, file_size: i
 
     Args:
         cip (comms.Driver): CIP driver to communicate with the terminal
+        instance (int): File instance
         serial_number (str): The terminal serial number as an 8-character hex string 'FFFFFFFF'
         file_size (int): File size in byte to that will be transferred
 
@@ -150,15 +154,7 @@ def send_dmk_update_preamble(cip: comms.Driver, serial_number: str, file_size: i
     req_serial_number = int(serial_number, 16)
     req_data = struct.pack('<IIII', file_size, req_unk1, req_unk2, req_serial_number)
 
-    #hex_string = req_data.hex()
-    #formatted_hex = f"{hex_string[:8]} {hex_string[8:]}"
-    #print(f"Formatted Hex: {formatted_hex}")
-
-    resp = messages.dmk_preamble(cip, req_data)
-
-    #hex_string = resp.value.hex()
-    #formatted_hex = f"{hex_string[:8]} {hex_string[8:16]} {hex_string[16:]}"
-    #print(f"Formatted Hex: {formatted_hex}")
+    resp = messages.dmk_preamble(cip, instance, req_data)
 
     if not resp.value: raise Exception(f'Failed to write file preamble to terminal.')
     resp_unk1, resp_chunk_size, resp_unk2 = struct.unpack('<III', resp.value)
@@ -167,7 +163,7 @@ def send_dmk_update_preamble(cip: comms.Driver, serial_number: str, file_size: i
     if (resp_unk2 != 0): raise Exception(f'Response UNK2: {resp_unk2}.  Update failed.')
     return resp_chunk_size
 
-def send_dmk_update_file(cip: comms.Driver, chunk_size: int, source_data: bytearray, description: str, progress: Optional[Callable[[str, int, int], None]] = None):
+def send_dmk_update_file(cip: comms.Driver, instance: int, chunk_size: int, source_data: bytearray, description: str, progress: Optional[Callable[[str, int, int], None]] = None):
     req_offset = 0
     current_bytes = 0
     total_bytes = len(source_data)
@@ -177,18 +173,7 @@ def send_dmk_update_file(cip: comms.Driver, chunk_size: int, source_data: bytear
         req_header = struct.pack('<I', req_offset)
         req_data = req_header + req_chunk
 
-        #print(len(req_data))
-        #print(f"req_offset: {req_offset}, req_chunk_len: {len(req_chunk)}, req_data_len: {len(req_data)}")
-
-        #hex_string = req_data.hex()
-        #formatted_hex = f"{hex_string[:8]} {hex_string[8:]}"
-        #print(f"Formatted Hex: {formatted_hex}")
-
-        resp = messages.dmk_chunk(cip, req_data)
-
-        #hex_string = resp.value.hex()
-        #formatted_hex = f"{hex_string[:8]} {hex_string[8:16]} {hex_string[16:]}"
-        #print(f"Formatted Hex: {formatted_hex}")
+        resp = messages.dmk_chunk(cip, instance, req_data)
 
         if not resp: raise Exception(f'Failed to write chunk to terminal.')
         resp_offset, resp_offset_next, resp_code = struct.unpack('<IIH', resp.value)
@@ -209,24 +194,43 @@ def send_dmk_update_file(cip: comms.Driver, chunk_size: int, source_data: bytear
         req_offset = resp_offset_next
         #req_offset += len(req_chunk)
 
+def send_dmk_reset(cip: comms.Driver):
+    """
+    Sends a reset after DMK is transferred to the rmote terminal..
+
+    Args:
+        cip (comms.Driver): CIP driver to communicate with the terminal
+    """
+    req_data = struct.pack('<B', 0x00)
+    resp = messages.reset(cip, req_data)
+    if not resp.value: raise Exception(f'Failed to reset terminal.')
+
 def send_dmk_updates(cip: comms.Driver, device: types.MEDeviceInfo, dmk_file_path: str, nvs: types.DMKNvsFile, progress: Optional[Callable[[str, int, int], None]] = None):
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
+        instance = 0
+        cip.connection_size = 1400
         for update in nvs.updates:
-            with comms.Driver(comms_path=cip._original_path, driver=cip._driver) as cip2:
-                chunk_size = send_dmk_update_preamble(
-                    cip=cip2,
-                    serial_number=device.cip_identity.serial_number,
-                    file_size=update.file_size
+            instance += 1
+            cip.forward_open()
+            cip.sequence_reset()
+
+            chunk_size = send_dmk_update_preamble(
+                cip=cip,
+                instance=instance,
+                serial_number=device.cip_identity.serial_number,
+                file_size=update.file_size
+            )
+            with zf.open(update.data_file_name) as file:
+                send_dmk_update_file(
+                    cip=cip,
+                    instance=instance,
+                    chunk_size=chunk_size,
+                    source_data=bytearray(file.read()),
+                    description=f'Updating {instance} of {len(nvs.updates)} {file.name}',
+                    progress=progress
                 )
-                with zf.open(update.data_file_name) as file:
-                    send_dmk_update_file(
-                        cip=cip2,
-                        chunk_size=chunk_size,
-                        source_data=bytearray(file.read()),
-                        description=f'Updating {file.name}',
-                        progress=progress
-                    )
-            time.sleep(max(30, update.max_timeout_seconds))
+            cip.forward_close()
+            if update.update_reset: send_dmk_reset(cip)
 
 def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
@@ -240,10 +244,10 @@ def process_dmk(cip: comms.Driver, device: types.MEDeviceInfo, dmk_file_path: st
     config_content = configparser.ConfigParser(allow_unnamed_section=True)
     config_nvs = configparser.ConfigParser(allow_unnamed_section=True, allow_no_value=True)
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
-        with zf.open('Content.txt') as file:
+        with zf.open(FILE_NANE_CONTENT) as file:
             raw_file = file.read().decode('utf-8')
             config_content.read_string(raw_file)
-        with zf.open('RA_PVPApps_FTviewME_AllRegions.nvs') as file:
+        with zf.open(FILE_NAME_NVS) as file:
             raw_file = file.read().decode('utf-8', errors='ignore')
             config_nvs.read_string(raw_file)
 
