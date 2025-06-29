@@ -2,14 +2,17 @@ from warnings import warn
 
 # see which drivers are installed on the system
 AVAILABLE_DRIVERS = []
+DRIVER_NAME_PYCOMM3 = 'pycomm3'
+DRIVER_NAME_PYLOGIX = 'pylogix'
 try:
     import pycomm3
-    AVAILABLE_DRIVERS.append("pycomm3")
+    from pycomm3.util import cycle
+    AVAILABLE_DRIVERS.append(DRIVER_NAME_PYCOMM3)
 except: pass
 
 try:
     import pylogix
-    AVAILABLE_DRIVERS.append("pylogix")
+    AVAILABLE_DRIVERS.append(DRIVER_NAME_PYLOGIX)
 except: pass
 
 class Driver:
@@ -38,10 +41,10 @@ class Driver:
             self._route_path = None
 
         # Configure driver
-        if self._driver == "pylogix":
+        if self._driver == DRIVER_NAME_PYLOGIX:
             self.cip = pylogix.PLC(self._ip_address)
             self.cip.Route = self._route_path
-        elif self._driver == "pycomm3":
+        elif self._driver == DRIVER_NAME_PYCOMM3:
             self.cip = pycomm3.CIPDriver(self._original_path)
             self.cip.open()
 
@@ -49,13 +52,13 @@ class Driver:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self._driver == "pylogix":
+        if self._driver == DRIVER_NAME_PYLOGIX:
             self.cip.Close()
-        if self._driver == "pycomm3":
+        if self._driver == DRIVER_NAME_PYCOMM3:
             self.cip.close()
 
     def generic_message(self, service, class_code, instance, attribute, request_data=b'', connected=False):
-        if self._driver == "pylogix":
+        if self._driver == DRIVER_NAME_PYLOGIX:
             ret = self.cip.Message(cip_service=service,
                                    cip_class=class_code,
                                    cip_instance=instance,
@@ -66,7 +69,7 @@ class Driver:
             else:
                 status = ret.Status
             return Response(ret.Value[44:], None, status)
-        elif self._driver == "pycomm3":
+        elif self._driver == DRIVER_NAME_PYCOMM3:
             if is_routed_path(self._original_path):
                 unconnected_send = True
                 route_path = True
@@ -85,59 +88,66 @@ class Driver:
 
     @property
     def connection_size(self):
-        if self._driver == "pycomm3":
+        if self._driver == DRIVER_NAME_PYCOMM3:
             raise self.cip.connection_size
-        if self._driver == "pylogix":
+        if self._driver == DRIVER_NAME_PYLOGIX:
             return self.cip.ConnectionSize
 
     @connection_size.setter
     def connection_size(self, new_value):
-        if self._driver == "pycomm3":
+        if self._driver == DRIVER_NAME_PYCOMM3:
             self.cip._cfg['connection_size'] = new_value
             self.cip.close()
             self.cip.open()
-        if self._driver == "pylogix":
+        if self._driver == DRIVER_NAME_PYLOGIX:
             self.cip.ConnectionSize = new_value
 
     @property
     def timeout(self):
-        if self._driver == "pycomm3":
+        if self._driver == DRIVER_NAME_PYCOMM3:
             return self.cip._cfg['socket_timeout']
-        if self._driver == "pylogix":
+        if self._driver == DRIVER_NAME_PYLOGIX:
             return self.cip.SocketTimeout
 
     @timeout.setter
     def timeout(self, new_value):
-        if self._driver == "pycomm3":
+        if self._driver == DRIVER_NAME_PYCOMM3:
             self.cip._cfg['timeout'] = new_value
             self.cip._cfg['socket_timeout'] = new_value
             self.cip.close()
             self.cip.open()
-        if self._driver == "pylogix":
+        if self._driver == DRIVER_NAME_PYLOGIX:
             self.cip.SocketTimeout = new_value
 
     def open(self):
-        if self._driver== "pycomm3":
+        if self._driver== DRIVER_NAME_PYCOMM3:
             self.cip.open()
 
     def close(self):
-        if self._driver == "pycomm3":
+        if self._driver == DRIVER_NAME_PYCOMM3:
             self.cip.close()
+
+    def sequence_reset(self):
+        if self._driver == DRIVER_NAME_PYCOMM3:
+            self.cip._sequence = cycle(65535, start=1)
+        if self._driver == DRIVER_NAME_PYLOGIX:
+            raise NotImplementedError()
+        
+    def forward_open(self):
+        if self._driver == DRIVER_NAME_PYCOMM3:
+            self.cip._forward_open()
+        if self._driver == DRIVER_NAME_PYLOGIX:
+            raise NotImplementedError()
+
+    def forward_close(self):
+        if self._driver == DRIVER_NAME_PYCOMM3:
+            self.cip._forward_close()
+        if self._driver == DRIVER_NAME_PYLOGIX:
+            raise NotImplementedError()
 
     @property
     def me_chunk_size(self):
         return get_me_chunk_size(self._original_path)
-    
-    @property
-    def dmk_chunk_size(self):
-        return get_dmk_chunk_size(self._original_path)
-
-def get_dmk_chunk_size(path: str) -> int:
-    if is_routed_path(path):
-        raise NotImplementedError()
-    else:
-        # Direct path
-        return 1350
 
 def get_me_chunk_size(path: str) -> int:
     # When files are transferred using ME services, this is the maximum
