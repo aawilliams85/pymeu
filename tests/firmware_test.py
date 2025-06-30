@@ -64,6 +64,29 @@ class dmk_tests(unittest.TestCase):
         print('')
         self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
 
+    def test_flash_pvp7b_direct_pylogix(self):
+        print('')
+        driver = DRIVER_PYLOGIX
+        device = DEVICE_PVP7B
+        comms_path = device.comms_paths[0]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware_dmk({firmware_image_path})\n'
+        )
+        print(result)
+        resp = meu.flash_firmware_dmk(
+            firmware_image_path=firmware_image_path,
+            dry_run=False,
+            progress=progress_callback)
+        for s in resp.device.log: print(s)
+        print('')
+        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+
     def test_dmk_validate(self):
         print('')
         with comms.Driver(PVP7A_Comms_Paths[0]) as cip:

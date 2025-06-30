@@ -206,6 +206,7 @@ def send_dmk_reset(cip: comms.Driver):
     if not resp: raise Exception(f'Failed to reset terminal.')
 
 def send_dmk_updates(cip: comms.Driver, device: types.MEDeviceInfo, dmk_file_path: str, nvs: types.DMKNvsFile, progress: Optional[Callable[[str, int, int], None]] = None):
+    cip.close()
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
         instance = 0
         cip.connection_size = 1400
