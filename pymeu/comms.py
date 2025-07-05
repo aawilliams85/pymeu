@@ -137,12 +137,14 @@ class Driver:
         if self._driver == DRIVER_NAME_PYCOMM3:
             self.cip._forward_open()
         if self._driver == DRIVER_NAME_PYLOGIX:
+            return
             self.cip.conn._connect(True)
 
     def forward_close(self):
         if self._driver == DRIVER_NAME_PYCOMM3:
             self.cip._forward_close()
         if self._driver == DRIVER_NAME_PYLOGIX:
+            return
             self.cip.conn._close_connection()
 
     @property
