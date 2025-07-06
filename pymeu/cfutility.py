@@ -9,35 +9,40 @@ from . import types
 from . import validation
 
 class CFUtility(object):
-    def __init__(self, comms_path: str, **kwargs):
+    def __init__(
+        self,
+        comms_path: str, 
+        driver: str = None, 
+        ignore_terminal_valid: bool = False, 
+        ignore_driver_valid: bool = False
+    ):
         """
-        Initializes an instance of the CFUtility class.
+        Initializes an instance of the MEUtility class.
 
         Args:
-            comms_path (str): The path to the communications resource (ex: 192.168.1.20).
-            **kwargs: Additional keyword arguments. 
-
-                - driver (str): Optional; can be set to pycomm3 or pylogix
-                to request specific driver for CIP messaging.
-                - ignore_terminal_valid (bool): Optional; if set to True, 
-                the instance will ignore terminal validation checks when
-                performing uploads, downloads, etc.
-                Defaults to False.
+            comms_path (str) : The path to the communications resource (ex: 192.168.1.20).
+            driver (str) : The driver name to use (ex: pycomm3 or pylogix).  If not specified, will default
+                the first one installed that can be found.
+            ignore_terminal_valid (bool) : If True, ignore terminal validation checks.
+            ignore_driver_valid (bool) : If True, ignore driver validation checks.
         """
         self.comms_path = comms_path
-        self.driver = kwargs.get('driver', None)
-        self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
+        self.driver = driver
+        self.ignore_terminal_valid = ignore_terminal_valid
+        self.ignore_driver_valid = ignore_driver_valid
 
-    def flash_firmware_dmk(self, 
-                       firmware_image_path: str, 
-                       dry_run: Optional[bool] = False,
-                       progress: Optional[Callable[[str, int, int], None]] = None
-                       ) -> types.MEResponse:
+    def flash_firmware(
+        self, 
+        firmware_image_path: str, 
+        dry_run: bool = False,
+        progress: Optional[Callable[[str, int, int], None]] = None
+    ) -> types.MEResponse:
         """
         Flashes a firmware image to the remote terminal.
 
         Args:
-            firmware_image_path (str): The local path to the firmware image file (ex: C:\\YourFolder\\\\FirmwareImage.DMK)
+            firmware_image_path (str) : The local path to the firmware image file (ex: C:\\YourFolder\\\\FirmwareImage.DMK)
+            dry_run (bool) : If True, run through pre-processing but don't actually flash the device.
             progress: Optional callback for progress indication.
         """
 

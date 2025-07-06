@@ -24,7 +24,7 @@ def progress_callback(description: str, total_bytes: int, current_bytes: int):
     print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
 
 meu = MEUtility('YourPanelViewIpAddress')
-meu.flash_firmware_me(
+meu.flash_firmware(
     firmware_image_path='C:\\YourFirmwareUpgradeCard\\upgrade\\SC.IMG',
     firmware_helper_path='C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWhelper6xX.dll',
     progress=progress_callback)

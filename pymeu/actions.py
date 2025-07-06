@@ -156,13 +156,6 @@ def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.
         
     return continue_download
 
-def flash_dmk(cip: comms.Driver, 
-              device: types.MEDeviceInfo,
-              firmware_image_path: str,
-              progress: Optional[Callable[[str, int, int], None]] = None
-              ):
-    raise Exception('Firmware flash does not support *.DMK yet.')
-
 def flash_firmware_upgrade_card(cip: comms.Driver, 
                                 device: types.MEDeviceInfo, 
                                 firmware_image_path: str,
