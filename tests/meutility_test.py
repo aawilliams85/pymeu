@@ -608,30 +608,6 @@ class fuw_tests(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_flash_pvp6(self):
-        print('')
-        for (device, driver, comms_path) in test_combinations:
-            if (device.name != PVP6): continue #Only flash PVP6 in this test
-
-            meu = MEUtility(comms_path, driver=driver)
-            firmware_image_path = device.local_firmware_image_paths[0]   
-            firmware_helper_path = device.local_firmware_helper_path         
-            result = (
-                    f'Device: {device.name}\n'
-                    f'Driver: {driver}\n'
-                    f'Path: {comms_path}\n'
-                    f'Function: flash_firmware({firmware_image_path})\n'
-            )
-            print(result)
-            resp = meu.flash_firmware_me(
-                firmware_image_path=firmware_image_path,
-                firmware_helper_path=firmware_helper_path,
-                progress=progress_callback)
-            for s in resp.device.log: print(s)
-            print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
-            time.sleep(device.boot_time_sec)
-
     def test_flash_pvp6_direct_pycomm3(self):
         print('')
         driver = DRIVER_PYCOMM3
