@@ -359,7 +359,7 @@ class download_tests(unittest.TestCase):
                     f'Function: download({download_file_path}, overwrite=True)\n'
             )
             print(result)
-            resp = meu.download(download_file_path, progress_callback, overwrite=True, run_at_startup=False)
+            resp = meu.download(download_file_path, overwrite=True, run_at_startup=False, progress=progress_callback)
             for s in resp.device.log: print(s)
             print('')
             self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
@@ -532,7 +532,7 @@ class upload_tests(unittest.TestCase):
                     f'Function: upload({upload_file_path}, overwrite=True)\n'
             )
             print(result)
-            resp = meu.upload(upload_file_path, progress_callback, overwrite=True)
+            resp = meu.upload(upload_file_path, overwrite=True, progress=progress_callback)
             for s in resp.device.log: print(s)
             print('')
             self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
@@ -568,7 +568,7 @@ class upload_tests(unittest.TestCase):
                     f'Function: upload_all({UPLOAD_FOLDER_PATH}, overwrite=True)\n'
             )
             print(result)
-            resp = meu.upload_all(upload_folder_path, progress_callback, overwrite=True)
+            resp = meu.upload_all(upload_folder_path, overwrite=True, progress=progress_callback)
             for s in resp.device.log: print(s)
             print('')
             self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
