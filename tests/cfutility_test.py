@@ -46,7 +46,7 @@ class dmk_tests(unittest.TestCase):
         device = DEVICE_PVP7B
         comms_path = device.comms_paths[0]
 
-        cfu = CFUtility(comms_path, driver=driver)
+        cfu = CFUtility(comms_path, driver=driver, ignore_driver_valid=True)
         firmware_image_path = device.local_firmware_image_paths[0]   
         result = (
                 f'Device: {device.name}\n'
