@@ -5,13 +5,12 @@ AVAILABLE_DRIVERS = []
 DRIVER_NAME_PYCOMM3 = 'pycomm3'
 DRIVER_NAME_PYLOGIX = 'pylogix'
 try:
-    import pycomm3
-    from pycomm3.util import cycle
+    from pycomm3 import CIPDriver, const, util
     AVAILABLE_DRIVERS.append(DRIVER_NAME_PYCOMM3)
 except: pass
 
 try:
-    import pylogix
+    from pylogix import PLC
     AVAILABLE_DRIVERS.append(DRIVER_NAME_PYLOGIX)
 except: pass
 
@@ -42,10 +41,11 @@ class Driver:
 
         # Configure driver
         if self._driver == DRIVER_NAME_PYLOGIX:
-            self.cip = pylogix.PLC(self._ip_address)
+            self.cip = PLC(self._ip_address)
             self.cip.Route = self._route_path
         elif self._driver == DRIVER_NAME_PYCOMM3:
-            self.cip = pycomm3.CIPDriver(self._original_path)
+            self.cip = CIPDriver(self._original_path)
+            self._const_timeout_ticks = const.TIMEOUT_TICKS # Used to check for unconnected send firmware upgrade
             self.cip.open()
 
     def __enter__(self):
@@ -129,7 +129,7 @@ class Driver:
 
     def sequence_reset(self):
         if self._driver == DRIVER_NAME_PYCOMM3:
-            self.cip._sequence = cycle(65535, start=1)
+            self.cip._sequence = util.cycle(65535, start=1)
         if self._driver == DRIVER_NAME_PYLOGIX:
             self.cip.conn._sequence_counter = 1
         

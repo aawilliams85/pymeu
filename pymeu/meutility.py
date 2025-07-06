@@ -11,24 +11,26 @@ from . import types
 from . import validation
 
 class MEUtility(object):
-    def __init__(self, comms_path: str, **kwargs):
+    def __init__(self,
+            comms_path: str, 
+            driver=None, 
+            ignore_terminal_valid=False, 
+            ignore_driver_valid=False
+    ):
         """
         Initializes an instance of the MEUtility class.
 
         Args:
             comms_path (str): The path to the communications resource (ex: 192.168.1.20).
-            **kwargs: Additional keyword arguments. 
-
-                - driver (str): Optional; can be set to pycomm3 or pylogix
-                to request specific driver for CIP messaging.
-                - ignore_terminal_valid (bool): Optional; if set to True, 
-                the instance will ignore terminal validation checks when
-                performing uploads, downloads, etc.
-                Defaults to False.
+            driver (str): The driver name to use (ex: pycomm3 or pylogix).  If not specified, will default
+                the first one installed that can be found.
+            ignore_terminal_valid (bool): If True, ignore terminal validation checks.
+            ignore_driver_valid (bool): If True, ignore driver validation checks.
         """
         self.comms_path = comms_path
-        self.driver = kwargs.get('driver', None)
-        self.ignore_terminal_valid = kwargs.get('ignore_terminal_valid', False)
+        self.driver = driver
+        self.ignore_terminal_valid = ignore_terminal_valid
+        self.ignore_driver_valid = ignore_driver_valid
 
     def download(self, file_path: str, progress: Optional[Callable[[str, int, int], None]] = None, **kwargs) -> types.MEResponse:
         """
@@ -122,6 +124,18 @@ class MEUtility(object):
                 firmware_helper_path = os.path.join(base_path, firmware_helper_path)
 
         with comms.Driver(self.comms_path, self.driver) as cip:
+            if (self.driver == comms.DRIVER_NAME_PYCOMM3) and comms.is_routed_path(self.comms_path):
+                if (cip._const_timeout_ticks != b'\xFF'):
+                    if self.ignore_driver_valid:
+                        warn('Drive pycomm3 specified with bad TIMEOUT_TICKS value, but driver validation is set to IGNORE.')
+                    else:
+                        resp = f"""
+                            Cannot flash firmware to routed path using pycomm3 due to TIMEOUT_TICKS default value {cip._const_timeout_ticks}.
+                            This will cause failures during the firmware upgrade process and require a factory reset to recover.
+                            Please change the value in pycomm3.const.TIMEOUT_TICKS to b'\\xFF' to proceed, or use pylogix instead.
+                        """
+                        raise NotImplementedError(resp)
+
             # Set socket timeout first.
             # The terminal will pause at certain points and delay acknowledging messages.
             # Without this, the process will fail and the terminal will require a factory reset.
