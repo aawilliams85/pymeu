@@ -139,7 +139,6 @@ def get_cip_identity(cip: comms.Driver) -> types.CIPIdentity:
     try:
         resp2 = messages.get_hardware_rev(cip)
         hardware_rev = struct.unpack('<H', resp2.value)[0]
-        print(hardware_rev)
     except:
         hardware_rev = None
 

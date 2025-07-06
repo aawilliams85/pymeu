@@ -17,28 +17,6 @@ class dmk_tests(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_flash_pvp7b_dryrun(self):
-        print('')
-        for (device, driver, comms_path) in test_combinations:
-            if (device != DEVICE_PVP7B): continue # Only check PVP7B in this test
-
-            for firmware_image_path in device.local_firmware_image_paths:
-                cfu = CFUtility(comms_path, driver=driver)
-                result = (
-                        f'Device: {device.name}\n'
-                        f'Driver: {driver}\n'
-                        f'Path: {comms_path}\n'
-                        f'Function: flash_firmware_dmk({firmware_image_path})\n'
-                )
-                print(result)
-                resp = cfu.flash_firmware_dmk(
-                    firmware_image_path=firmware_image_path,
-                    dry_run=True,
-                    progress=progress_callback)
-                for s in resp.device.log: print(s)
-                print('')
-                self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
-
     def test_flash_pvp7b_direct_pycomm3(self):
         print('')
         driver = DRIVER_PYCOMM3
@@ -54,7 +32,7 @@ class dmk_tests(unittest.TestCase):
                 f'Function: flash_firmware_dmk({firmware_image_path})\n'
         )
         print(result)
-        resp = cfu.flash_firmware_dmk(
+        resp = cfu.flash_firmware(
             firmware_image_path=firmware_image_path,
             dry_run=False,
             progress=progress_callback)
@@ -77,7 +55,7 @@ class dmk_tests(unittest.TestCase):
                 f'Function: flash_firmware_dmk({firmware_image_path})\n'
         )
         print(result)
-        resp = cfu.flash_firmware_dmk(
+        resp = cfu.flash_firmware(
             firmware_image_path=firmware_image_path,
             dry_run=False,
             progress=progress_callback)

@@ -47,6 +47,17 @@ class CFUtility(object):
         """
 
         with comms.Driver(self.comms_path, self.driver) as cip:
+            if (self.driver == comms.DRIVER_NAME_PYLOGIX):
+                if self.ignore_driver_valid:
+                    warn('Drive pylogix specified but driver validation is set to IGNORE.')
+                else:
+                    resp = f"""
+                        Cannot flash firmware with pylogix yet, work still required on forward open/forward close.
+                        Please use pycomm3 instead for now.
+                    """
+                    raise NotImplementedError(resp)
+
+
             # Set socket timeout first.
             # The terminal will pause at certain points and delay acknowledging messages.
             # Without this, the process will fail and the terminal will require a factory reset.
