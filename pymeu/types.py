@@ -4,6 +4,7 @@ from enum import StrEnum
 
 @dataclass
 class CIPIdentity:
+    hardware_rev: int
     major_rev: int
     minor_rev: int
     product_code: int

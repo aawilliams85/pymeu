@@ -174,7 +174,7 @@ DEVICES = [
     DEVICE_PVP5,
     DEVICE_PVP6,
     DEVICE_PVP7A,
-    #DEVICE_PVP7B    
+    DEVICE_PVP7B    
 ]
 
 DRIVER_PYCOMM3 = 'pycomm3'
