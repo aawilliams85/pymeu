@@ -1,4 +1,3 @@
-
 from enum import IntEnum
 from . import comms
 
@@ -67,6 +66,14 @@ def get_identity(cip: comms.Driver):
         class_code=0x01,
         instance=0x01,
         attribute=None
+    )
+
+def get_hardware_rev(cip: comms.Driver):
+    return cip.generic_message(
+        service=MEServices.GET_ATTRIBUTE_SINGLE,
+        class_code=0x01,
+        instance=0x01,
+        attribute=101,
     )
 
 def reset(cip: comms.Driver, data):
