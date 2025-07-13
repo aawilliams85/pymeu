@@ -66,6 +66,10 @@ PVP5_Device_Paths = types.MEPaths(
     f'\\Storage Card\\{RUNTIME_PATH}',
     '\\Storage Card\\FUWhelper.dll'
 )
+PVP5_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v15', 'FUWhelper4xX.dll')
+PVP5_Local_Firmware_Image_Paths = [
+    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP5', 'ME_PVP4xX_5.10.16.09')
+]
 PVP5_MER_Files = [
     'Test_v5_A.mer',
     'Test_v5_B.mer',
@@ -140,8 +144,8 @@ DEVICE_PVP5 = METestDevice(
     PVP5_Device_Paths, 
     75, 
     PVP5_MER_Files,
-    '',
-    [])
+    PVP5_Local_Firmware_Helper_Path,
+    PVP5_Local_Firmware_Image_Paths)
 
 DEVICE_PVP6 = METestDevice(
     PVP6, 
