@@ -244,8 +244,32 @@ def flash_firmware_pvp5(
     progress: Optional[Callable[[str, int, int], None]] = None
 ):
     # Prepare local files
-    firmware_image_files = list[types.MEFile]
-    firmware_image_path
+    firmare_cover_path = 'FUWcover4xX.exe' ###
+    firmware_cover_file = types.MEFile(
+        name='FUWCover.exe',
+        overwrite_requested=True,
+        overwrite_required=True,
+        path=firmare_cover_path
+    )
+
+    firmware_image_files = []
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'upgrade.inf'), f'\\Storage Card\\upgrade\\upgrade.inf'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'autorun.exe'), f'\\Storage Card\\upgrade\\autorun.exe'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'MFCCE400.dll'), f'\\Storage Card\\upgrade\\MFCCE400.dll'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'), f'\\Storage Card\\upgrade\\FUWcleanup.exe']) # Questionable
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'InstallME.exe'), f'\\Storage Card\\upgrade\\InstallME.exe'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'AutoApp.bat'), f'\\Storage Card\\upgrade\\AutoApp.bat'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'locOSup.exe'), f'\\Windows\\upgrade\\locOSup.exe'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'ebcbootrom.bin'), f'\\Windows\\upgrade\\ebcbootrom.bin'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'system.bin'), f'\\Windows\\upgrade\\system.bin'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'), f'\\Windows\\upgrade\\UpgradeOptions.exe'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'valOSpart.exe'), f'\\Windows\\upgrade\\valOSpart.exe'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'GetFreeRAM.exe'), f'\\Windows\\upgrade\\GetFreeRAM.exe'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'RFOn.bat'), f'\\Storage Card\\upgrade\\RFOn.bat'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'FUWInhibitor.exe'), f'\\Storage Card\\upgrade\\FUWInhibitor.exe'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'MEFileList.inf'), f'\\Storage Card\\upgrade\\MEFileList.inf'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'FTVP.Cab'), f'\\Storage Card\\upgrade\\FTVP.Cab'])
+    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'WebServer.Cab'), f'\\Storage Card\\upgrade\\WebServer.Cab'])
 
     # Prepare terminal for firmware upgrade card
     try:
