@@ -112,6 +112,7 @@ class MEUtility(object):
         self, 
         firmware_image_path: str, 
         firmware_helper_path: str, 
+        dry_run: bool = False,
         progress: Optional[Callable[[str, int, int], None]] = None
     ) -> types.MEResponse:
         """
@@ -156,11 +157,12 @@ class MEUtility(object):
 
             # Perform firmware flash to terminal
             try:
-                resp = actions.flash_firmware_upgrade_card(
+                resp = actions.flash_firmware(
                     cip=cip,
                     device=self.device,
                     firmware_image_path=firmware_image_path,
                     firmware_helper_path=firmware_helper_path,
+                    dry_run=dry_run,
                     progress=progress)
 
                 if not(resp):

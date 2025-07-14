@@ -624,9 +624,10 @@ class fuw_tests(unittest.TestCase):
                 f'Function: flash_firmware({firmware_image_path})\n'
         )
         print(result)
-        resp = meu.flash_firmware_me(
+        resp = meu.flash_firmware(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
+            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -648,9 +649,10 @@ class fuw_tests(unittest.TestCase):
                 f'Function: flash_firmware({firmware_image_path})\n'
         )
         print(result)
-        resp = meu.flash_firmware_me(
+        resp = meu.flash_firmware(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
+            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -672,9 +674,10 @@ class fuw_tests(unittest.TestCase):
                 f'Function: flash_firmware({firmware_image_path})\n'
         )
         print(result)
-        resp = meu.flash_firmware_me(
+        resp = meu.flash_firmware(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
+            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -696,9 +699,10 @@ class fuw_tests(unittest.TestCase):
                 f'Function: flash_firmware({firmware_image_path})\n'
         )
         print(result)
-        resp = meu.flash_firmware_me(
+        resp = meu.flash_firmware(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
+            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -720,9 +724,10 @@ class fuw_tests(unittest.TestCase):
                 f'Function: flash_firmware({firmware_image_path})\n'
         )
         print(result)
-        resp = meu.flash_firmware_me(
+        resp = meu.flash_firmware(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
+            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -744,9 +749,10 @@ class fuw_tests(unittest.TestCase):
                 f'Function: flash_firmware({firmware_image_path})\n'
         )
         print(result)
-        resp = meu.flash_firmware_me(
+        resp = meu.flash_firmware(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
+            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -768,9 +774,10 @@ class fuw_tests(unittest.TestCase):
                 f'Function: flash_firmware({firmware_image_path})\n'
         )
         print(result)
-        resp = meu.flash_firmware_me(
+        resp = meu.flash_firmware(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
+            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -792,9 +799,10 @@ class fuw_tests(unittest.TestCase):
                 f'Function: flash_firmware({firmware_image_path})\n'
         )
         print(result)
-        resp = meu.flash_firmware_me(
+        resp = meu.flash_firmware(
             firmware_image_path=firmware_image_path,
             firmware_helper_path=firmware_helper_path,
+            dry_run=False,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -809,7 +817,7 @@ class fuwhelper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             with comms.Driver(comms_path, driver=driver) as cip:
                 device2 = validation.get_terminal_info(cip)
-                if device.local_firmware_helper_path:
+                if device.local_firmware_helper_path is not None and device.transfer_firmware_helper:
                     fuw_helper_file = types.MEFile('FUWhelper.dll',
                                                 True,
                                                 True,
@@ -819,6 +827,7 @@ class fuwhelper_tests(unittest.TestCase):
     def test_get_process_running(self):
         print('')
         results = []
+        print('1')
         for (device, driver, comms_path) in test_combinations:
             with comms.Driver(comms_path, driver=driver) as cip:
                 if device.local_firmware_helper_path:
@@ -834,6 +843,60 @@ class fuwhelper_tests(unittest.TestCase):
                     self.assertEqual(value, True)
                     results.append(value)
         self.assertTrue(all(x == results[0] for x in results))
+
+    def test_get_free_space(self):
+        print('')
+        results = []
+        for (device, driver, comms_path) in test_combinations:
+            if device.name != PVP5: continue # Only used in PVP5 firmware upgrade wizard
+            with comms.Driver(comms_path, driver=driver) as cip:
+                value = terminal.fuwhelper.get_free_space(cip, device.device_paths, '\\Storage Card')
+                result = (
+                    f'Device: {device.name}\n' 
+                    f'Driver: {driver}\n' 
+                    f'Path: {comms_path}\n'
+                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.GET_FREE_SPACE}\n'
+                    f'Value: {value}\n'
+                )
+                print(result)
+                self.assertGreater(value, 0)
+                results.append(value)
+
+    def test_get_os_rev(self):
+        print('')
+        results = []
+        for (device, driver, comms_path) in test_combinations:
+            if device.name != PVP5: continue # Only used in PVP5 firmware upgrade wizard
+            with comms.Driver(comms_path, driver=driver) as cip:
+                value = terminal.fuwhelper.get_os_rev(cip, device.device_paths)
+                result = (
+                    f'Device: {device.name}\n' 
+                    f'Driver: {driver}\n' 
+                    f'Path: {comms_path}\n'
+                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.GET_TERMINAL_OS_REV}\n'
+                    f'Value: {value}\n'
+                )
+                print(result)
+                self.assertNotEqual(value, None)
+                results.append(value)
+
+    def test_get_partition_size(self):
+        print('')
+        results = []
+        for (device, driver, comms_path) in test_combinations:
+            if device.name != PVP5: continue # Only used in PVP5 firmware upgrade wizard
+            with comms.Driver(comms_path, driver=driver) as cip:
+                value = terminal.fuwhelper.get_partition_size(cip, device.device_paths)
+                result = (
+                    f'Device: {device.name}\n' 
+                    f'Driver: {driver}\n' 
+                    f'Path: {comms_path}\n'
+                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.GET_TERMINAL_PARTITION_SIZE}\n'
+                    f'Value: {value}\n'
+                )
+                print(result)
+                self.assertGreater(value, 0)
+                results.append(value)
 
     def test_get_process_running_nonexistent(self):
         print('')
@@ -852,6 +915,87 @@ class fuwhelper_tests(unittest.TestCase):
                     print(result)
                     self.assertEqual(value, False)
                     results.append(value)
+        self.assertTrue(all(x == results[0] for x in results))
+
+    def test_get_total_space(self):
+        print('')
+        results = []
+        for (device, driver, comms_path) in test_combinations:
+            if device.name != PVP5: continue # Only used in PVP5 firmware upgrade wizard
+            with comms.Driver(comms_path, driver=driver) as cip:
+                value = terminal.fuwhelper.get_total_space(cip, device.device_paths, '\\Storage Card')
+                result = (
+                    f'Device: {device.name}\n' 
+                    f'Driver: {driver}\n' 
+                    f'Path: {comms_path}\n'
+                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.GET_TOTAL_SPACE}\n'
+                    f'Value: {value}\n'
+                )
+                print(result)
+                self.assertGreater(value, 0)
+                results.append(value)
+
+    def test_set_me_corrupt_screen(self):
+        print('')
+        results = []
+        for (device, driver, comms_path) in test_combinations:
+            if device.name != PVP5: continue # Only used in PVP5 firmware upgrade wizard
+            with comms.Driver(comms_path, driver=driver) as cip:
+                cip.timeout = 255.0
+                value = terminal.fuwhelper.set_me_corrupt_screen(cip, device.device_paths, False)
+                result = (
+                    f'Device: {device.name}\n' 
+                    f'Driver: {driver}\n' 
+                    f'Path: {comms_path}\n'
+                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.DISABLE_ME_CORRUPT_SCREEN}\n'
+                    f'Value: {value}\n'
+                )
+                print(result)
+                self.assertEqual(value, True)
+                results.append(value)
+
+                value = terminal.fuwhelper.set_me_corrupt_screen(cip, device.device_paths, True)
+                result = (
+                    f'Device: {device.name}\n' 
+                    f'Driver: {driver}\n' 
+                    f'Path: {comms_path}\n'
+                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.ENABLE_ME_CORRUPT_SCREEN}\n'
+                    f'Value: {value}\n'
+                )
+                print(result)
+                self.assertEqual(value, True)
+                results.append(value)
+        self.assertTrue(all(x == results[0] for x in results))
+
+    def test_set_screensaver(self):
+        print('')
+        results = []
+        for (device, driver, comms_path) in test_combinations:
+            if device.name != PVP5: continue # Only used in PVP5 firmware upgrade wizard
+            with comms.Driver(comms_path, driver=driver) as cip:
+                value = terminal.fuwhelper.set_screensaver(cip, device.device_paths, False)
+                result = (
+                    f'Device: {device.name}\n' 
+                    f'Driver: {driver}\n' 
+                    f'Path: {comms_path}\n'
+                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.DISABLE_SCREENSAVER}\n'
+                    f'Value: {value}\n'
+                )
+                print(result)
+                self.assertEqual(value, True)
+                results.append(value)
+
+                value = terminal.fuwhelper.set_screensaver(cip, device.device_paths, True)
+                result = (
+                    f'Device: {device.name}\n' 
+                    f'Driver: {driver}\n' 
+                    f'Path: {comms_path}\n'
+                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.ENABLE_SCREENSAVER}\n'
+                    f'Value: {value}\n'
+                )
+                print(result)
+                self.assertEqual(value, True)
+                results.append(value)
         self.assertTrue(all(x == results[0] for x in results))
 
     def test_stop_me(self):

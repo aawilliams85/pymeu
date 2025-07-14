@@ -9,7 +9,7 @@ from .. import types
 CREATE_DIR_SUCCESS = 0
 
 # Known functions available from FuwHelper.
-class FuwHelperFunctions(StrEnum):    
+class FuwHelperFunctions(StrEnum):
     CLEAR_FOLDER = 'ClearRemDirectory', # Args: {Folder Path}
     CREATE_FOLDER = 'CreateRemDirectory' # Args: {Folder Path}, Returns: Static value if successful [Further investigation needed]
     DELETE_FILE = 'DeleteRemFile' # Args: {File Path}, Returns: ???
@@ -29,8 +29,14 @@ class FuwHelperFunctions(StrEnum):
     STOP_PROCESS = 'TerminateEXE' # Args: {Binary Name}
     STOP_PROCESS_ME = 'SafeTerminateME' # Args: Null, Resp Code: 0 successful, 2 failed/wasn't running, Resp Data: Null
 
-def create_folder(cip: comms.Driver, paths: types.MEPaths, dir: str) -> bool:
-    req_args = [paths.fuwhelper_file, FuwHelperFunctions.CREATE_FOLDER, dir]
+def clear_folder(cip: comms.Driver, paths: types.MEPaths, folder_path: str) -> bool:
+    req_args = [paths.fuwhelper_file, FuwHelperFunctions.CLEAR_FOLDER, folder_path]
+    resp_code, resp_data = helper.run_function(cip, req_args)
+    if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
+    return True
+
+def create_folder(cip: comms.Driver, paths: types.MEPaths, folder_path: str) -> bool:
+    req_args = [paths.fuwhelper_file, FuwHelperFunctions.CREATE_FOLDER, folder_path]
     resp_code, resp_data = helper.run_function(cip, req_args)
     if (resp_code != CREATE_DIR_SUCCESS): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
     return True
@@ -67,26 +73,26 @@ def get_folder_exists(cip: comms.Driver, paths: types.MEPaths, folder_path: str)
 
 def get_free_space(cip: comms.Driver, paths: types.MEPaths, folder_path: str) -> int:
     if not(get_folder_exists(cip, paths, folder_path)): raise FileNotFoundError(f'Folder {folder_path} does not exist on remote terminal.')
-    req_args = [paths.helper_file, FuwHelperFunctions.GET_FREE_SPACE, folder_path]
+    req_args = [paths.fuwhelper_file, FuwHelperFunctions.GET_FREE_SPACE, folder_path]
     resp_code, resp_data = helper.run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
     return int(resp_data)
 
 def get_os_rev(cip: comms.Driver, paths: types.MEPaths) -> str:
-    req_args = [paths.helper_file, FuwHelperFunctions.GET_TERMINAL_OS_REV, '']
+    req_args = [paths.fuwhelper_file, FuwHelperFunctions.GET_TERMINAL_OS_REV, '']
     resp_code, resp_data = helper.run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
     return str(resp_data)
 
 def get_partition_size(cip: comms.Driver, paths: types.MEPaths) -> int:
-    req_args = [paths.helper_file, FuwHelperFunctions.GET_TERMINAL_PARTITION_SIZE, '']
+    req_args = [paths.fuwhelper_file, FuwHelperFunctions.GET_TERMINAL_PARTITION_SIZE, '']
     resp_code, resp_data = helper.run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
     return int(resp_data)
 
 def get_total_space(cip: comms.Driver, paths: types.MEPaths, folder_path: str) -> int:
     if not(get_folder_exists(cip, paths, folder_path)): raise FileNotFoundError(f'Folder {folder_path} does not exist on remote terminal.')
-    req_args = [paths.helper_file, FuwHelperFunctions.GET_TOTAL_SPACE, folder_path]
+    req_args = [paths.fuwhelper_file, FuwHelperFunctions.GET_TOTAL_SPACE, folder_path]
     resp_code, resp_data = helper.run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
     return int(resp_data)

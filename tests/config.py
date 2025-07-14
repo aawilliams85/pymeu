@@ -12,6 +12,7 @@ class METestDevice:
     mer_files: list[str]
     local_firmware_helper_path: str
     local_firmware_image_paths: list[str]
+    transfer_firmware_helper: bool
 
 def generate_test_combinations(devices: list[METestDevice], drivers: list[str]) -> list[tuple[METestDevice,str,str]]:
     """
@@ -66,9 +67,9 @@ PVP5_Device_Paths = types.MEPaths(
     f'\\Storage Card\\{RUNTIME_PATH}',
     '\\Storage Card\\FUWhelper.dll'
 )
-PVP5_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v15', 'FUWhelper4xX.dll')
+PVP5_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v11', 'FUWhelper4xX.dll')
 PVP5_Local_Firmware_Image_Paths = [
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP5', 'ME_PVP4xX_5.10.16.09')
+    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v5', 'ME_PVP4xX_5.10.16.09')
 ]
 PVP5_MER_Files = [
     'Test_v5_A.mer',
@@ -88,8 +89,8 @@ PVP6_Device_Paths = types.MEPaths(
 )
 PVP6_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
 PVP6_Local_Firmware_Image_Paths = [
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP6', 'ME_PVP6xX_11.00-20190915', 'upgrade', 'SC.IMG'),
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP6', 'ME_PVP6xX_12.00-20200922', 'upgrade', 'SC.IMG'),
+    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v6', 'ME_PVP6xX_11.00-20190915', 'upgrade', 'SC.IMG'),
+    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v6', 'ME_PVP6xX_12.00-20200922', 'upgrade', 'SC.IMG'),
 ]
 PVP6_MER_Files = [
     'Test_v11_A.mer',
@@ -109,8 +110,8 @@ PVP7A_Device_Paths = types.MEPaths(
 )
 PVP7A_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
 PVP7A_Local_Firmware_Image_Paths = [
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP7A', 'ME_PVP7xX_11.00-20190916', 'upgrade', 'SC.IMG'),
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', 'PVP7A', 'ME_PVP7xX_15.00-20240926', 'upgrade', 'SC.IMG'),
+    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v7A', 'ME_PVP7xX_11.00-20190916', 'upgrade', 'SC.IMG'),
+    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v7A', 'ME_PVP7xX_15.00-20240926', 'upgrade', 'SC.IMG'),
 ]
 PVP7A_MER_Files = [
     'Test_v11_A.mer',
@@ -120,8 +121,7 @@ PVP7A_MER_Files = [
 
 #PanelView Plus 7B configuration
 PVP7B = 'PVP7B'
-#PVP7B_Comms_Paths = ['192.168.40.23','192.168.40.11,bp,3,enet,192.168.1.23']
-PVP7B_Comms_Paths = ['192.168.1.23', '192.168.1.23']
+PVP7B_Comms_Paths = ['192.168.40.23','192.168.40.11,bp,3,enet,192.168.1.23']
 PVP7B_Device_Paths = types.MEPaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
@@ -130,7 +130,7 @@ PVP7B_Device_Paths = types.MEPaths(
     '\\Storage Card\\FUWhelper.dll'
 )
 PVP7B_Local_Firmware_Image_Paths = [
-    os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', 'PVP7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
+    os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', '2711P_PanelViewPlus_v7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
 ]
 PVP7B_MER_Files = [
     'Test_v11_A.mer',
@@ -139,45 +139,53 @@ PVP7B_MER_Files = [
 ]
 
 DEVICE_PVP5 = METestDevice(
-    PVP5, 
-    PVP5_Comms_Paths,
-    PVP5_Device_Paths, 
-    75, 
-    PVP5_MER_Files,
-    PVP5_Local_Firmware_Helper_Path,
-    PVP5_Local_Firmware_Image_Paths)
+    name=PVP5, 
+    comms_paths=PVP5_Comms_Paths,
+    device_paths=PVP5_Device_Paths, 
+    boot_time_sec=75, 
+    mer_files=PVP5_MER_Files,
+    local_firmware_helper_path=PVP5_Local_Firmware_Helper_Path,
+    local_firmware_image_paths=PVP5_Local_Firmware_Image_Paths,
+    transfer_firmware_helper=True
+)
 
 DEVICE_PVP6 = METestDevice(
-    PVP6, 
-    PVP6_Comms_Paths,
-    PVP6_Device_Paths, 
-    75, 
-    PVP6_MER_Files,
-    PVP6_Local_Firmware_Helper_Path,
-    PVP6_Local_Firmware_Image_Paths)
+    name=PVP6, 
+    comms_paths=PVP6_Comms_Paths,
+    device_paths=PVP6_Device_Paths, 
+    boot_time_sec=75, 
+    mer_files=PVP6_MER_Files,
+    local_firmware_helper_path=PVP6_Local_Firmware_Helper_Path,
+    local_firmware_image_paths=PVP6_Local_Firmware_Image_Paths,
+    transfer_firmware_helper=True
+)
 
 DEVICE_PVP7A = METestDevice(
-    PVP7A, 
-    PVP7A_Comms_Paths,
-    PVP7A_Device_Paths, 
-    75, 
-    PVP7A_MER_Files,
-    PVP7A_Local_Firmware_Helper_Path,
-    PVP7A_Local_Firmware_Image_Paths)
+    name=PVP7A, 
+    comms_paths=PVP7A_Comms_Paths,
+    device_paths=PVP7A_Device_Paths, 
+    boot_time_sec=75, 
+    mer_files=PVP7A_MER_Files,
+    local_firmware_helper_path=PVP7A_Local_Firmware_Helper_Path,
+    local_firmware_image_paths=PVP7A_Local_Firmware_Image_Paths,
+    transfer_firmware_helper=False
+)
 
 DEVICE_PVP7B = METestDevice(
-    PVP7B, 
-    PVP7B_Comms_Paths,
-    PVP7B_Device_Paths, 
-    75, 
-    PVP7B_MER_Files,
-    '',
-    PVP7B_Local_Firmware_Image_Paths)
+    name=PVP7B, 
+    comms_paths=PVP7B_Comms_Paths,
+    device_paths=PVP7B_Device_Paths, 
+    boot_time_sec=75, 
+    mer_files=PVP7B_MER_Files,
+    local_firmware_helper_path='',
+    local_firmware_image_paths=PVP7B_Local_Firmware_Image_Paths,
+    transfer_firmware_helper=False
+)
 
 DEVICES = [
     DEVICE_PVP5,
-    DEVICE_PVP6,
-    DEVICE_PVP7A,
+    #DEVICE_PVP6,
+    #DEVICE_PVP7A,
     #DEVICE_PVP7B    
 ]
 

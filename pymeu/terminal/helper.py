@@ -20,7 +20,7 @@ class HelperFunctions(StrEnum):
     CREATE_ME_SHORTCUT = 'CreateRemMEStartupShortcut' # Args: {Folder Path}:{Filename.MER}: /r /delay /o /d, Returns: 1 if startup shortcut is created
     DELETE_FILE = 'DeleteRemFile' # Args: {File Path}, Returns: ???
     #DELETE_FOLDER = 'DeleteRemDirectory' # Untested
-    #GET_EXE_RUNNING = 'IsExeRunning' # Untested
+    #GET_PROCESS_RUNNING = 'IsExeRunning' # Untested
     GET_FILE_EXISTS = 'FileExists' # Args: {File Path}, Returns: 1 if {File Path} exists
     GET_FILE_SIZE = 'FileSize' # Args: {File Path}, Returns: File size in bytes
     #GET_FILE_VERSION = 'GetFileVersion' # Untested

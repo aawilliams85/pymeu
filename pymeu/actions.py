@@ -11,7 +11,13 @@ from .terminal import registry
 from . import comms
 from . import types
 
-def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, redact_log: bool, silent_mode: bool):
+def create_log(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo, 
+    print_log: bool, 
+    redact_log: bool, 
+    silent_mode: bool
+):
     if print_log: print(f'Terminal CIP identity: {device.cip_identity}.')
     if print_log: print(f'Terminal ME identity: {device.me_identity}.')
     if print_log: print(f'Terminal ME paths: {device.me_paths}.')
@@ -58,7 +64,14 @@ def create_log(cip: comms.Driver, device: types.MEDeviceInfo, print_log: bool, r
     device.log.append(line)
     if print_log: print(f'{line}')
 
-def download(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_path: str, file_data: bytearray, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
+def download(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo, 
+    file: types.MEFile, 
+    rem_path: str, 
+    file_data: bytearray, 
+    progress: Optional[Callable[[str, int, int], None]] = None
+) -> bool:
     # Get attributes
     #
     # Still no clue on what these are, or when/how they would change.
@@ -120,11 +133,25 @@ def download(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, 
 
     return continue_download
 
-def download_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_path: str, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
+def download_file(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo, 
+    file: types.MEFile, 
+    rem_path: str, 
+    progress: Optional[Callable[[str, int, int], None]] = None
+) -> bool:
     with open(file.path, 'rb') as source_file:
         return download(cip, device, file, rem_path, bytearray(source_file.read()), progress)
 
-def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.MEFile, run_at_startup: bool, replace_comms: bool, delete_logs: bool, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
+def download_mer_file(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo, 
+    file:types.MEFile, 
+    run_at_startup: bool, 
+    replace_comms: bool, 
+    delete_logs: bool, 
+    progress: Optional[Callable[[str, int, int], None]] = None
+) -> bool:
     # Create runtime folder
     try:
         helper.create_folder_runtime(cip, device.me_paths)
@@ -156,12 +183,14 @@ def download_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file:types.
         
     return continue_download
 
-def flash_firmware_upgrade_card(cip: comms.Driver, 
-                                device: types.MEDeviceInfo, 
-                                firmware_image_path: str,
-                                firmware_helper_path: str, 
-                                progress: Optional[Callable[[str, int, int], None]] = None
-                                ):
+def flash_firmware(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo, 
+    firmware_image_path: str,
+    firmware_helper_path: str, 
+    dry_run: bool = False,
+    progress: Optional[Callable[[str, int, int], None]] = None
+):
 
     # Determine if firmware upgrade helepr exists already
     transfer_fuwhelper = True
@@ -191,8 +220,96 @@ def flash_firmware_upgrade_card(cip: comms.Driver,
             device.log.append(f'Exception: {str(e)}')
             device.log.append(f'Traceback: {traceback.format_exc()}')
             device.log.append(f'Failed to upgrade terminal.')
-            return False            
+            return False
 
+    # Determine which process to run
+    major_rev = int(device.me_identity.me_version.split(".")[0])
+    if (major_rev <= 5):
+        flash_firmware_pvp5(cip=cip,
+                                         device=device,
+                                         firmware_image_path=firmware_image_path,
+                                         progress=progress)
+    else:
+        flash_firmware_pvp6(cip=cip,
+                                         device=device,
+                                         firmware_image_path=firmware_image_path,
+                                         progress=progress)
+        
+    return True
+
+def flash_firmware_pvp5(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo,
+    firmware_image_path: str,
+    progress: Optional[Callable[[str, int, int], None]] = None
+):
+    # Prepare local files
+    firmware_image_files = list[types.MEFile]
+    firmware_image_path
+
+    # Prepare terminal for firmware upgrade card
+    try:
+        fuwhelper.set_screensaver(cip, device.me_paths, False)
+        fuwhelper.set_me_corrupt_screen(cip, device.me_paths, False)
+        os_rev = fuwhelper.get_os_rev(cip, device.me_paths)
+        print(os_rev)
+        part_size = fuwhelper.get_partition_size(cip, device.me_paths)
+        print(part_size)
+        restore = fuwhelper.get_file_exists(cip, device.me_paths, '\\Storage Card\\_restore_reserve.cmd')
+        print(restore)
+        fuwhelper.start_process(cip, device.me_paths, 'GenReserve:0')
+
+        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage_Card')):
+            fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card')
+        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\upgrade')):
+            fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card')
+        fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\upgrade')
+
+        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Windows')):
+            fuwhelper.create_folder(cip, device.me_paths, '\\Windows')
+        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Windows\\upgrade')):
+            fuwhelper.create_folder(cip, device.me_paths, '\\Windows\\upgrade')
+        fuwhelper.clear_folder(cip, device.me_paths, '\\Windows\\upgrade')
+
+        if (fuwhelper.get_file_exists(cip, device.me_paths, '\\Storage Card\\Step2.dat')):
+            fuwhelper.delete_file(cip, device.me_paths, '\\Storage Card\\Step2.dat')
+
+        storage_free_space = fuwhelper.get_free_space(cip, device.me_paths, '\\Storage Card')
+        print(storage_free_space)
+        storage_total_space = fuwhelper.get_total_space(cip, device.me_paths, '\\Storage Card')
+        print(storage_total_space)
+        windows_free_space = fuwhelper.get_free_space(cip, device.me_paths, '\\Windows')
+        print(windows_free_space)
+        windows_total_space = fuwhelper.get_total_space(cip, device.me_paths, '\\Windows')
+        print(windows_total_space)
+
+        # *** Check whether all expected files exists from MEFileInfo.inf?
+        fuw_cover_file = types.MEFile(
+            name='FUWCover.exe',
+            overwrite_requested=True,
+            overwrite_required=True,
+            path=''
+        )
+
+    except Exception as e:
+        device.log.append(f'Exception: {str(e)}')
+        device.log.append(f'Traceback: {traceback.format_exc()}')
+        device.log.append(f'Failed to upgrade terminal.')
+        return False
+
+    # Download firmware upgrade card to terminal
+
+    # Initiate install
+
+    return True
+
+
+def flash_firmware_pvp6(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo,
+    firmware_image_path: str,
+    progress: Optional[Callable[[str, int, int], None]] = None
+):
     # Prepare terminal for firmware upgrade card
     try:
         if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card')):
@@ -231,7 +348,12 @@ def flash_firmware_upgrade_card(cip: comms.Driver,
 
     return True
 
-def upload(cip: comms.Driver, device: types.MEDeviceInfo, rem_file_path: str, progress: Optional[Callable[[str, int, int], None]] = None) -> bytearray:
+def upload(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo, 
+    rem_file_path: str, 
+    progress: Optional[Callable[[str, int, int], None]] = None
+) -> bytearray:
     # Create a transfer instance on the terminal
     try:
         transfer_instance, total_bytes = files.create_transfer_instance_upload(cip, f'{rem_file_path}')
@@ -259,18 +381,34 @@ def upload(cip: comms.Driver, device: types.MEDeviceInfo, rem_file_path: str, pr
 
     return resp_binary
     
-def upload_file(cip: comms.Driver, device: types.MEDeviceInfo, local_file_path: str, rem_file_path: str, progress: Optional[Callable[[str, int, int], None]] = None):
+def upload_file(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo, 
+    local_file_path: str, 
+    rem_file_path: str, 
+    progress: Optional[Callable[[str, int, int], None]] = None
+):
     resp_binary = upload(cip, device, rem_file_path, progress)
     with open(local_file_path, 'wb') as dest_file:
         dest_file.write(resp_binary)
 
-def upload_list(cip: comms.Driver, transfer_instance: int, rem_file_path: str) -> list[str]:
+def upload_list(
+    cip: comms.Driver, 
+    transfer_instance: int, 
+    rem_file_path: str
+) -> list[str]:
     resp_binary = upload(cip, transfer_instance, rem_file_path)
     resp_str = "".join([chr(b) for b in resp_binary if b != 0])
     resp_list = resp_str.split(':')
     return resp_list
 
-def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile, rem_file: types.MEFile, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
+def upload_mer_file(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo, 
+    file: types.MEFile, 
+    rem_file: types.MEFile, 
+    progress: Optional[Callable[[str, int, int], None]] = None
+) -> bool:
     # Verify file exists on terminal
     try:
         if helper.get_file_exists_mer(cip, device.me_paths, rem_file.name):
@@ -295,7 +433,10 @@ def upload_mer_file(cip: comms.Driver, device: types.MEDeviceInfo, file: types.M
 
     return True
 
-def upload_med_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
+def upload_med_list(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo
+) -> list[str]:
     # Create list on the terminal
     try:
         helper.create_file_list_med(cip, device.me_paths)
@@ -326,7 +467,10 @@ def upload_med_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
 
     return file_list
 
-def upload_mer_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
+def upload_mer_list(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo
+) -> list[str]:
     # Create *.MER list
     try:
         helper.create_file_list_mer(cip, device.me_paths)
@@ -358,7 +502,10 @@ def upload_mer_list(cip: comms.Driver, device: types.MEDeviceInfo) -> list[str]:
 
     return file_list
 
-def reboot(cip: comms.Driver, device: types.MEDeviceInfo):
+def reboot(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo
+):
     cip1 = comms.Driver(cip._original_path)
     cip1.timeout = 0.25
     cip1.open()

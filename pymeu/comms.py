@@ -173,10 +173,7 @@ def get_me_chunk_size(path: str) -> int:
                 if segment_size % 2: segment_size += 1 # if segment length is odd, there is a pad byte
 
             working_size -= segment_size
-
-        chunk_size = working_size
-        warn(f'Chunk size set to {chunk_size} but still WIP for routed paths.')
-        return chunk_size
+        return working_size
     else:
         # Direct path
         # Tests up to 2000 bytes did succeed, >2000 bytes failed.
