@@ -379,23 +379,6 @@ def flash_firmware_pvp5(
         required=False
     ))
 
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'upgrade.inf'), f'\\Storage Card\\upgrade\\upgrade.inf', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'autorun.exe'), f'\\Storage Card\\upgrade\\autorun.exe', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'MFCCE400.DLL'), f'\\Storage Card\\upgrade\\MFCCE400.dll', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'), f'\\Storage Card\\upgrade\\FUWcleanup.exe', True]) # Questionable
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'InstallME.exe'), f'\\Storage Card\\upgrade\\InstallME.exe', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'Autoapp.bat'), f'\\Storage Card\\upgrade\\AutoApp.bat', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'locOSUp.exe'), f'\\Windows\\upgrade\\locOSup.exe', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'ebcbootrom.bin'), f'\\Windows\\upgrade\\ebcbootrom.bin', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'system.bin'), f'\\Windows\\upgrade\\system.bin', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'), f'\\Windows\\upgrade\\UpgradeOptions.exe', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'valOSPart.exe'), f'\\Windows\\upgrade\\valOSpart.exe', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'GetFreeRAM.exe'), f'\\Windows\\upgrade\\GetFreeRAM.exe', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'RFOn.bat'), f'\\Storage Card\\upgrade\\RFOn.bat', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'FUWInhibitor.exe'), f'\\Storage Card\\upgrade\\FUWInhibitor.exe', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'MEFileList.inf'), f'\\Storage Card\\upgrade\\MEFileList.inf', True])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'FTVP.Cab'), f'\\Storage Card\\upgrade\\FTVP.Cab', False])
-    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'WebServer.Cab'), f'\\Storage Card\\upgrade\\WebServer.Cab', False])
     for file in firmware_image_files:
         if not(os.path.exists(file.local_path)):
             if file.required: raise FileNotFoundError(f'Expected {file.local_path} to exist.')
@@ -419,7 +402,7 @@ def flash_firmware_pvp5(
         if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage_Card')):
             fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card')
         if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\upgrade')):
-            fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card')
+            fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card\\upgrade')
         fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\upgrade')
 
         if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Windows')):
@@ -433,8 +416,6 @@ def flash_firmware_pvp5(
                 fuwhelper.delete_file(cip, device.me_paths, '\\Storage Card\\Step2.dat')
             except Exception as e:
                 print(e)
-                #device.log.append(f'Exception: {str(e)}')
-                #device.log.append(f'Traceback: {traceback.format_exc()}')                
 
         storage_free_space = fuwhelper.get_free_space(cip, device.me_paths, '\\Storage Card')
         print(storage_free_space)
@@ -462,8 +443,6 @@ def flash_firmware_pvp5(
                     fuwhelper.delete_file(cip, device.me_paths, f'\\Storage Card{file}')
                 except Exception as e:
                     print(e)
-                    #device.log.append(f'Exception: {str(e)}')
-                    #device.log.append(f'Traceback: {traceback.format_exc()}')
 
         # Delete KEPServer
         if fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise'):
@@ -491,6 +470,7 @@ def flash_firmware_pvp5(
                 rem_path=file.remote_folder,
                 progress=progress
             )
+            time.sleep(1)
         else:
             if file.required: raise FileNotFoundError(f'Expected {file.local_path} to exist.')    
 
