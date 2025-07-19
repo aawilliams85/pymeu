@@ -112,6 +112,7 @@ class MEUtility(object):
         self, 
         firmware_image_path: str, 
         firmware_helper_path: str, 
+        firmware_cover_path: str = None,
         dry_run: bool = False,
         progress: Optional[Callable[[str, int, int], None]] = None
     ) -> types.MEResponse:
@@ -162,6 +163,7 @@ class MEUtility(object):
                     device=self.device,
                     firmware_image_path=firmware_image_path,
                     firmware_helper_path=firmware_helper_path,
+                    firmware_cover_path=firmware_cover_path,
                     dry_run=dry_run,
                     progress=progress)
 

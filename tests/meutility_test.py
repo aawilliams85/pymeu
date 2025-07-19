@@ -608,6 +608,33 @@ class fuw_tests(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_flash_pvp5_direct_pycomm3(self):
+        print('')
+        driver = DRIVER_PYCOMM3
+        device = DEVICE_PVP5
+        comms_path = device.comms_paths[0]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        firmware_helper_path = device.local_firmware_helper_path
+        firmware_cover_path = device.local_firmware_cover_path
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware({firmware_image_path})\n'
+        )
+        print(result)
+        resp = meu.flash_firmware(
+            firmware_image_path=firmware_image_path,
+            firmware_helper_path=firmware_helper_path,
+            firmware_cover_path=firmware_cover_path,
+            dry_run=False,
+            progress=progress_callback)
+        for s in resp.device.log: print(s)
+        print('')
+        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+
     def test_flash_pvp6_direct_pycomm3(self):
         print('')
         driver = DRIVER_PYCOMM3

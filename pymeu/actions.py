@@ -1,4 +1,5 @@
 from collections.abc import Callable
+import configparser
 import os
 import time
 import traceback
@@ -183,11 +184,27 @@ def download_mer_file(
         
     return continue_download
 
+def deserialize_me_file_list(ini_content: str) -> types.MEv5FileList:
+    config = configparser.ConfigParser(allow_no_value=True)
+    config.read_string(ini_content)
+    info_section = config['info']
+    info = types.MEv5FileListHeader(
+        me=info_section['ME'],
+        size_on_disk=int(info_section['SizeOnDisk'])
+    )
+    me_files = types.MEv5FileListFiles(
+        files=list(config['MEFILES'].keys())
+    )
+    
+    # Return ConfigData instance
+    return types.MEv5FileList(info=info, mefiles=me_files)
+
 def flash_firmware(
     cip: comms.Driver, 
     device: types.MEDeviceInfo, 
     firmware_image_path: str,
     firmware_helper_path: str, 
+    firmware_cover_path: str = None,
     dry_run: bool = False,
     progress: Optional[Callable[[str, int, int], None]] = None
 ):
@@ -225,51 +242,167 @@ def flash_firmware(
     # Determine which process to run
     major_rev = int(device.me_identity.me_version.split(".")[0])
     if (major_rev <= 5):
-        flash_firmware_pvp5(cip=cip,
-                                         device=device,
-                                         firmware_image_path=firmware_image_path,
-                                         progress=progress)
+        flash_firmware_pvp5(
+            cip=cip,
+            device=device,
+            firmware_image_path=firmware_image_path,
+            firmware_cover_path=firmware_cover_path,
+            progress=progress
+        )
     else:
-        flash_firmware_pvp6(cip=cip,
-                                         device=device,
-                                         firmware_image_path=firmware_image_path,
-                                         progress=progress)
-        
+        flash_firmware_pvp6(
+            cip=cip,
+            device=device,
+            firmware_image_path=firmware_image_path,
+            progress=progress
+        )
     return True
 
 def flash_firmware_pvp5(
     cip: comms.Driver, 
     device: types.MEDeviceInfo,
     firmware_image_path: str,
+    firmware_cover_path: str,
     progress: Optional[Callable[[str, int, int], None]] = None
 ):
+
     # Prepare local files
-    firmare_cover_path = 'FUWcover4xX.exe' ###
     firmware_cover_file = types.MEFile(
         name='FUWCover.exe',
         overwrite_requested=True,
         overwrite_required=True,
-        path=firmare_cover_path
+        path=firmware_cover_path
     )
 
+    # [Local Path, Remote Path, Required]
     firmware_image_files = []
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'upgrade.inf'), f'\\Storage Card\\upgrade\\upgrade.inf'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'autorun.exe'), f'\\Storage Card\\upgrade\\autorun.exe'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'MFCCE400.dll'), f'\\Storage Card\\upgrade\\MFCCE400.dll'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'), f'\\Storage Card\\upgrade\\FUWcleanup.exe']) # Questionable
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'InstallME.exe'), f'\\Storage Card\\upgrade\\InstallME.exe'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'AutoApp.bat'), f'\\Storage Card\\upgrade\\AutoApp.bat'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'locOSup.exe'), f'\\Windows\\upgrade\\locOSup.exe'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'ebcbootrom.bin'), f'\\Windows\\upgrade\\ebcbootrom.bin'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'system.bin'), f'\\Windows\\upgrade\\system.bin'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'), f'\\Windows\\upgrade\\UpgradeOptions.exe'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'valOSpart.exe'), f'\\Windows\\upgrade\\valOSpart.exe'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'GetFreeRAM.exe'), f'\\Windows\\upgrade\\GetFreeRAM.exe'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'RFOn.bat'), f'\\Storage Card\\upgrade\\RFOn.bat'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'FUWInhibitor.exe'), f'\\Storage Card\\upgrade\\FUWInhibitor.exe'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'MEFileList.inf'), f'\\Storage Card\\upgrade\\MEFileList.inf'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'FTVP.Cab'), f'\\Storage Card\\upgrade\\FTVP.Cab'])
-    firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'WebServer.Cab'), f'\\Storage Card\\upgrade\\WebServer.Cab'])
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'upgrade.inf'),
+        remote_file='upgrade.inf',
+        remote_folder='\\Storage Card\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'autorun.exe'),
+        remote_file='autorun.exe',
+        remote_folder='\\Storage Card\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'MFCCE400.DLL'),
+        remote_file='MFCCE400.DLL',
+        remote_folder='\\Storage Card\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'),
+        remote_file='FUWcleanup.exe',
+        remote_folder='\\Storage Card\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'InstallME.exe'),
+        remote_file='InstallME.exe',
+        remote_folder='\\Storage Card\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'Autoapp.bat'),
+        remote_file='Autoapp.bat',
+        remote_folder='\\Storage Card\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'locOSUp.exe'),
+        remote_file='locOSUp.exe',
+        remote_folder='\\Windows\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'ebcbootrom.bin'),
+        remote_file='ebcbootrom.bin',
+        remote_folder='\\Windows\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'system.bin'),
+        remote_file='system.bin',
+        remote_folder='\\Windows\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'),
+        remote_file='UpgradeOptions.exe',
+        remote_folder='\\Windows\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'valOSPart.exe'),
+        remote_file='valOSPart.exe',
+        remote_folder='\\Windows\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'GetFreeRAM.exe'),
+        remote_file='GetFreeRAM.exe',
+        remote_folder='\\Windows\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'RFOn.bat'),
+        remote_file='RFOn.bat',
+        remote_folder='\\Storage Card\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'FUWInhibitor.exe'),
+        remote_file='FUWInhibitor.exe',
+        remote_folder='\\Storage Card\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'MEFileList.inf'),
+        remote_file='MEFileList.inf',
+        remote_folder='\\Storage Card\\upgrade',
+        required=True
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'FTVP.Cab'),
+        remote_file='FTVP.Cab',
+        remote_folder='\\Storage Card\\upgrade',
+        required=False
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'WebServer.Cab'),
+        remote_file='WebServer.Cab',
+        remote_folder='\\Storage Card\\upgrade',
+        required=False
+    ))
+
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'upgrade.inf'), f'\\Storage Card\\upgrade\\upgrade.inf', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'autorun.exe'), f'\\Storage Card\\upgrade\\autorun.exe', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'MFCCE400.DLL'), f'\\Storage Card\\upgrade\\MFCCE400.dll', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'), f'\\Storage Card\\upgrade\\FUWcleanup.exe', True]) # Questionable
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'InstallME.exe'), f'\\Storage Card\\upgrade\\InstallME.exe', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'Autoapp.bat'), f'\\Storage Card\\upgrade\\AutoApp.bat', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'locOSUp.exe'), f'\\Windows\\upgrade\\locOSup.exe', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'ebcbootrom.bin'), f'\\Windows\\upgrade\\ebcbootrom.bin', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'system.bin'), f'\\Windows\\upgrade\\system.bin', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'), f'\\Windows\\upgrade\\UpgradeOptions.exe', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'valOSPart.exe'), f'\\Windows\\upgrade\\valOSpart.exe', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'GetFreeRAM.exe'), f'\\Windows\\upgrade\\GetFreeRAM.exe', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'RFOn.bat'), f'\\Storage Card\\upgrade\\RFOn.bat', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'FUWInhibitor.exe'), f'\\Storage Card\\upgrade\\FUWInhibitor.exe', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'MEFileList.inf'), f'\\Storage Card\\upgrade\\MEFileList.inf', True])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'FTVP.Cab'), f'\\Storage Card\\upgrade\\FTVP.Cab', False])
+    #firmware_image_files.append([os.path.join(firmware_image_path, 'upgrade', 'WebServer.Cab'), f'\\Storage Card\\upgrade\\WebServer.Cab', False])
+    for file in firmware_image_files:
+        if not(os.path.exists(file.local_path)):
+            if file.required: raise FileNotFoundError(f'Expected {file.local_path} to exist.')
+
+    # Read MEFileList... this is a list of files that will be checked and deleted later
+    with open(os.path.join(firmware_image_path, 'upgrade', 'MEFileList.inf'), 'r') as file:
+        me_file_list = deserialize_me_file_list(file.read())
 
     # Prepare terminal for firmware upgrade card
     try:
@@ -296,7 +429,12 @@ def flash_firmware_pvp5(
         fuwhelper.clear_folder(cip, device.me_paths, '\\Windows\\upgrade')
 
         if (fuwhelper.get_file_exists(cip, device.me_paths, '\\Storage Card\\Step2.dat')):
-            fuwhelper.delete_file(cip, device.me_paths, '\\Storage Card\\Step2.dat')
+            try:
+                fuwhelper.delete_file(cip, device.me_paths, '\\Storage Card\\Step2.dat')
+            except Exception as e:
+                print(e)
+                #device.log.append(f'Exception: {str(e)}')
+                #device.log.append(f'Traceback: {traceback.format_exc()}')                
 
         storage_free_space = fuwhelper.get_free_space(cip, device.me_paths, '\\Storage Card')
         print(storage_free_space)
@@ -307,14 +445,30 @@ def flash_firmware_pvp5(
         windows_total_space = fuwhelper.get_total_space(cip, device.me_paths, '\\Windows')
         print(windows_total_space)
 
-        # *** Check whether all expected files exists from MEFileInfo.inf?
-        fuw_cover_file = types.MEFile(
-            name='FUWCover.exe',
-            overwrite_requested=True,
-            overwrite_required=True,
-            path=''
-        )
+        # Check files from MEFileInfo.inf?
+        for file in me_file_list.mefiles.files:
+            fuwhelper.get_file_exists(cip, device.me_paths, f'\\Storage Card{file}')
 
+        # *** Check whether all expected files exists from MEFileInfo.inf?
+        resp = download_file(cip, device, firmware_cover_file, '\\Windows', progress)
+        fuwhelper.start_process(cip, device.me_paths, '\\Windows\\FUWCover.exe')
+        fuwhelper.stop_process(cip, device.me_paths, 'MERuntime.exe')
+        fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\Rockwell Software\\RSViewME')
+
+        # Delete files from MEFileInfo.inf?
+        for file in me_file_list.mefiles.files:
+            if fuwhelper.get_file_exists(cip, device.me_paths, f'\\Storage Card{file}'):
+                try:
+                    fuwhelper.delete_file(cip, device.me_paths, f'\\Storage Card{file}')
+                except Exception as e:
+                    print(e)
+                    #device.log.append(f'Exception: {str(e)}')
+                    #device.log.append(f'Traceback: {traceback.format_exc()}')
+
+        # Delete KEPServer
+        if fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise'):
+            fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
+            fuwhelper.delete_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
         device.log.append(f'Traceback: {traceback.format_exc()}')
@@ -322,9 +476,30 @@ def flash_firmware_pvp5(
         return False
 
     # Download firmware upgrade card to terminal
+    for file in firmware_image_files:
+        if (os.path.exists(file.local_path)):
+            this_file = types.MEFile(
+                name=file.remote_file,
+                overwrite_requested=True,
+                overwrite_required=True,
+                path=file.local_path
+            )
+            resp = download_file(
+                cip=cip,
+                device=device,
+                file=this_file,
+                rem_path=file.remote_folder,
+                progress=progress
+            )
+        else:
+            if file.required: raise FileNotFoundError(f'Expected {file.local_path} to exist.')    
 
     # Initiate install
-
+    fuwhelper.set_screensaver(cip, device.me_paths, True)
+    fuwhelper.set_me_corrupt_screen(cip, device.me_paths, True)
+    time.sleep(5)
+    fuwhelper.stop_process(cip, device.me_paths, 'FUWCover.exe')
+    fuwhelper.start_process(cip, device.me_paths, '\\Storage Card\\upgrade\\autorun.exe')
     return True
 
 

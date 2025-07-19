@@ -81,6 +81,27 @@ class DMKFile:
     nvs: DMKNvsFile
 
 @dataclass
+class MEv5FileListHeader:
+    me: str
+    size_on_disk: int
+
+@dataclass
+class MEv5FileListFiles:
+    files: list[str]
+
+@dataclass
+class MEv5FileList:
+    info: MEv5FileListHeader
+    mefiles: MEv5FileListFiles
+
+@dataclass
+class MEv5FileManifest:
+    local_path: str
+    remote_file: str
+    remote_folder: str
+    required: bool
+
+@dataclass
 class MEFile:
     name: str
     overwrite_requested: bool

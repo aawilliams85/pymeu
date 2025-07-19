@@ -10,6 +10,7 @@ class METestDevice:
     device_paths: types.MEPaths
     boot_time_sec: int
     mer_files: list[str]
+    local_firmware_cover_path: str
     local_firmware_helper_path: str
     local_firmware_image_paths: list[str]
     transfer_firmware_helper: bool
@@ -59,7 +60,8 @@ NONEXISTENT_PROCESS = 'NonexistentProcess.exe'
 
 # PanelView Plus configuration
 PVP5 = 'PVP5'
-PVP5_Comms_Paths = ['192.168.40.20','192.168.40.11,bp,3,enet,192.168.1.20']
+#PVP5_Comms_Paths = ['192.168.40.20','192.168.40.11,bp,3,enet,192.168.1.20']
+PVP5_Comms_Paths = ['192.168.1.20','192.168.40.11,bp,3,enet,192.168.1.20']
 PVP5_Device_Paths = types.MEPaths(
     f'\\Storage Card\\Rockwell Software\\RSViewME\\{HELPER_FILE_NAME}',
     '\\Storage Card',
@@ -67,6 +69,7 @@ PVP5_Device_Paths = types.MEPaths(
     f'\\Storage Card\\{RUNTIME_PATH}',
     '\\Storage Card\\FUWhelper.dll'
 )
+PVP5_Local_Firmware_Cover_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v11', 'FUWCover4xX.exe')
 PVP5_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v11', 'FUWhelper4xX.dll')
 PVP5_Local_Firmware_Image_Paths = [
     os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v5', 'ME_PVP4xX_5.10.16.09')
@@ -144,6 +147,7 @@ DEVICE_PVP5 = METestDevice(
     device_paths=PVP5_Device_Paths, 
     boot_time_sec=75, 
     mer_files=PVP5_MER_Files,
+    local_firmware_cover_path=PVP5_Local_Firmware_Cover_Path,
     local_firmware_helper_path=PVP5_Local_Firmware_Helper_Path,
     local_firmware_image_paths=PVP5_Local_Firmware_Image_Paths,
     transfer_firmware_helper=True
@@ -155,6 +159,7 @@ DEVICE_PVP6 = METestDevice(
     device_paths=PVP6_Device_Paths, 
     boot_time_sec=75, 
     mer_files=PVP6_MER_Files,
+    local_firmware_cover_path='',
     local_firmware_helper_path=PVP6_Local_Firmware_Helper_Path,
     local_firmware_image_paths=PVP6_Local_Firmware_Image_Paths,
     transfer_firmware_helper=True
@@ -166,6 +171,7 @@ DEVICE_PVP7A = METestDevice(
     device_paths=PVP7A_Device_Paths, 
     boot_time_sec=75, 
     mer_files=PVP7A_MER_Files,
+    local_firmware_cover_path='',
     local_firmware_helper_path=PVP7A_Local_Firmware_Helper_Path,
     local_firmware_image_paths=PVP7A_Local_Firmware_Image_Paths,
     transfer_firmware_helper=False
@@ -177,6 +183,7 @@ DEVICE_PVP7B = METestDevice(
     device_paths=PVP7B_Device_Paths, 
     boot_time_sec=75, 
     mer_files=PVP7B_MER_Files,
+    local_firmware_cover_path='',
     local_firmware_helper_path='',
     local_firmware_image_paths=PVP7B_Local_Firmware_Image_Paths,
     transfer_firmware_helper=False
@@ -184,9 +191,9 @@ DEVICE_PVP7B = METestDevice(
 
 DEVICES = [
     DEVICE_PVP5,
-    #DEVICE_PVP6,
-    #DEVICE_PVP7A,
-    #DEVICE_PVP7B    
+    DEVICE_PVP6,
+    DEVICE_PVP7A,
+    DEVICE_PVP7B    
 ]
 
 DRIVER_PYCOMM3 = 'pycomm3'
