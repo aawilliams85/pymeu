@@ -118,7 +118,13 @@ def download(
     # Transfer file chunk by chunk
     try:
         if continue_download:
-            files.execute_transfer_download(cip, transfer_instance, file_data, progress)
+            files.execute_transfer_download(
+                cip=cip,
+                transfer_instance=transfer_instance,
+                source_data=file_data,
+                progress_desc=f'{file.name}',
+                progress=progress
+            )
             device.log.append(f'Downloaded {file.name} using transfer instance {transfer_instance}.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')

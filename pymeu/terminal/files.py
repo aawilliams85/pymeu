@@ -153,7 +153,7 @@ def create_transfer_instance_upload(cip: comms.Driver, remote_path: str) -> tupl
 def delete_transfer_instance(cip: comms.Driver, transfer_instance: int):
     return messages.delete_transfer_instance(cip, transfer_instance)
 
-def execute_transfer_download(cip: comms.Driver, transfer_instance: int, source_data: bytearray, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
+def execute_transfer_download(cip: comms.Driver, transfer_instance: int, source_data: bytearray, progress_desc: str = None, progress: Optional[Callable[[str, int, int], None]] = None) -> bool:
     """
     Downloads a file from the local device to the remote terminal.
     The transfer happens by breaking the file down into one or more
@@ -216,7 +216,7 @@ def execute_transfer_download(cip: comms.Driver, transfer_instance: int, source_
 
         # Update progress callback
         current_bytes = req_offset + len(req_chunk)
-        if progress: progress('Download',total_bytes, current_bytes)
+        if progress: progress(f'Download {progress_desc}',total_bytes, current_bytes)
 
         # Continue to next chunk
         req_chunk_number += 1
