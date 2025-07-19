@@ -74,7 +74,6 @@ PVP5_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', '
 PVP5_Local_Firmware_Image_Paths = [
     os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v5', 'ME_PVP4xX_5.10.16.09'),
     os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v5', 'ME_PVP4xX_5.10.16.09.WithViewPoint'),
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v5', 'ME_PVP4xX_5.10.16.09.Mod')
 ]
 PVP5_MER_Files = [
     'Test_v5_A.mer',

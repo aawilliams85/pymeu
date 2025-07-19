@@ -280,105 +280,157 @@ def flash_firmware_pvp5(
         path=firmware_cover_path
     )
 
-    # [Local Path, Remote Path, Required]
+    # Firmware image known files
     firmware_image_files = []
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='upgrade.inf',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'upgrade.inf'),
         remote_file='upgrade.inf',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='autorun.exe',
         local_path=os.path.join(firmware_image_path, 'autorun.exe'),
         remote_file='autorun.exe',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='MFCCE400.DLL',
         local_path=os.path.join(firmware_image_path, 'MFCCE400.DLL'),
         remote_file='MFCCE400.DLL',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='UpgradeOptions.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'),
         remote_file='FUWcleanup.exe',
         remote_folder='\\Storage Card\\upgrade',
-        required=True
+        required=False
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='InstallME.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'InstallME.exe'),
         remote_file='InstallME.exe',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='Autoapp.bat',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'Autoapp.bat'),
         remote_file='Autoapp.bat',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='locOSUp.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'locOSUp.exe'),
         remote_file='locOSUp.exe',
         remote_folder='\\Windows\\upgrade',
         required=True
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='ebcbootrom.bin',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'ebcbootrom.bin'),
         remote_file='ebcbootrom.bin',
         remote_folder='\\Windows\\upgrade',
-        required=True
+        required=False
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='EBCMOZ.EBC',
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'EBCMOZ.EBC'),
+        remote_file='EBCMOZ.EBC',
+        remote_folder='\\Storage Card\\upgrade',
+        required=False
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_file='PVPlus_Mozart_nkc.MCE',
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'PVPlus_Mozart_nkc.MCE'),
+        remote_file='PVPlus_Mozart_nkc.MCE',
+        remote_folder='\\Storage Card\\upgrade',
+        required=False
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_file='system.bin',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'system.bin'),
         remote_file='system.bin',
         remote_folder='\\Windows\\upgrade',
-        required=True
+        required=False
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='UpgradeOptions.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'),
         remote_file='UpgradeOptions.exe',
         remote_folder='\\Windows\\upgrade',
-        required=True
+        required=False
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='valOSPart.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'valOSPart.exe'),
         remote_file='valOSPart.exe',
         remote_folder='\\Windows\\upgrade',
-        required=True
+        required=False
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='GetFreeRAM.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'GetFreeRAM.exe'),
         remote_file='GetFreeRAM.exe',
         remote_folder='\\Windows\\upgrade',
         required=True
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='RFOn.bat',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'RFOn.bat'),
         remote_file='RFOn.bat',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='RFOn1.bat',
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'RFOn1.bat'),
+        remote_file='RFOn1.bat',
+        remote_folder='\\Storage Card\\upgrade',
+        required=False
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_file='RFOn2.bat',
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'RFOn2.bat'),
+        remote_file='RFOn2.bat',
+        remote_folder='\\Storage Card\\upgrade',
+        required=False
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_file='RFOn3.bat',
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'RFOn3.bat'),
+        remote_file='RFOn3.bat',
+        remote_folder='\\Storage Card\\upgrade',
+        required=False
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
+        local_file='FUWInhibitor.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'FUWInhibitor.exe'),
         remote_file='FUWInhibitor.exe',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='MEFileList.inf',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'MEFileList.inf'),
         remote_file='MEFileList.inf',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='FTVP.Cab',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'FTVP.Cab'),
         remote_file='FTVP.Cab',
         remote_folder='\\Storage Card\\upgrade',
         required=False
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='WebServer.Cab',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'WebServer.Cab'),
         remote_file='WebServer.Cab',
         remote_folder='\\Storage Card\\upgrade',
@@ -388,6 +440,37 @@ def flash_firmware_pvp5(
     for file in firmware_image_files:
         if not(os.path.exists(file.local_path)):
             if file.required: raise FileNotFoundError(f'Expected {file.local_path} to exist.')
+        else:
+            print(f'Found {file.local_path}')
+
+    # For additional files - make a guess at whether they belong in Storage Card or Windows
+    firmware_image_other_files = os.listdir(os.path.join(firmware_image_path, 'upgrade'))
+    for file in firmware_image_other_files:
+        if not any(file2.local_file.lower() == file.lower() for file2 in firmware_image_files):
+            if (file.lower().startswith('RFOn')):
+                remote_folder = '\\Storage Card\\upgrade'
+            elif (file.lower().endswith('bin')):
+                remote_folder = '\\Windows\\upgrade'
+            elif (file.lower().endswith('ebc')):
+                remote_folder = '\\Storage Card\\upgrade'
+            elif (file.lower().endswith('mce')):
+                remote_folder = '\\Storage Card\\upgrade'
+            elif (file.lower().endswith('exe')):
+                remote_folder = '\\Windows\\upgrade'
+            else:
+                remote_folder = '\\Storage Card\\upgrade'
+
+            firmware_image_files.append(types.MEv5FileManifest(
+                local_file=file,
+                local_path=os.path.join(firmware_image_path, 'upgrade', file),
+                remote_file=file,
+                remote_folder=remote_folder,
+                required=False
+            ))
+
+    for file in firmware_image_files:
+        print(file)
+        print('')
 
     # Read MEFileList... this is a list of files that will be checked and deleted later
     with open(os.path.join(firmware_image_path, 'upgrade', 'MEFileList.inf'), 'r') as file:

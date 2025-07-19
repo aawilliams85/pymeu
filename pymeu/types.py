@@ -96,6 +96,7 @@ class MEv5FileList:
 
 @dataclass
 class MEv5FileManifest:
+    local_file: str
     local_path: str
     remote_file: str
     remote_folder: str
