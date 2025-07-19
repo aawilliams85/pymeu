@@ -6,8 +6,8 @@ Warning - This example is for PanelView Plus 5 only!
 
 First, use the ME Firmware Upgrade Wizard utility to create a
 Firmware Upgrade Card for the desired terminal type + version.
-Note the path to "SC.IMG" in the folder it creates as your
-firmware image path.
+The firmware image path is the Firmware Upgrade Card path.  It should
+contain 'autorun.exe', 'MFCCE400.DLL', and the 'upgrade' folder.
 
 Next, locate the Firmware Upgrade Wizard helper DLL as your
 firmware helper path.  Default location:
