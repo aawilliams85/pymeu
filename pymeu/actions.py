@@ -318,6 +318,13 @@ def flash_firmware_pvp5(
         required=True
     ))
     firmware_image_files.append(types.MEv5FileManifest(
+        local_file='KepwareCEInstall.exe',
+        local_path=os.path.join(firmware_image_path, 'upgrade', 'KepwareCEInstall.exe'),
+        remote_file='KepwareCEInstall.exe',
+        remote_folder='\\Storage Card\\upgrade',
+        required=False
+    ))
+    firmware_image_files.append(types.MEv5FileManifest(
         local_file='Autoapp.bat',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'Autoapp.bat'),
         remote_file='Autoapp.bat',
