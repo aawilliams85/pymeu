@@ -12,8 +12,8 @@ BLACKLISTED_STREAMS = [
     'DIRSIZE_INFORMATION',
     'PRODUCT_VERSION_INFORMATION',
     'VERSION_INFORMATION',
-    '__MAPPEE0',
-    '__MAPPER0'
+    '__MAPPEE0', # Future: extract this as the data portion of the Kepware install
+    '__MAPPER0' # Future: extract this as the filename of the Kepware install
 ]
 
 def get_int8_nibbles(value: int):
@@ -114,9 +114,8 @@ def decompress_stream(input: bytearray) -> bytearray:
 
     return output
 
-def extract_fup(file_path: str, output_path: str):
+def extract_fup(ole: olefile.OleFileIO, output_path: str):
     streams = []
-    ole = olefile.OleFileIO(file_path)
     for stream_path in ole.listdir():
         stream_name = '/'.join(stream_path)
         if (ole.exists(stream_name) and not ole.get_type(stream_name) == olefile.STGTY_STORAGE):
@@ -129,10 +128,14 @@ def extract_fup(file_path: str, output_path: str):
             }
             streams.append(stream_info)
             print(f'Name: {stream_name}, Path: {stream_path}, Size: {len(stream_data)}')
-    ole.close()
-    for stream in streams:
-        if stream['name'] in BLACKLISTED_STREAMS: continue
-        stream_decompressed = decompress_stream(stream['data'])
-        stream_output_path = os.path.join(output_path, stream['name'])
-        with open(stream_output_path, 'wb') as f:
-            f.write(stream_decompressed)
+    return streams
+
+def extract_fup_to_disk(file_path: str, output_path: str):
+    with olefile.OleFileIO(file_path) as ole:
+        streams = extract_fup(ole, output_path)
+        for stream in streams:
+            if stream['name'] in BLACKLISTED_STREAMS: continue
+            stream_decompressed = decompress_stream(stream['data'])
+            stream_output_path = os.path.join(output_path, stream['path'][-1])
+            with open(stream_output_path, 'wb') as f:
+                f.write(stream_decompressed)

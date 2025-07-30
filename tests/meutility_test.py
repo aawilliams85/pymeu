@@ -612,7 +612,11 @@ class fup_tests(unittest.TestCase):
     def test_fup_unpack(self):
         print('')
         for path in PVP5_FUP_File_Paths:
-            fup.extract_fup(path, os.path.join(FIRMWARE_FOLDER_PATH, 'FUP_Extracted'))
+            fup.extract_fup_to_disk(path, os.path.join(FIRMWARE_FOLDER_PATH, 'FUP_Extracted'))
+
+    def test_mer_unpack(self):
+        print('')
+        fup.extract_fup_to_disk(os.path.join(UPLOAD_FOLDER_PATH, 'PVP7A', 'pycomm3', 'Test_v11_A.mer'), os.path.join(UPLOAD_FOLDER_PATH, 'MER_Extracted'))
 
     def tearDown(self):
         pass
