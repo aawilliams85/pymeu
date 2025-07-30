@@ -7,7 +7,9 @@ license = {file = "LICENSE"}
 authors = [
     { name = "aawilliams85", email = "adair.williams85@gmail.com" }
 ]
-dependencies = []
+dependencies = [
+    olefile>=0.47
+]
 
 [project.optional-dependencies]
 pycomm3 = ["pycomm3>=1.2.14"]

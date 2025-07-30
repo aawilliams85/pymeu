@@ -69,6 +69,9 @@ PVP5_Device_Paths = types.MEPaths(
     f'\\Storage Card\\{RUNTIME_PATH}',
     '\\Storage Card\\FUWhelper.dll'
 )
+PVP5_FUP_File_Paths = [
+    os.path.join(FIRMWARE_FOLDER_PATH, 'FUP', '2711P_PanelViewPlus_v5', 'ME_PVP4xX_5.10.16.09.fup')
+]
 PVP5_Local_Firmware_Cover_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v11', 'FUWCover4xX.exe')
 PVP5_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v11', 'FUWhelper4xX.dll')
 PVP5_Local_Firmware_Image_Paths = [

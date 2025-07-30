@@ -4,6 +4,7 @@ import unittest
 
 from pymeu import actions
 from pymeu import comms
+from pymeu import fup
 from pymeu import MEUtility
 from pymeu import terminal
 from pymeu import types
@@ -600,6 +601,18 @@ class upload_tests(unittest.TestCase):
 
                 # Close parallel transfer instance
                 terminal.files.delete_transfer_instance(cip2, transfer_instance_2)
+
+    def tearDown(self):
+        pass
+
+class fup_tests(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_fup_unpack(self):
+        print('')
+        for path in PVP5_FUP_File_Paths:
+            fup.extract_fup(path, os.path.join(FIRMWARE_FOLDER_PATH, 'FUP_Extracted'))
 
     def tearDown(self):
         pass

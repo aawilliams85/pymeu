@@ -1,9 +1,20 @@
+import olefile
+import os
+
 CONTROL_SIZE = 2
 DATA_SIZE = 16
 LITERAL_SIZE = 1
 PAGE_CONTROL_SIZE_BYTES = 4
 PAGE_HEADER_SIZE_BYTES = 4
 TOKEN_SIZE = 2
+
+BLACKLISTED_STREAMS = [
+    'DIRSIZE_INFORMATION',
+    'PRODUCT_VERSION_INFORMATION',
+    'VERSION_INFORMATION',
+    '__MAPPEE0',
+    '__MAPPER0'
+]
 
 def get_int8_nibbles(value: int):
     high_nibble = (value >> 4) & 0x0F
@@ -34,7 +45,7 @@ def decompress_page(input: bytearray) -> bytearray:
     offset = 0
     page_control_bytes = input[offset:offset + PAGE_CONTROL_SIZE_BYTES]
     offset += PAGE_CONTROL_SIZE_BYTES
-    print(page_control_bytes)
+    #print(page_control_bytes)
 
     # If page is not compressed, return the rest of the page as-is
     if (page_control_bytes[0] == 0x01):
@@ -102,3 +113,26 @@ def decompress_stream(input: bytearray) -> bytearray:
         output += decompress_page(page_bytes)
 
     return output
+
+def extract_fup(file_path: str, output_path: str):
+    streams = []
+    ole = olefile.OleFileIO(file_path)
+    for stream_path in ole.listdir():
+        stream_name = '/'.join(stream_path)
+        if (ole.exists(stream_name) and not ole.get_type(stream_name) == olefile.STGTY_STORAGE):
+            stream_data = ole.openstream(stream_name).read()
+            stream_info = {
+                'name': stream_name,
+                'data': stream_data,
+                'path': stream_path,
+                'size': len(stream_data)
+            }
+            streams.append(stream_info)
+            print(f'Name: {stream_name}, Path: {stream_path}, Size: {len(stream_data)}')
+    ole.close()
+    for stream in streams:
+        if stream['name'] in BLACKLISTED_STREAMS: continue
+        stream_decompressed = decompress_stream(stream['data'])
+        stream_output_path = os.path.join(output_path, stream['name'])
+        with open(stream_output_path, 'wb') as f:
+            f.write(stream_decompressed)
