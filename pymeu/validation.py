@@ -1,7 +1,7 @@
 import struct
 
-from .terminal import helper
-from .terminal import registry
+from .me import helper
+from .me import registry
 from . import comms
 from . import messages
 from . import types

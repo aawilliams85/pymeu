@@ -5,10 +5,10 @@ import time
 import traceback
 from typing import Optional
 
-from .terminal import files
-from .terminal import fuwhelper
-from .terminal import helper
-from .terminal import registry
+from .me import files
+from .me import fuwhelper
+from .me import helper
+from .me import registry
 from . import comms
 from . import types
 
@@ -577,7 +577,6 @@ def flash_firmware_pvp5(
     fuwhelper.stop_process(cip, device.me_paths, 'FUWCover.exe')
     fuwhelper.start_process(cip, device.me_paths, '\\Storage Card\\upgrade\\autorun.exe')
     return True
-
 
 def flash_firmware_pvp6(
     cip: comms.Driver, 

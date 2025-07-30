@@ -4,9 +4,8 @@ import unittest
 
 from pymeu import actions
 from pymeu import comms
-from pymeu import fup
 from pymeu import MEUtility
-from pymeu import terminal
+from pymeu import me
 from pymeu import types
 from pymeu import validation
 
@@ -25,12 +24,12 @@ class helper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             folder_path = device.device_paths.runtime
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.helper.create_folder(cip, device.device_paths, folder_path)
+                value = me.helper.create_folder(cip, device.device_paths, folder_path)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.helper.HelperFunctions.CREATE_FOLDER} {folder_path}\n'
+                    f'Function: {me.helper.HelperFunctions.CREATE_FOLDER} {folder_path}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -69,12 +68,12 @@ class helper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             file_path = device.device_paths.helper_file
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.helper.get_file_exists(cip, device.device_paths, file_path)
+                value = me.helper.get_file_exists(cip, device.device_paths, file_path)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.helper.HelperFunctions.GET_FILE_EXISTS} {file_path}\n'
+                    f'Function: {me.helper.HelperFunctions.GET_FILE_EXISTS} {file_path}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -88,12 +87,12 @@ class helper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             file_path = NONEXISTENT_FILE
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.helper.get_file_exists(cip, device.device_paths, file_path)
+                value = me.helper.get_file_exists(cip, device.device_paths, file_path)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.helper.HelperFunctions.GET_FILE_EXISTS} {file_path}\n'
+                    f'Function: {me.helper.HelperFunctions.GET_FILE_EXISTS} {file_path}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -107,12 +106,12 @@ class helper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             file_path = device.device_paths.helper_file
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.helper.get_file_size(cip, device.device_paths, file_path)
+                value = me.helper.get_file_size(cip, device.device_paths, file_path)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.helper.HelperFunctions.GET_FILE_SIZE} {file_path}\n'
+                    f'Function: {me.helper.HelperFunctions.GET_FILE_SIZE} {file_path}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -130,11 +129,11 @@ class helper_tests(unittest.TestCase):
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.helper.HelperFunctions.GET_FILE_SIZE} {file_path}\n'
+                    f'Function: {me.helper.HelperFunctions.GET_FILE_SIZE} {file_path}\n'
                 )
                 print(result)
                 with self.assertRaises(FileNotFoundError):
-                    terminal.helper.get_file_size(cip, device.device_paths, file_path)
+                    me.helper.get_file_size(cip, device.device_paths, file_path)
         #self.assertTrue(all(x == results[0] for x in results))
 
     def test_get_folder_exists(self):
@@ -143,12 +142,12 @@ class helper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             folder_path = device.device_paths.storage
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.helper.get_folder_exists(cip, device.device_paths, folder_path)
+                value = me.helper.get_folder_exists(cip, device.device_paths, folder_path)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.helper.HelperFunctions.GET_FOLDER_EXISTS} {folder_path}\n'
+                    f'Function: {me.helper.HelperFunctions.GET_FOLDER_EXISTS} {folder_path}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -162,12 +161,12 @@ class helper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             folder_path = NONEXISTENT_FOLDER
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.helper.get_folder_exists(cip, device.device_paths, folder_path)
+                value = me.helper.get_folder_exists(cip, device.device_paths, folder_path)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.helper.HelperFunctions.GET_FOLDER_EXISTS} {folder_path}\n'
+                    f'Function: {me.helper.HelperFunctions.GET_FOLDER_EXISTS} {folder_path}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -181,12 +180,12 @@ class helper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             folder_path = f'{device.device_paths.runtime}\\'
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.helper.get_free_space(cip, device.device_paths, folder_path)
+                value = me.helper.get_free_space(cip, device.device_paths, folder_path)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.helper.HelperFunctions.GET_FREE_SPACE} {folder_path}\n'
+                    f'Function: {me.helper.HelperFunctions.GET_FREE_SPACE} {folder_path}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -204,11 +203,11 @@ class helper_tests(unittest.TestCase):
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.helper.HelperFunctions.GET_FREE_SPACE} {folder_path}\n'
+                    f'Function: {me.helper.HelperFunctions.GET_FREE_SPACE} {folder_path}\n'
                 )
                 print(result)
                 with self.assertRaises(FileNotFoundError):
-                    terminal.helper.get_free_space(cip, device.device_paths, folder_path)
+                    me.helper.get_free_space(cip, device.device_paths, folder_path)
 
     def test_get_version(self):
         print('')
@@ -216,12 +215,12 @@ class helper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             file_path = device.device_paths.helper_file
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.helper.get_version(cip, device.device_paths, file_path)
+                value = me.helper.get_version(cip, device.device_paths, file_path)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.helper.HelperFunctions.GET_VERSION} {file_path}\n'
+                    f'Function: {me.helper.HelperFunctions.GET_VERSION} {file_path}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -239,11 +238,11 @@ class helper_tests(unittest.TestCase):
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.helper.HelperFunctions.GET_VERSION} {file_path}\n'
+                    f'Function: {me.helper.HelperFunctions.GET_VERSION} {file_path}\n'
                 )
                 print(result)
                 with self.assertRaises(FileNotFoundError):
-                    terminal.helper.get_version(cip, device.device_paths, file_path)
+                    me.helper.get_version(cip, device.device_paths, file_path)
 
     def tearDown(self):
         pass
@@ -252,11 +251,11 @@ class registry_tests(unittest.TestCase):
     def setUp(self):
         self.skip_pairs = {
             PVP5: {
-                terminal.registry.RegKeys.ME_STARTUP_APP,
-                terminal.registry.RegKeys.ME_STARTUP_DELETE_LOGS,
-                terminal.registry.RegKeys.ME_STARTUP_LOAD_CURRENT,
-                terminal.registry.RegKeys.ME_STARTUP_OPTIONS,
-                terminal.registry.RegKeys.ME_STARTUP_REPLACE_COMMS
+                me.registry.RegKeys.ME_STARTUP_APP,
+                me.registry.RegKeys.ME_STARTUP_DELETE_LOGS,
+                me.registry.RegKeys.ME_STARTUP_LOAD_CURRENT,
+                me.registry.RegKeys.ME_STARTUP_OPTIONS,
+                me.registry.RegKeys.ME_STARTUP_REPLACE_COMMS
             },
         }
 
@@ -267,11 +266,11 @@ class registry_tests(unittest.TestCase):
             file_path = device.device_paths.helper_file
             with comms.Driver(comms_path, driver=driver) as cip:
                 kvp = []
-                for key in terminal.registry.RegKeys:
+                for key in me.registry.RegKeys:
                     if device.name in self.skip_pairs and key in self.skip_pairs[device.name]:
                         value = 'Skipping known failure.'
                     else:
-                        value = f'Value: {terminal.registry.get_value(cip, [key])}'
+                        value = f'Value: {me.registry.get_value(cip, [key])}'
 
                     result = (
                         f'Device: {device.name}\n'
@@ -591,7 +590,7 @@ class upload_tests(unittest.TestCase):
                 # Open parallel transfer instance (normally transfer instance 1)
                 device2 = validation.get_terminal_info(cip2)
                 path2 = f'{device2.me_paths.runtime}\\{device.mer_files[0]}'
-                transfer_instance_2, transfer_size_2 = terminal.files.create_transfer_instance_upload(cip2, path2)
+                transfer_instance_2, transfer_size_2 = me.files.create_transfer_instance_upload(cip2, path2)
 
                 # Perform upload (normally transfer instance 2)
                 resp = meu.upload(upload_file_path, overwrite=True)
@@ -600,23 +599,23 @@ class upload_tests(unittest.TestCase):
                 self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
 
                 # Close parallel transfer instance
-                terminal.files.delete_transfer_instance(cip2, transfer_instance_2)
+                me.files.delete_transfer_instance(cip2, transfer_instance_2)
 
     def tearDown(self):
         pass
 
-class fup_tests(unittest.TestCase):
+class decompress_tests(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_fup_unpack(self):
+    def test_decompress_fup(self):
         print('')
         for path in PVP5_FUP_File_Paths:
-            fup.extract_fup_to_disk(path, os.path.join(FIRMWARE_FOLDER_PATH, 'FUP_Extracted'))
+            me.decompress.decompress_archive_to_disk(path, os.path.join(FIRMWARE_FOLDER_PATH, 'FUP_Extracted'))
 
-    def test_mer_unpack(self):
+    def test_decompress_mer(self):
         print('')
-        fup.extract_fup_to_disk(os.path.join(UPLOAD_FOLDER_PATH, 'PVP7A', 'pycomm3', 'Test_v11_A.mer'), os.path.join(UPLOAD_FOLDER_PATH, 'MER_Extracted'))
+        me.decompress.decompress_archive_to_disk(os.path.join(UPLOAD_FOLDER_PATH, 'PVP7A', 'pycomm3', 'Test_v11_A.mer'), os.path.join(UPLOAD_FOLDER_PATH, 'MER_Extracted'))
 
     def tearDown(self):
         pass
@@ -875,12 +874,12 @@ class fuwhelper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             with comms.Driver(comms_path, driver=driver) as cip:
                 if device.local_firmware_helper_path:
-                    value = terminal.fuwhelper.get_process_running(cip, device.device_paths, MERUNTIME_PROCESS)
+                    value = me.fuwhelper.get_process_running(cip, device.device_paths, MERUNTIME_PROCESS)
                     result = (
                         f'Device: {device.name}\n' 
                         f'Driver: {driver}\n' 
                         f'Path: {comms_path}\n'
-                        f'Function: {terminal.fuwhelper.FuwHelperFunctions.GET_PROCESS_RUNNING}\n'
+                        f'Function: {me.fuwhelper.FuwHelperFunctions.GET_PROCESS_RUNNING}\n'
                         f'Value: {value}\n'
                     )
                     print(result)
@@ -894,12 +893,12 @@ class fuwhelper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             if device.name != PVP5: continue # Only used in PVP5 firmware upgrade wizard
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.fuwhelper.get_free_space(cip, device.device_paths, '\\Storage Card')
+                value = me.fuwhelper.get_free_space(cip, device.device_paths, '\\Storage Card')
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.GET_FREE_SPACE}\n'
+                    f'Function: {me.fuwhelper.FuwHelperFunctions.GET_FREE_SPACE}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -912,12 +911,12 @@ class fuwhelper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             if device.name != PVP5: continue # Only used in PVP5 firmware upgrade wizard
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.fuwhelper.get_os_rev(cip, device.device_paths)
+                value = me.fuwhelper.get_os_rev(cip, device.device_paths)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.GET_TERMINAL_OS_REV}\n'
+                    f'Function: {me.fuwhelper.FuwHelperFunctions.GET_TERMINAL_OS_REV}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -930,12 +929,12 @@ class fuwhelper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             if device.name != PVP5: continue # Only used in PVP5 firmware upgrade wizard
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.fuwhelper.get_partition_size(cip, device.device_paths)
+                value = me.fuwhelper.get_partition_size(cip, device.device_paths)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.GET_TERMINAL_PARTITION_SIZE}\n'
+                    f'Function: {me.fuwhelper.FuwHelperFunctions.GET_TERMINAL_PARTITION_SIZE}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -948,12 +947,12 @@ class fuwhelper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             with comms.Driver(comms_path, driver=driver) as cip:
                 if device.local_firmware_helper_path:
-                    value = terminal.fuwhelper.get_process_running(cip, device.device_paths, NONEXISTENT_PROCESS)
+                    value = me.fuwhelper.get_process_running(cip, device.device_paths, NONEXISTENT_PROCESS)
                     result = (
                         f'Device: {device.name}\n' 
                         f'Driver: {driver}\n' 
                         f'Path: {comms_path}\n'
-                        f'Function: {terminal.fuwhelper.FuwHelperFunctions.GET_PROCESS_RUNNING}\n'
+                        f'Function: {me.fuwhelper.FuwHelperFunctions.GET_PROCESS_RUNNING}\n'
                         f'Value: {value}\n'
                     )
                     print(result)
@@ -967,12 +966,12 @@ class fuwhelper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             if device.name != PVP5: continue # Only used in PVP5 firmware upgrade wizard
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.fuwhelper.get_total_space(cip, device.device_paths, '\\Storage Card')
+                value = me.fuwhelper.get_total_space(cip, device.device_paths, '\\Storage Card')
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.GET_TOTAL_SPACE}\n'
+                    f'Function: {me.fuwhelper.FuwHelperFunctions.GET_TOTAL_SPACE}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -986,24 +985,24 @@ class fuwhelper_tests(unittest.TestCase):
             if device.name != PVP5: continue # Only used in PVP5 firmware upgrade wizard
             with comms.Driver(comms_path, driver=driver) as cip:
                 cip.timeout = 255.0
-                value = terminal.fuwhelper.set_me_corrupt_screen(cip, device.device_paths, False)
+                value = me.fuwhelper.set_me_corrupt_screen(cip, device.device_paths, False)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.DISABLE_ME_CORRUPT_SCREEN}\n'
+                    f'Function: {me.fuwhelper.FuwHelperFunctions.DISABLE_ME_CORRUPT_SCREEN}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
                 self.assertEqual(value, True)
                 results.append(value)
 
-                value = terminal.fuwhelper.set_me_corrupt_screen(cip, device.device_paths, True)
+                value = me.fuwhelper.set_me_corrupt_screen(cip, device.device_paths, True)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.ENABLE_ME_CORRUPT_SCREEN}\n'
+                    f'Function: {me.fuwhelper.FuwHelperFunctions.ENABLE_ME_CORRUPT_SCREEN}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -1017,24 +1016,24 @@ class fuwhelper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             if device.name != PVP5: continue # Only used in PVP5 firmware upgrade wizard
             with comms.Driver(comms_path, driver=driver) as cip:
-                value = terminal.fuwhelper.set_screensaver(cip, device.device_paths, False)
+                value = me.fuwhelper.set_screensaver(cip, device.device_paths, False)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.DISABLE_SCREENSAVER}\n'
+                    f'Function: {me.fuwhelper.FuwHelperFunctions.DISABLE_SCREENSAVER}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
                 self.assertEqual(value, True)
                 results.append(value)
 
-                value = terminal.fuwhelper.set_screensaver(cip, device.device_paths, True)
+                value = me.fuwhelper.set_screensaver(cip, device.device_paths, True)
                 result = (
                     f'Device: {device.name}\n' 
                     f'Driver: {driver}\n' 
                     f'Path: {comms_path}\n'
-                    f'Function: {terminal.fuwhelper.FuwHelperFunctions.ENABLE_SCREENSAVER}\n'
+                    f'Function: {me.fuwhelper.FuwHelperFunctions.ENABLE_SCREENSAVER}\n'
                     f'Value: {value}\n'
                 )
                 print(result)
@@ -1048,12 +1047,12 @@ class fuwhelper_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             with comms.Driver(comms_path, driver=driver) as cip:
                 if device.local_firmware_helper_path:
-                    value = terminal.fuwhelper.stop_process_me(cip, device.device_paths)
+                    value = me.fuwhelper.stop_process_me(cip, device.device_paths)
                     result = (
                         f'Device: {device.name}\n' 
                         f'Driver: {driver}\n' 
                         f'Path: {comms_path}\n'
-                        f'Function: {terminal.fuwhelper.FuwHelperFunctions.STOP_PROCESS_ME}\n'
+                        f'Function: {me.fuwhelper.FuwHelperFunctions.STOP_PROCESS_ME}\n'
                         f'Value: {value}\n'
                     )
                     print(result)

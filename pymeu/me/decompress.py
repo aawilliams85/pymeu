@@ -16,30 +16,30 @@ BLACKLISTED_STREAMS = [
     '__MAPPER0' # Future: extract this as the filename of the Kepware install
 ]
 
-def get_int8_nibbles(value: int):
+def _get_int8_nibbles(value: int):
     high_nibble = (value >> 4) & 0x0F
     low_nibble = value & 0x0F
     return (low_nibble, high_nibble)
 
-def get_control_values(bytes: bytearray):
-    (length, offset_msb) = get_int8_nibbles(bytes[0])
+def _get_control_values(bytes: bytearray):
+    (length, offset_msb) = _get_int8_nibbles(bytes[0])
     offset_lsb = bytes[1]
     offset = (offset_msb << 8) + offset_lsb
     length += 1
     return (length, offset)
 
-def get_expected_length(bytes):
+def _get_expected_length(bytes):
     tokens = int.from_bytes(bytes, byteorder='little').bit_count()
     literals = DATA_SIZE - tokens
     length = (tokens * 2) + literals
     return length
 
-def is_token(bytes: bytes, index) -> bool:
+def _is_token(bytes: bytes, index) -> bool:
     tokens = int.from_bytes(bytes, byteorder='little').bit_count()
     if (tokens & (1 << index)): return True
     return False
 
-def decompress_page(input: bytearray) -> bytearray:
+def _decompress_page(input: bytearray) -> bytearray:
     output = bytearray()
     length = len(input)
     offset = 0
@@ -58,7 +58,7 @@ def decompress_page(input: bytearray) -> bytearray:
         control_bytes = input[offset:offset + CONTROL_SIZE]
         if not control_bytes: break
         control_int = int.from_bytes(control_bytes, byteorder='little')
-        control_length = get_expected_length(control_bytes)
+        control_length = _get_expected_length(control_bytes)
 
         offset += CONTROL_SIZE
         data_bytes = input[offset:offset + control_length]
@@ -72,7 +72,7 @@ def decompress_page(input: bytearray) -> bytearray:
             if control_int & (1 << data_index):
             #if is_token(control_int, data_index):
                 token_bytes = data_bytes[byte_index:byte_index+TOKEN_SIZE]
-                (token_length, token_offset) = get_control_values(token_bytes)
+                (token_length, token_offset) = _get_control_values(token_bytes)
 
                 head = len(output)
                 token_index = 0
@@ -99,7 +99,7 @@ def decompress_page(input: bytearray) -> bytearray:
     # Return decompressed page bytes
     return output
 
-def decompress_stream(input: bytearray) -> bytearray:
+def _decompress_stream(input: bytearray) -> bytearray:
     output = bytearray()
     length = len(input)
     offset = 0
@@ -110,11 +110,19 @@ def decompress_stream(input: bytearray) -> bytearray:
         page_bytes = input[offset:offset + page_size]
         offset += page_size
 
-        output += decompress_page(page_bytes)
+        output += _decompress_page(page_bytes)
 
     return output
 
-def extract_fup(ole: olefile.OleFileIO, output_path: str):
+def _create_subfolders(output_path: str, archive_paths: list[str]):
+    folders = archive_paths[:-1]
+    current_path = output_path
+    for folder in folders:
+        current_path = os.path.join(current_path, folder)
+        os.makedirs(current_path, exist_ok=True)
+    return os.path.join(current_path, archive_paths[-1])
+
+def decompress_archive(ole: olefile.OleFileIO, output_path: str):
     streams = []
     for stream_path in ole.listdir():
         stream_name = '/'.join(stream_path)
@@ -130,12 +138,13 @@ def extract_fup(ole: olefile.OleFileIO, output_path: str):
             print(f'Name: {stream_name}, Path: {stream_path}, Size: {len(stream_data)}')
     return streams
 
-def extract_fup_to_disk(file_path: str, output_path: str):
+def decompress_archive_to_disk(file_path: str, output_path: str):
     with olefile.OleFileIO(file_path) as ole:
-        streams = extract_fup(ole, output_path)
+        streams = decompress_archive(ole, output_path)
         for stream in streams:
-            if stream['name'] in BLACKLISTED_STREAMS: continue
-            stream_decompressed = decompress_stream(stream['data'])
-            stream_output_path = os.path.join(output_path, stream['path'][-1])
+            if stream['name'] in BLACKLISTED_STREAMS: continue # Skipping some streams for now
+            stream_output_path = _create_subfolders(output_path, stream['path'])
+            stream_decompressed = _decompress_stream(stream['data'])
+            #stream_output_path = os.path.join(output_path, stream['path'][-1])
             with open(stream_output_path, 'wb') as f:
                 f.write(stream_decompressed)

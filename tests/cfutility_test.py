@@ -4,7 +4,7 @@ import unittest
 
 from pymeu import comms
 from pymeu import CFUtility
-from pymeu import terminal
+from pymeu import me
 from pymeu import types
 from pymeu import validation
 
