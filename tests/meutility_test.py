@@ -611,11 +611,11 @@ class decompress_tests(unittest.TestCase):
     def test_decompress_fup(self):
         print('')
         for path in PVP5_FUP_File_Paths:
-            me.decompress.decompress_archive_to_disk(path, os.path.join(LOCAL_OUTPUT_FUP_PATH, 'Extracted'))
+            me.decompress.decompress_archive_to_disk(path, os.path.join(LOCAL_OUTPUT_FUP_PATH, f'{os.path.basename(path)}.Extracted'))
 
     def test_decompress_mer(self):
         print('')
-        me.decompress.decompress_archive_to_disk(os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_A.mer'), os.path.join(LOCAL_OUTPUT_MER_PATH, 'Test_V11_A_Extracted'))
+        me.decompress.decompress_archive_to_disk(os.path.join(LOCAL_INPUT_MER_PATH, PVP5_MER_Files[0]), os.path.join(LOCAL_OUTPUT_MER_PATH, f'{PVP5_MER_Files[0]}.Extracted'))
 
     def tearDown(self):
         pass

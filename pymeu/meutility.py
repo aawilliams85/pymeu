@@ -266,7 +266,7 @@ class MEUtility(object):
         rem_file = types.MEFile(self.remote_file_name,False,False,file_path)
 
         # Create upload folder if it doesn't exist yet
-        if not(os.path.exists(os.path.dirname(file.path))): os.makedirs(os.path.dirname(file.path))
+        if not(os.path.exists(os.path.dirname(file.path))): os.makedirs(os.path.dirname(file.path), exist_ok=True)
 
         with comms.Driver(self.comms_path, self.driver) as cip:
             # Validate device at this communications path is a terminal of known version.
@@ -312,7 +312,7 @@ class MEUtility(object):
         self.overwrite = overwrite
 
         # Create upload folder if it doesn't exist yet
-        if not(os.path.exists(file_path)): os.makedirs(os.path.dirname(file_path))
+        if not(os.path.exists(file_path)): os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
         with comms.Driver(self.comms_path, self.driver) as cip:
             # Validate device at this communications path is a terminal of known version.

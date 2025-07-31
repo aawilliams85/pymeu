@@ -65,8 +65,7 @@ NONEXISTENT_PROCESS = 'NonexistentProcess.exe'
 
 # PanelView Plus configuration
 PVP5 = '2711P_PanelViewPlus_v5'
-#PVP5_Comms_Paths = ['192.168.40.20','192.168.40.11,bp,3,enet,192.168.1.20']
-PVP5_Comms_Paths = ['192.168.1.20','192.168.40.11,bp,3,enet,192.168.1.20']
+PVP5_Comms_Paths = ['192.168.40.20','192.168.40.11,bp,3,enet,192.168.1.20']
 PVP5_Device_Paths = types.MEPaths(
     f'\\Storage Card\\Rockwell Software\\RSViewME\\{HELPER_FILE_NAME}',
     '\\Storage Card',
@@ -84,9 +83,8 @@ PVP5_Local_Firmware_Image_Paths = [
     os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP5, 'ME_PVP4xX_5.10.16.09.WithViewPoint'),
 ]
 PVP5_MER_Files = [
-    'Test_v5_A.mer',
-    'Test_v5_B.mer',
-    'Test_v5_C.mer'
+    'Test_v5_640x480_A.mer',
+    'Test_v5_640x480_B.mer'
 ]
 
 # PanelView Plus 6 configuration
@@ -105,9 +103,8 @@ PVP6_Local_Firmware_Image_Paths = [
     os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP6, 'ME_PVP6xX_12.00-20200922', 'upgrade', 'SC.IMG'),
 ]
 PVP6_MER_Files = [
-    'Test_v11_A.mer',
-    'Test_v11_B.mer',
-    'Test_v11_C.mer'
+    'Test_v11_640x480_A.mer',
+    'Test_v11_640x480_B.mer',
 ]
 
 # PanelView Plus 7A configuration
@@ -126,9 +123,8 @@ PVP7A_Local_Firmware_Image_Paths = [
     os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP7A, 'ME_PVP7xX_15.00-20240926', 'upgrade', 'SC.IMG'),
 ]
 PVP7A_MER_Files = [
-    'Test_v11_A.mer',
-    'Test_v11_B.mer',
-    'Test_v11_C.mer'
+    'Test_v11_1024x768_A.mer',
+    'Test_v11_1024x768_B.mer'
 ]
 
 #PanelView Plus 7B configuration
@@ -145,9 +141,8 @@ PVP7B_Local_Firmware_Image_Paths = [
     os.path.join(LOCAL_INPUT_PATH, 'DMK', PVP7B, '2711P-PanelView_Plus_7_Performance_15.100.dmk')
 ]
 PVP7B_MER_Files = [
-    'Test_v11_A.mer',
-    'Test_v11_B.mer',
-    'Test_v11_C.mer'
+    'Test_v11_1024x768_A.mer',
+    'Test_v11_1024x768_B.mer'
 ]
 
 DEVICE_PVP5 = METestDevice(
@@ -202,7 +197,7 @@ DEVICES = [
     DEVICE_PVP5,
     DEVICE_PVP6,
     DEVICE_PVP7A,
-    DEVICE_PVP7B    
+    #DEVICE_PVP7B    
 ]
 
 DRIVER_PYCOMM3 = 'pycomm3'
