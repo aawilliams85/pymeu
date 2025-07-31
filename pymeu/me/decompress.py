@@ -11,10 +11,11 @@ TOKEN_SIZE = 2
 BLACKLISTED_STREAMS = [
     'DIRSIZE_INFORMATION',
     'PRODUCT_VERSION_INFORMATION',
-    'VERSION_INFORMATION',
-    '__MAPPEE0', # Future: extract this as the data portion of the Kepware install
-    '__MAPPER0' # Future: extract this as the filename of the Kepware install
+    'VERSION_INFORMATION'
 ]
+
+STREAM_NAME_MAPPED_DATA = '__MAPPEE'
+STREAM_NAME_MAPPED_NAME = '__MAPPER'
 
 def _get_int8_nibbles(value: int):
     high_nibble = (value >> 4) & 0x0F
@@ -122,6 +123,13 @@ def _create_subfolders(output_path: str, archive_paths: list[str]):
         os.makedirs(current_path, exist_ok=True)
     return os.path.join(current_path, archive_paths[-1])
 
+def _get_name_string(input: bytearray) -> str:
+    offset = 0
+    length = int.from_bytes(input[offset:offset + PAGE_HEADER_SIZE_BYTES], byteorder='little')
+    offset += PAGE_HEADER_SIZE_BYTES
+    name = input[offset:].decode('utf-16-le').rstrip('\x00')
+    return name
+
 def decompress_archive(ole: olefile.OleFileIO, output_path: str):
     streams = []
     for stream_path in ole.listdir():
@@ -144,8 +152,22 @@ def decompress_archive_to_disk(file_path: str, output_path: str):
 
     with olefile.OleFileIO(file_path) as ole:
         streams = decompress_archive(ole, output_path)
+        streams_processed = []
+        mapped_names = []
+        for stream in streams:
+            if stream['name'].startswith(STREAM_NAME_MAPPED_NAME):
+                mapped_names.append(_get_name_string(stream['data']))
+                streams_processed += stream['name']
+        print(mapped_names)
+
         for stream in streams:
             if stream['name'] in BLACKLISTED_STREAMS: continue # Skipping some streams for now
+            if stream['name'] in streams_processed: continue
+
+            if stream['name'].startswith(STREAM_NAME_MAPPED_DATA):
+                print()
+                pass
+
             stream_output_path = _create_subfolders(output_path, stream['path'])
             stream_decompressed = _decompress_stream(stream['data'])
             with open(stream_output_path, 'wb') as f:
