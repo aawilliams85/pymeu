@@ -14,8 +14,8 @@ BLACKLISTED_STREAMS = [
     'VERSION_INFORMATION'
 ]
 
-STREAM_NAME_MAPPED_DATA = '__MAPPEE'
-STREAM_NAME_MAPPED_NAME = '__MAPPER'
+STREAM_NAME_MAPPEE = '__MAPPEE'
+STREAM_NAME_MAPPER = '__MAPPER'
 
 def _get_int8_nibbles(value: int):
     high_nibble = (value >> 4) & 0x0F
@@ -123,18 +123,36 @@ def _create_subfolders(output_path: str, archive_paths: list[str]):
         os.makedirs(current_path, exist_ok=True)
     return os.path.join(current_path, archive_paths[-1])
 
-def _get_name_string(input: bytearray) -> str:
+def _get_mapper_filename(input: bytearray) -> str:
+    # If 
     offset = 0
     length = int.from_bytes(input[offset:offset + PAGE_HEADER_SIZE_BYTES], byteorder='little')
     offset += PAGE_HEADER_SIZE_BYTES
     name = input[offset:].decode('utf-16-le').rstrip('\x00')
     return name
 
+def _get_mapper_for_mappee(ole: olefile.OleFileIO, mappee_name: str) -> str:
+    # The assumption is that if there are multipel MAPPER/MAPPEE pairs
+    # in the archive, that they have unique numbers at end of the stream name.
+    mapper_name = mappee_name.replace(STREAM_NAME_MAPPEE, STREAM_NAME_MAPPER)
+    mapper_data = ole.openstream(mapper_name).read()
+    return _get_mapper_filename(mapper_data)
+
 def decompress_archive(ole: olefile.OleFileIO, output_path: str):
     streams = []
     for stream_path in ole.listdir():
         stream_name = '/'.join(stream_path)
         if (ole.exists(stream_name) and not ole.get_type(stream_name) == olefile.STGTY_STORAGE):
+            # If a stream name starts with __MAPPEE it has the content of the file.
+            # If a stream name starts with __MAPPER it has the name of the file.
+            #
+            # This logic restores the name from the MAPPER to the MAPPEE and
+            # excludes the MAPPER from the stream list.
+            if stream_name.startswith(STREAM_NAME_MAPPEE):
+                stream_path[-1] = _get_mapper_for_mappee(ole, stream_name)
+            if stream_name.startswith(STREAM_NAME_MAPPER):
+                continue
+
             stream_data = ole.openstream(stream_name).read()
             stream_info = {
                 'name': stream_name,
@@ -152,22 +170,8 @@ def decompress_archive_to_disk(file_path: str, output_path: str):
 
     with olefile.OleFileIO(file_path) as ole:
         streams = decompress_archive(ole, output_path)
-        streams_processed = []
-        mapped_names = []
-        for stream in streams:
-            if stream['name'].startswith(STREAM_NAME_MAPPED_NAME):
-                mapped_names.append(_get_name_string(stream['data']))
-                streams_processed += stream['name']
-        print(mapped_names)
-
         for stream in streams:
             if stream['name'] in BLACKLISTED_STREAMS: continue # Skipping some streams for now
-            if stream['name'] in streams_processed: continue
-
-            if stream['name'].startswith(STREAM_NAME_MAPPED_DATA):
-                print()
-                pass
-
             stream_output_path = _create_subfolders(output_path, stream['path'])
             stream_decompressed = _decompress_stream(stream['data'])
             with open(stream_output_path, 'wb') as f:
