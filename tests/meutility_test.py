@@ -6,8 +6,8 @@ from pymeu import actions
 from pymeu import comms
 from pymeu import MEUtility
 from pymeu import me
-from pymeu import types
-from pymeu import validation
+from pymeu.me import types
+from pymeu.me import validation
 
 from config import *
 

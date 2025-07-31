@@ -1,7 +1,7 @@
 import unittest
 
 from pymeu import CFUtility
-from pymeu import types
+from pymeu.cf import types
 
 from config import *
 

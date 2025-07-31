@@ -6,7 +6,7 @@ from warnings import warn
 
 from .. import comms
 from .. import messages
-from .. import types
+from . import types
 
 # Known values associated with some file services, with unclear purpose or meaning.
 # Further investigation needed.

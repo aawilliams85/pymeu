@@ -2,7 +2,7 @@ import unittest
 
 from pymeu import comms
 from pymeu import me
-from pymeu import validation
+from pymeu.me import validation
 
 from config import *
 

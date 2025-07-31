@@ -4,7 +4,7 @@ from warnings import warn
 
 from .. import comms
 from .. import messages
-from .. import types 
+from . import types 
 
 
 # Known static value for successful creation of a folder.

@@ -5,8 +5,8 @@ from warnings import warn
 
 from . import actions
 from . import comms
-from . import types
-from . import validation
+from .me import types
+from .me import validation
 
 class MEUtility(object):
     def __init__(

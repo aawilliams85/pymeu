@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import os
 
-from pymeu import types
+from pymeu.me import types
 
 @dataclass
 class METestDevice:

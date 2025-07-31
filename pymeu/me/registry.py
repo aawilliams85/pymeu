@@ -1,5 +1,5 @@
-
 from enum import StrEnum
+
 from .. import comms
 from .. import messages
 

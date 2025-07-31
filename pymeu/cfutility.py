@@ -5,8 +5,8 @@ from warnings import warn
 
 from . import comms
 from .cf import dmk
-from . import types
-from . import validation
+from .cf import types
+from .cf import validation
 
 class CFUtility(object):
     def __init__(
@@ -36,7 +36,7 @@ class CFUtility(object):
         firmware_image_path: str, 
         dry_run: bool = False,
         progress: Optional[Callable[[str, int, int], None]] = None
-    ) -> types.MEResponse:
+    ) -> types.CFResponse:
         """
         Flashes a firmware image to the remote terminal.
 
@@ -64,7 +64,7 @@ class CFUtility(object):
             cip.timeout = 255.0
 
             # Validate device at this communications path is a terminal of known version.
-            self.device = validation.get_terminal_info(cip)
+            self.device = validation.get_device_info(cip)
             if not(validation.is_valid_dmk_terminal(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
@@ -81,10 +81,10 @@ class CFUtility(object):
                     progress=progress)                    
                 if not(resp):
                     self.device.log.append(f'Failed to flash terminal.')
-                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    return types.CFResponse(self.device, types.MEResponseStatus.FAILURE)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to flash terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.CFResponse(self.device, types.MEResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.CFResponse(self.device, types.MEResponseStatus.SUCCESS)

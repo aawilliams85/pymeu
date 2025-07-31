@@ -5,12 +5,12 @@ import time
 import traceback
 from typing import Optional
 
+from . import comms
 from .me import files
 from .me import fuwhelper
 from .me import helper
 from .me import registry
-from . import comms
-from . import types
+from .me import types
 
 def create_log(
     cip: comms.Driver, 

@@ -1,8 +1,8 @@
 from enum import StrEnum
 
-from . import helper
 from .. import comms
-from .. import types
+from . import helper
+from . import types
 
 # Known static value for successful creation of a folder.
 # Further investigation needed.

@@ -8,7 +8,7 @@ import zipfile
 
 from .. import comms
 from .. import messages
-from .. import types
+from . import types
 
 FILE_NANE_CONTENT = 'Content.txt'
 FILE_NAME_NVS = 'RA_PVPApps_FTviewME_AllRegions.nvs'
@@ -205,7 +205,7 @@ def send_dmk_reset(cip: comms.Driver):
     resp = messages.reset(cip, req_data)
     if not resp: raise Exception(f'Failed to reset terminal.')
 
-def send_dmk_updates(cip: comms.Driver, device: types.MEDeviceInfo, dmk_file_path: str, nvs: types.DMKNvsFile, progress: Optional[Callable[[str, int, int], None]] = None):
+def send_dmk_updates(cip: comms.Driver, device: types.CFDeviceInfo, dmk_file_path: str, nvs: types.DMKNvsFile, progress: Optional[Callable[[str, int, int], None]] = None):
     cip.close()
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
         instance = 0
@@ -241,7 +241,7 @@ def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
                 if (actual_size != update.file_size):
                     raise Exception(f'File: {update.data_file_name}, Expected Size: {update.file_size}, Actual Size: {actual_size}')
 
-def process_dmk(cip: comms.Driver, device: types.MEDeviceInfo, dmk_file_path: str, dry_run: bool, progress: Optional[Callable[[str, int, int], None]] = None):
+def process_dmk(cip: comms.Driver, device: types.CFDeviceInfo, dmk_file_path: str, dry_run: bool, progress: Optional[Callable[[str, int, int], None]] = None):
     config_content = configparser.ConfigParser(allow_unnamed_section=True)
     config_nvs = configparser.ConfigParser(allow_unnamed_section=True, allow_no_value=True)
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
@@ -270,7 +270,7 @@ def process_dmk(cip: comms.Driver, device: types.MEDeviceInfo, dmk_file_path: st
 def masked_equals(mask: int, a: int, b: int) -> bool:
     return (mask & a) == (mask & b)
 
-def validate_dmk_for_terminal(device: types.MEDeviceInfo, content: types.DMKContentFile) -> bool:
+def validate_dmk_for_terminal(device: types.CFDeviceInfo, content: types.DMKContentFile) -> bool:
     for catalog in content.catalogs:
         if not(masked_equals(catalog.vendor_id_mask, catalog.vendor_id, device.cip_identity.vendor_id)): continue
         if not(masked_equals(catalog.product_type_mask, catalog.product_type, device.cip_identity.product_type)): continue
