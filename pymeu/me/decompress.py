@@ -139,12 +139,14 @@ def decompress_archive(ole: olefile.OleFileIO, output_path: str):
     return streams
 
 def decompress_archive_to_disk(file_path: str, output_path: str):
+    # Create output folder if it doesn't exist yet
+    if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
+
     with olefile.OleFileIO(file_path) as ole:
         streams = decompress_archive(ole, output_path)
         for stream in streams:
             if stream['name'] in BLACKLISTED_STREAMS: continue # Skipping some streams for now
             stream_output_path = _create_subfolders(output_path, stream['path'])
             stream_decompressed = _decompress_stream(stream['data'])
-            #stream_output_path = os.path.join(output_path, stream['path'][-1])
             with open(stream_output_path, 'wb') as f:
                 f.write(stream_decompressed)

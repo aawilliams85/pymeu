@@ -295,7 +295,7 @@ class download_tests(unittest.TestCase):
         print('')
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
-            download_file_path = os.path.join(DOWNLOAD_FOLDER_PATH, device.mer_files[0].replace('.mer','.zzz'))
+            download_file_path = os.path.join(LOCAL_INPUT_MER_PATH, device.mer_files[0].replace('.mer','.zzz'))
             result = (
                     f'Device: {device.name}\n'
                     f'Driver: {driver}\n'
@@ -313,7 +313,7 @@ class download_tests(unittest.TestCase):
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
             for mer_file in device.mer_files:
-                download_file_path = os.path.join(DOWNLOAD_FOLDER_PATH, mer_file)
+                download_file_path = os.path.join(LOCAL_INPUT_MER_PATH, mer_file)
                 result = (
                         f'Device: {device.name}\n'
                         f'Driver: {driver}\n'
@@ -331,7 +331,7 @@ class download_tests(unittest.TestCase):
         count = 0
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
-            download_file_path = os.path.join(DOWNLOAD_FOLDER_PATH, device.mer_files[0])
+            download_file_path = os.path.join(LOCAL_INPUT_MER_PATH, device.mer_files[0])
             result = (
                     f'Device: {device.name}\n'
                     f'Driver: {driver}\n'
@@ -351,7 +351,7 @@ class download_tests(unittest.TestCase):
         count = 0
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
-            download_file_path = os.path.join(DOWNLOAD_FOLDER_PATH, device.mer_files[0])
+            download_file_path = os.path.join(LOCAL_INPUT_MER_PATH, device.mer_files[0])
             result = (
                     f'Device: {device.name}\n'
                     f'Driver: {driver}\n'
@@ -372,7 +372,7 @@ class download_tests(unittest.TestCase):
         count = 0
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
-            download_file_path = os.path.join(DOWNLOAD_FOLDER_PATH, device.mer_files[0])
+            download_file_path = os.path.join(LOCAL_INPUT_MER_PATH, device.mer_files[0])
             result = (
                     f'Device: {device.name}\n'
                     f'Driver: {driver}\n'
@@ -486,7 +486,7 @@ class upload_tests(unittest.TestCase):
         print('')
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
-            upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, 'Nonexistent_Project.mer')
+            upload_file_path = os.path.join(LOCAL_OUTPUT_MER_PATH, 'Nonexistent_Project.mer')
             result = (
                     f'Device: {device.name}\n'
                     f'Driver: {driver}\n'
@@ -504,7 +504,7 @@ class upload_tests(unittest.TestCase):
         results = []
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
-            upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, device.name, driver, device.mer_files[0])
+            upload_file_path = os.path.join(LOCAL_OUTPUT_MER_PATH, device.name, driver, device.mer_files[0])
             result = (
                     f'Device: {device.name}\n'
                     f'Driver: {driver}\n'
@@ -524,7 +524,7 @@ class upload_tests(unittest.TestCase):
         results = []
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
-            upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, device.name, driver, device.mer_files[0])
+            upload_file_path = os.path.join(LOCAL_OUTPUT_MER_PATH, device.name, driver, device.mer_files[0])
             result = (
                     f'Device: {device.name}\n'
                     f'Driver: {driver}\n'
@@ -543,12 +543,12 @@ class upload_tests(unittest.TestCase):
         print('')
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
-            upload_folder_path = os.path.join(UPLOAD_FOLDER_PATH, device.name, driver)
+            upload_folder_path = os.path.join(LOCAL_OUTPUT_MER_PATH, device.name, driver)
             result = (
                     f'Device: {device.name}\n'
                     f'Driver: {driver}\n'
                     f'Path: {comms_path}\n'
-                    f'Function: upload_all({UPLOAD_FOLDER_PATH}, overwrite=True)\n'
+                    f'Function: upload_all({LOCAL_OUTPUT_MER_PATH}, overwrite=True)\n'
             )
             print(result)
             resp = meu.upload_all(upload_folder_path, overwrite=True)
@@ -560,12 +560,12 @@ class upload_tests(unittest.TestCase):
         print('')
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
-            upload_folder_path = os.path.join(UPLOAD_FOLDER_PATH, device.name, driver)
+            upload_folder_path = os.path.join(LOCAL_OUTPUT_MER_PATH, device.name, driver)
             result = (
                     f'Device: {device.name}\n'
                     f'Driver: {driver}\n'
                     f'Path: {comms_path}\n'
-                    f'Function: upload_all({UPLOAD_FOLDER_PATH}, overwrite=True)\n'
+                    f'Function: upload_all({LOCAL_OUTPUT_MER_PATH}, overwrite=True)\n'
             )
             print(result)
             resp = meu.upload_all(upload_folder_path, overwrite=True, progress=progress_callback)
@@ -577,7 +577,7 @@ class upload_tests(unittest.TestCase):
         print('')
         for (device, driver, comms_path) in test_combinations:
             meu = MEUtility(comms_path, driver=driver)
-            upload_file_path = os.path.join(UPLOAD_FOLDER_PATH, device.name, driver, device.mer_files[0])
+            upload_file_path = os.path.join(LOCAL_OUTPUT_MER_PATH, device.name, driver, device.mer_files[0])
             result = (
                     f'Device: {device.name}\n'
                     f'Driver: {driver}\n'
@@ -611,11 +611,11 @@ class decompress_tests(unittest.TestCase):
     def test_decompress_fup(self):
         print('')
         for path in PVP5_FUP_File_Paths:
-            me.decompress.decompress_archive_to_disk(path, os.path.join(FIRMWARE_FOLDER_PATH, 'FUP_Extracted'))
+            me.decompress.decompress_archive_to_disk(path, os.path.join(LOCAL_OUTPUT_FUP_PATH, 'Extracted'))
 
     def test_decompress_mer(self):
         print('')
-        me.decompress.decompress_archive_to_disk(os.path.join(UPLOAD_FOLDER_PATH, 'PVP7A', 'pycomm3', 'Test_v11_A.mer'), os.path.join(UPLOAD_FOLDER_PATH, 'MER_Extracted'))
+        me.decompress.decompress_archive_to_disk(os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_A.mer'), os.path.join(LOCAL_OUTPUT_MER_PATH, 'Test_V11_A_Extracted'))
 
     def tearDown(self):
         pass

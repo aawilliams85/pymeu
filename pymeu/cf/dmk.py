@@ -6,9 +6,9 @@ from typing import Optional
 from warnings import warn
 import zipfile
 
-from . import comms
-from . import messages
-from . import types
+from .. import comms
+from .. import messages
+from .. import types
 
 FILE_NANE_CONTENT = 'Content.txt'
 FILE_NAME_NVS = 'RA_PVPApps_FTviewME_AllRegions.nvs'

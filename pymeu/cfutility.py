@@ -4,7 +4,7 @@ from typing import Optional
 from warnings import warn
 
 from . import comms
-from . import dmk
+from .cf import dmk
 from . import types
 from . import validation
 

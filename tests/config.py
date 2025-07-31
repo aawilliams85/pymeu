@@ -44,10 +44,15 @@ def progress_callback(description: str, total_bytes: int, current_bytes: int):
     print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
 
 # Shared paths - computer
-BASE_PATH = os.path.abspath(os.path.dirname(__file__))
-DOWNLOAD_FOLDER_PATH = os.path.join(BASE_PATH, 'download')
-UPLOAD_FOLDER_PATH = os.path.join(BASE_PATH, 'upload')
-FIRMWARE_FOLDER_PATH = os.path.join(BASE_PATH, 'firmware')
+LOCAL_BASE_PATH = os.path.abspath(os.path.dirname(__file__))
+LOCAL_INPUT_PATH = os.path.join(LOCAL_BASE_PATH, 'input_files')
+LOCAL_OUTPUT_PATH = os.path.join(LOCAL_BASE_PATH, 'output_files')
+LOCAL_INPUT_DMK_PATH = os.path.join(LOCAL_INPUT_PATH, 'DMK')
+LOCAL_INPUT_FUP_PATH = os.path.join(LOCAL_INPUT_PATH, 'FUP')
+LOCAL_INPUT_HELPER_PATH = os.path.join(LOCAL_INPUT_PATH, 'Helper')
+LOCAL_INPUT_MER_PATH = os.path.join(LOCAL_INPUT_PATH, 'MER')
+LOCAL_OUTPUT_FUP_PATH = os.path.join(LOCAL_OUTPUT_PATH, 'FUP')
+LOCAL_OUTPUT_MER_PATH = os.path.join(LOCAL_OUTPUT_PATH, 'MER')
 
 # Shared paths - terminal
 HELPER_FILE_NAME = 'RemoteHelper.DLL'
@@ -59,7 +64,7 @@ MERUNTIME_PROCESS = 'MERuntime.exe'
 NONEXISTENT_PROCESS = 'NonexistentProcess.exe'
 
 # PanelView Plus configuration
-PVP5 = 'PVP5'
+PVP5 = '2711P_PanelViewPlus_v5'
 #PVP5_Comms_Paths = ['192.168.40.20','192.168.40.11,bp,3,enet,192.168.1.20']
 PVP5_Comms_Paths = ['192.168.1.20','192.168.40.11,bp,3,enet,192.168.1.20']
 PVP5_Device_Paths = types.MEPaths(
@@ -70,13 +75,13 @@ PVP5_Device_Paths = types.MEPaths(
     '\\Storage Card\\FUWhelper.dll'
 )
 PVP5_FUP_File_Paths = [
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUP', '2711P_PanelViewPlus_v5', 'ME_PVP4xX_5.10.16.09.fup')
+    os.path.join(LOCAL_INPUT_PATH, 'FUP', PVP5, 'ME_PVP4xX_5.10.16.09.fup')
 ]
-PVP5_Local_Firmware_Cover_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v11', 'FUWCover4xX.exe')
-PVP5_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v11', 'FUWhelper4xX.dll')
+PVP5_Local_Firmware_Cover_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v11', 'FUWCover4xX.exe')
+PVP5_Local_Firmware_Helper_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v11', 'FUWhelper4xX.dll')
 PVP5_Local_Firmware_Image_Paths = [
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v5', 'ME_PVP4xX_5.10.16.09'),
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v5', 'ME_PVP4xX_5.10.16.09.WithViewPoint'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP5, 'ME_PVP4xX_5.10.16.09'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP5, 'ME_PVP4xX_5.10.16.09.WithViewPoint'),
 ]
 PVP5_MER_Files = [
     'Test_v5_A.mer',
@@ -85,7 +90,7 @@ PVP5_MER_Files = [
 ]
 
 # PanelView Plus 6 configuration
-PVP6 = 'PVP6'
+PVP6 = '2711P_PanelViewPlus_v6'
 PVP6_Comms_Paths = ['192.168.40.21','192.168.40.11,bp,3,enet,192.168.1.21']
 PVP6_Device_Paths = types.MEPaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
@@ -94,10 +99,10 @@ PVP6_Device_Paths = types.MEPaths(
     f'\\Application Data\\{RUNTIME_PATH}',
     '\\Storage Card\\FUWhelper.dll'
 )
-PVP6_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
+PVP6_Local_Firmware_Helper_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
 PVP6_Local_Firmware_Image_Paths = [
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v6', 'ME_PVP6xX_11.00-20190915', 'upgrade', 'SC.IMG'),
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v6', 'ME_PVP6xX_12.00-20200922', 'upgrade', 'SC.IMG'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP6, 'ME_PVP6xX_11.00-20190915', 'upgrade', 'SC.IMG'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP6, 'ME_PVP6xX_12.00-20200922', 'upgrade', 'SC.IMG'),
 ]
 PVP6_MER_Files = [
     'Test_v11_A.mer',
@@ -106,7 +111,7 @@ PVP6_MER_Files = [
 ]
 
 # PanelView Plus 7A configuration
-PVP7A = 'PVP7A'
+PVP7A = '2711P_PanelViewPlus_v7A'
 PVP7A_Comms_Paths = ['192.168.40.22','192.168.40.11,bp,3,enet,192.168.1.22']
 PVP7A_Device_Paths = types.MEPaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
@@ -115,10 +120,10 @@ PVP7A_Device_Paths = types.MEPaths(
     f'\\Application Data\\{RUNTIME_PATH}',
     '\\Storage Card\\FUWhelper.dll'
 )
-PVP7A_Local_Firmware_Helper_Path = os.path.join(FIRMWARE_FOLDER_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
+PVP7A_Local_Firmware_Helper_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
 PVP7A_Local_Firmware_Image_Paths = [
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v7A', 'ME_PVP7xX_11.00-20190916', 'upgrade', 'SC.IMG'),
-    os.path.join(FIRMWARE_FOLDER_PATH, 'FUC', '2711P_PanelViewPlus_v7A', 'ME_PVP7xX_15.00-20240926', 'upgrade', 'SC.IMG'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP7A, 'ME_PVP7xX_11.00-20190916', 'upgrade', 'SC.IMG'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP7A, 'ME_PVP7xX_15.00-20240926', 'upgrade', 'SC.IMG'),
 ]
 PVP7A_MER_Files = [
     'Test_v11_A.mer',
@@ -127,7 +132,7 @@ PVP7A_MER_Files = [
 ]
 
 #PanelView Plus 7B configuration
-PVP7B = 'PVP7B'
+PVP7B = '2711P_PanelViewPlus_v7B'
 PVP7B_Comms_Paths = ['192.168.40.23','192.168.40.11,bp,3,enet,192.168.1.23']
 PVP7B_Device_Paths = types.MEPaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
@@ -137,7 +142,7 @@ PVP7B_Device_Paths = types.MEPaths(
     '\\Storage Card\\FUWhelper.dll'
 )
 PVP7B_Local_Firmware_Image_Paths = [
-    os.path.join(FIRMWARE_FOLDER_PATH, 'DMK', '2711P_PanelViewPlus_v7B', '2711P-PanelView_Plus_7_Performance_15.100.dmk')
+    os.path.join(LOCAL_INPUT_PATH, 'DMK', PVP7B, '2711P-PanelView_Plus_7_Performance_15.100.dmk')
 ]
 PVP7B_MER_Files = [
     'Test_v11_A.mer',
