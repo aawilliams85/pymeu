@@ -50,11 +50,7 @@ coverage.xml
 docs/_build/
 
 #Input files for tests
-/tests/input_files/DMK
-/tests/input_files/FUC
-/tests/input_files/FUP
-/tests/input_files/FUW
-/tests/input_files/Helper
+/tests/input_files/*
 
 #Output files from tests
 /tests/output_files/*
