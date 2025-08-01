@@ -1,18 +1,14 @@
 import olefile
 import os
 
+from . import types
+
 CONTROL_SIZE = 2
 DATA_SIZE = 16
 LITERAL_SIZE = 1
 PAGE_CONTROL_SIZE_BYTES = 4
 PAGE_HEADER_SIZE_BYTES = 4
 TOKEN_SIZE = 2
-
-BLACKLISTED_STREAMS = [
-    'DIRSIZE_INFORMATION',
-    'PRODUCT_VERSION_INFORMATION',
-    'VERSION_INFORMATION'
-]
 
 STREAM_NAME_MAPPEE = '__MAPPEE'
 STREAM_NAME_MAPPER = '__MAPPER'
@@ -29,7 +25,7 @@ def _get_control_values(bytes: bytearray):
     length += 1
     return (length, offset)
 
-def _get_expected_length(bytes):
+def _get_expected_length(bytes) -> int:
     tokens = int.from_bytes(bytes, byteorder='little').bit_count()
     literals = DATA_SIZE - tokens
     length = (tokens * 2) + literals
@@ -46,7 +42,6 @@ def _decompress_page(input: bytearray) -> bytearray:
     offset = 0
     page_control_bytes = input[offset:offset + PAGE_CONTROL_SIZE_BYTES]
     offset += PAGE_CONTROL_SIZE_BYTES
-    #print(page_control_bytes)
 
     # If page is not compressed, return the rest of the page as-is
     if (page_control_bytes[0] == 0x01):
@@ -64,7 +59,6 @@ def _decompress_page(input: bytearray) -> bytearray:
         offset += CONTROL_SIZE
         data_bytes = input[offset:offset + control_length]
         actual_length = len(data_bytes)
-        #if (actual_length != control_length): print(f'Actual length: {actual_length}')
         offset += control_length
 
         # Each chunk is comprised of a fixed number of data tokens (some literal, some pointers)
@@ -124,7 +118,6 @@ def _create_subfolders(output_path: str, archive_paths: list[str]):
     return os.path.join(current_path, archive_paths[-1])
 
 def _get_mapper_filename(input: bytearray) -> str:
-    # If 
     offset = 0
     length = int.from_bytes(input[offset:offset + PAGE_HEADER_SIZE_BYTES], byteorder='little')
     offset += PAGE_HEADER_SIZE_BYTES
@@ -132,13 +125,13 @@ def _get_mapper_filename(input: bytearray) -> str:
     return name
 
 def _get_mapper_for_mappee(ole: olefile.OleFileIO, mappee_name: str) -> str:
-    # The assumption is that if there are multipel MAPPER/MAPPEE pairs
+    # The assumption is that if there are multiple MAPPER/MAPPEE pairs
     # in the archive, that they have unique numbers at end of the stream name.
     mapper_name = mappee_name.replace(STREAM_NAME_MAPPEE, STREAM_NAME_MAPPER)
     mapper_data = ole.openstream(mapper_name).read()
     return _get_mapper_filename(mapper_data)
 
-def decompress_archive(ole: olefile.OleFileIO, output_path: str):
+def decompress_archive(ole: olefile.OleFileIO, output_path: str) -> list[types.MEArchive]:
     streams = []
     for stream_path in ole.listdir():
         stream_name = '/'.join(stream_path)
@@ -152,27 +145,35 @@ def decompress_archive(ole: olefile.OleFileIO, output_path: str):
                 stream_path[-1] = _get_mapper_for_mappee(ole, stream_name)
             if stream_name.startswith(STREAM_NAME_MAPPER):
                 continue
-
+            
             stream_data = ole.openstream(stream_name).read()
-            stream_info = {
-                'name': stream_name,
-                'data': stream_data,
-                'path': stream_path,
-                'size': len(stream_data)
-            }
+            try:
+                stream_data = _decompress_stream(stream_data)
+            except Exception as e:
+                # Some streams aren't compressed AND 
+                print(e)
+
+            stream_info = types.MEArchive(
+                name=stream_name,
+                data=stream_data,
+                path=stream_path,
+                size=len(stream_data)
+            )
+                
             streams.append(stream_info)
             print(f'Name: {stream_name}, Path: {stream_path}, Size: {len(stream_data)}')
     return streams
 
-def decompress_archive_to_disk(file_path: str, output_path: str):
+def archive_to_disk(file_path: str, output_path: str):
+    # Directly dump archive with no application-specific
+    # handling (ex: for *.FUP or *.MER)
+
     # Create output folder if it doesn't exist yet
     if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
 
     with olefile.OleFileIO(file_path) as ole:
         streams = decompress_archive(ole, output_path)
         for stream in streams:
-            if stream['name'] in BLACKLISTED_STREAMS: continue # Skipping some streams for now
-            stream_output_path = _create_subfolders(output_path, stream['path'])
-            stream_decompressed = _decompress_stream(stream['data'])
+            stream_output_path = _create_subfolders(output_path, stream.path)
             with open(stream_output_path, 'wb') as f:
-                f.write(stream_decompressed)
+                f.write(stream.data)

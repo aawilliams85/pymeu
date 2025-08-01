@@ -5,12 +5,12 @@ import time
 import traceback
 from typing import Optional
 
-from . import comms
-from .me import files
-from .me import fuwhelper
-from .me import helper
-from .me import registry
-from .me import types
+from .. import comms
+from . import filetransfer
+from . import fuwhelper
+from . import helper
+from . import registry
+from . import types
 
 def create_log(
     cip: comms.Driver, 
@@ -79,7 +79,7 @@ def download(
     # If they aren't changed by creating paths, could be moved ahead
     # to is_download_valid().
     try:
-        get_unk1 = files.is_get_unk_valid(cip)
+        get_unk1 = filetransfer.is_get_unk_valid(cip)
         if get_unk1:
             device.log.append(f'Got UNK1 attributes from terminal.')
         else:
@@ -92,7 +92,7 @@ def download(
 
     # Create a transfer instance on the terminal
     try:
-        transfer_instance = files.create_transfer_instance_download(cip, file, rem_path)
+        transfer_instance = filetransfer.create_transfer_instance_download(cip, file, rem_path)
         device.log.append(f'Create transfer instance {transfer_instance} for download.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -104,7 +104,7 @@ def download(
     # Still no clue what this is.  Might be setting file up for write?
     continue_download = True
     try:
-        set_unk1 = files.is_set_unk_valid(cip)
+        set_unk1 = filetransfer.is_set_unk_valid(cip)
         if set_unk1:
             device.log.append(f'Set UNK1 attributes on terminal.')
         else:
@@ -118,7 +118,7 @@ def download(
     # Transfer file chunk by chunk
     try:
         if continue_download:
-            files.execute_transfer_download(
+            filetransfer.execute_transfer_download(
                 cip=cip,
                 transfer_instance=transfer_instance,
                 source_data=file_data,
@@ -132,7 +132,7 @@ def download(
 
     # Delete transfer instance on the terminal
     try:
-        files.delete_transfer_instance(cip, transfer_instance)
+        filetransfer.delete_transfer_instance(cip, transfer_instance)
         device.log.append(f'Deleted transfer instance {transfer_instance}.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -630,7 +630,7 @@ def upload(
 ) -> bytearray:
     # Create a transfer instance on the terminal
     try:
-        transfer_instance, total_bytes = files.create_transfer_instance_upload(cip, f'{rem_file_path}')
+        transfer_instance, total_bytes = filetransfer.create_transfer_instance_upload(cip, f'{rem_file_path}')
         device.log.append(f'Create transfer instance {transfer_instance} for upload.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -639,7 +639,7 @@ def upload(
 
     # Transfer file chunk by chunk
     try:
-        resp_binary = files.execute_transfer_upload(cip, transfer_instance, total_bytes, progress)
+        resp_binary = filetransfer.execute_transfer_upload(cip, transfer_instance, total_bytes, progress)
         device.log.append(f'Uploaded {rem_file_path} using transfer instance {transfer_instance}.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')
@@ -647,7 +647,7 @@ def upload(
 
     # Delete transfer instance on the terminal
     try:
-        files.delete_transfer_instance(cip, transfer_instance)
+        filetransfer.delete_transfer_instance(cip, transfer_instance)
         device.log.append(f'Deleted transfer instance {transfer_instance}.')
     except Exception as e:
         device.log.append(f'Exception: {str(e)}')

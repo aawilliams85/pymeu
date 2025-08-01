@@ -2,7 +2,7 @@ import filecmp
 import time
 import unittest
 
-from pymeu import actions
+from pymeu.me import actions
 from pymeu import comms
 from pymeu import MEUtility
 from pymeu import me
@@ -590,7 +590,7 @@ class upload_tests(unittest.TestCase):
                 # Open parallel transfer instance (normally transfer instance 1)
                 device2 = validation.get_terminal_info(cip2)
                 path2 = f'{device2.me_paths.runtime}\\{device.mer_files[0]}'
-                transfer_instance_2, transfer_size_2 = me.files.create_transfer_instance_upload(cip2, path2)
+                transfer_instance_2, transfer_size_2 = me.filetransfer.create_transfer_instance_upload(cip2, path2)
 
                 # Perform upload (normally transfer instance 2)
                 resp = meu.upload(upload_file_path, overwrite=True)
@@ -599,7 +599,7 @@ class upload_tests(unittest.TestCase):
                 self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
 
                 # Close parallel transfer instance
-                me.files.delete_transfer_instance(cip2, transfer_instance_2)
+                me.filetransfer.delete_transfer_instance(cip2, transfer_instance_2)
 
     def tearDown(self):
         pass
@@ -611,11 +611,11 @@ class decompress_tests(unittest.TestCase):
     def test_decompress_fup(self):
         print('')
         for path in PVP5_FUP_File_Paths:
-            me.decompress.decompress_archive_to_disk(path, os.path.join(LOCAL_OUTPUT_FUP_PATH, f'{os.path.basename(path)}.Extracted'))
+            me.firmware.fup_to_disk(path, os.path.join(LOCAL_OUTPUT_FUP_PATH, f'{os.path.basename(path)}.Extracted'))
 
     def test_decompress_mer(self):
         print('')
-        me.decompress.decompress_archive_to_disk(os.path.join(LOCAL_INPUT_MER_PATH, PVP5_MER_Files[0]), os.path.join(LOCAL_OUTPUT_MER_PATH, f'{PVP5_MER_Files[0]}.Extracted'))
+        me.decompress.archive_to_disk(os.path.join(LOCAL_INPUT_MER_PATH, PVP5_MER_Files[0]), os.path.join(LOCAL_OUTPUT_MER_PATH, f'{PVP5_MER_Files[0]}.Extracted'))
 
     def tearDown(self):
         pass

@@ -3,7 +3,7 @@ import os
 from typing import Optional
 from warnings import warn
 
-from . import actions
+from .me import actions
 from . import comms
 from .me import types
 from .me import validation
@@ -89,24 +89,24 @@ class MEUtility(object):
                     self.device.log.append(f'Validated download for {file.name}.')
                 else:
                     self.device.log.append(f'Failed to validate download.')
-                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to validate download.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
             # Perform *.MER download to terminal
             try:
                 resp = actions.download_mer_file(cip, self.device, file, self.run_at_startup, self.replace_comms, self.delete_logs, progress)
                 if not(resp):
                     self.device.log.append(f'Failed to download to terminal.')
-                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to download to terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
     
     def flash_firmware(
         self, 
@@ -169,13 +169,13 @@ class MEUtility(object):
 
                 if not(resp):
                     self.device.log.append(f'Failed to flash terminal.')
-                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to flash terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
 
     def get_terminal_info(
         self, 
@@ -213,9 +213,9 @@ class MEUtility(object):
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to get terminal info.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
 
     def reboot(
         self
@@ -236,9 +236,9 @@ class MEUtility(object):
                 actions.reboot(cip, self.device)
             except Exception as e:
                 self.device.log.append(f'Failed to reboot terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
 
     def upload(
         self, 
@@ -280,20 +280,20 @@ class MEUtility(object):
             # Check for existing *.MER
             if not(self.overwrite) and (os.path.exists(file.path)):
                 self.device.log.append(f'File {file.path} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
             # Perform *.MER upload from terminal
             try:
                 resp = actions.upload_mer_file(cip, self.device, file, rem_file, progress)
                 if not(resp):
                     self.device.log.append(f'Failed to upload from terminal.')
-                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to upload from terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
 
     def upload_all(
         self, 
@@ -328,7 +328,7 @@ class MEUtility(object):
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to upload *.MER list from terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
             
             for mer in mer_list:
                 if len(mer) > 0:
@@ -338,17 +338,17 @@ class MEUtility(object):
                     # Check for existing *.MER
                     if not(self.overwrite) and (os.path.exists(mer_path)):
                         self.device.log.append(f'File {mer_path} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
-                        return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                        return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
                     
                     # Perform *.MER upload from terminal
                     try:
                         resp = actions.upload_mer_file(cip, self.device, file, file, progress)
                         if not(resp):
                             self.device.log.append(f'Failed to upload from terminal.')
-                            return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                            return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
                     except Exception as e:
                         self.device.log.append(f'Exception: {str(e)}')
                         self.device.log.append(f'Failed to upload from terminal.')
-                        return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                        return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)

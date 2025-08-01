@@ -1,8 +1,42 @@
 import os
 from dataclasses import dataclass, field
-from enum import StrEnum
 
-from ..common.types import CIPIdentity
+from ..common.types import CIPIdentity, ResponseStatus
+
+@dataclass
+class MEArchive:
+    name: str
+    data: bytearray
+    path: list[str]
+    size: int
+
+@dataclass
+class MEFupVersion:
+    plat: int
+    os: str
+    me: str
+    kep: str
+    minos: str
+    maxos: str
+    ard: int
+
+@dataclass
+class MEFupCard:
+    files: list[(str, str)]
+    ram_size_bytes: int
+    storage_size_bytes: int
+    fp_size: int
+
+@dataclass
+class MEFupDrivers:
+    drivers: list[(str, int)]
+
+@dataclass
+class MEFupManifest:
+    version: MEFupVersion
+    fwc: MEFupCard
+    otw: MEFupCard
+    drivers: MEFupDrivers
 
 @dataclass
 class MEv5FileListHeader:
@@ -75,7 +109,3 @@ class MEDeviceInfo:
 class MEResponse(object):
     device: MEDeviceInfo
     status: str
-
-class MEResponseStatus(StrEnum):
-    SUCCESS = 'Success'
-    FAILURE = 'Failure'

@@ -1,4 +1,3 @@
-import os
 from dataclasses import dataclass, field
 from enum import StrEnum
 
@@ -13,3 +12,7 @@ class CIPIdentity:
     serial_number: str = field(repr=False)
     status: int
     vendor_id: int
+
+class ResponseStatus(StrEnum):
+    SUCCESS = 'Success'
+    FAILURE = 'Failure'

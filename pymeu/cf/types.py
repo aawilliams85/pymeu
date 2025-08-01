@@ -1,8 +1,6 @@
-import os
 from dataclasses import dataclass, field
-from enum import StrEnum
 
-from ..common.types import CIPIdentity
+from ..common.types import CIPIdentity, ResponseStatus
 
 @dataclass
 class DMKContentHeader:
@@ -80,7 +78,3 @@ class CFDeviceInfo:
 class CFResponse(object):
     device: CFDeviceInfo
     status: str
-
-class MEResponseStatus(StrEnum):
-    SUCCESS = 'Success'
-    FAILURE = 'Failure'

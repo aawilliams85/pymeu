@@ -81,10 +81,10 @@ class CFUtility(object):
                     progress=progress)                    
                 if not(resp):
                     self.device.log.append(f'Failed to flash terminal.')
-                    return types.CFResponse(self.device, types.MEResponseStatus.FAILURE)
+                    return types.CFResponse(self.device, types.ResponseStatus.FAILURE)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to flash terminal.')
-                return types.CFResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.CFResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.CFResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.CFResponse(self.device, types.ResponseStatus.SUCCESS)
