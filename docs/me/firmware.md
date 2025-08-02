@@ -60,3 +60,55 @@ During creation of a FWC, or while transferring OTW, the selected FUP is expande
 ```code
 C:\Users\Public\Documents\RSView Enterprise\Temp\temp
 ```
+
+## File Structure
+### FUP
+The *.FUP file is an OLE 2.0 container that holds all of the file streams for the FUC.  Most of the useful streams are compressed.<br>
+For v5 FUPs, there are many files needed, including at least one file that is excluded from the FWC but necessary for OTW.<br>
+For v6/v7A FUPs, ignoring KepDrivers, there is a singular large *.IMG file that has the majority of the content.  One example: <br>
+```code
+DIRSIZE_INFORMATION
+FUWautorun.exe
+PRODUCT_VERSION_INFORMATION
+SC <DATE>.IMG
+upgrade.inf
+VERSION_INFORMATION
+```
+The file 'upgrade.inf' is a manifest that describes how to build the FWC and OTW forms from the FUC.  It also contains the values used to build upgrade.dat, which is NOT included as a stream in the FUP, probably because it needs to change based on user selections i.e. KepDrivers.<br>
+```code
+[version]
+Platform=(number)
+OS=(version string)
+ME=(version string)
+KEP=(version string)
+MINOS=(version string)
+MAXOS=(version string)
+ARD=(number)
+
+[FWC]
+upgrade.dat=\upgrade\upgrade.inf
+(filename in FUC=file path in FWC, 1 line per entry)
+AddRAMSize:(size in bytes)
+AddISCSize:(size in bytes)
+AddFPSize:(size in ???)
+
+[OTW]
+upgrade.dat=\upgrade\upgrade.inf
+(filename in FUC=file path in OTW, 1 line per entry)
+AddRAMSize:(size in bytes)
+AddISCSize:(size in bytes)
+AddFPSize:(size in ???)
+
+[KEPDRIVERS]
+(driver name=size in bytes, 1 line per entry)
+```
+
+For v5 terminals, 'MEFileList.inf' is a manifest that describes which existing files to delete on the terminal.<br>
+```code
+[info]
+ME=(version string)
+SizeOnDisk=(size in bytes)
+
+[MEFILES]
+(file paths, 1 line per entry)
+```
