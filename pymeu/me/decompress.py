@@ -32,9 +32,8 @@ def _get_expected_length(bytes) -> int:
     return length
 
 def _is_token(bytes: bytes, index) -> bool:
-    tokens = int.from_bytes(bytes, byteorder='little').bit_count()
-    if (tokens & (1 << index)): return True
-    return False
+    tokens = int.from_bytes(bytes, byteorder='little')
+    return bool(tokens & (1 << index))
 
 def _decompress_page(input: bytearray) -> bytearray:
     output = bytearray()
@@ -53,7 +52,6 @@ def _decompress_page(input: bytearray) -> bytearray:
         # At the start of each chunk is a pair of control bytes
         control_bytes = input[offset:offset + CONTROL_SIZE]
         if not control_bytes: break
-        control_int = int.from_bytes(control_bytes, byteorder='little')
         control_length = _get_expected_length(control_bytes)
 
         offset += CONTROL_SIZE
@@ -64,8 +62,7 @@ def _decompress_page(input: bytearray) -> bytearray:
         # Each chunk is comprised of a fixed number of data tokens (some literal, some pointers)
         byte_index = 0
         for data_index in range(DATA_SIZE):
-            if control_int & (1 << data_index):
-            #if is_token(control_int, data_index):
+            if _is_token(control_bytes, data_index):
                 token_bytes = data_bytes[byte_index:byte_index+TOKEN_SIZE]
                 (token_length, token_offset) = _get_control_values(token_bytes)
 
