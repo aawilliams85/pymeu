@@ -40,6 +40,17 @@ Firmware Upgrade Card (FUC): The firmware kit in an expanded form.<br>
 Firmware Card (FWC): A firmware kit expanded in a form specifically for removable media (i.e. USB or memory card).<br>
 Over-The-Wire (OTW): A firmware kit expanded in a form specifically for transmission over a network.<br>
 
+```mermaid
+graph LR;
+  FUW-->FUP;
+  FUP-->FUC;
+  FUC-->OTW;
+  FUC-->FWC;
+  FWC-->USB;
+  OTW-->Terminal;
+  USB-->Terminal;
+```
+
 ## Folder Paths
 After installation of the FUW, the corresponding FUP should be available in this folder:<br>
 ```code
