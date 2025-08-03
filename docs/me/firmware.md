@@ -81,7 +81,7 @@ C:\Program Files (x86)\Rockwell Software\RSView Enterprise
 It isn't clear which devices use which files in all cases.  General guidance:
 
 | Suffix | Platform
----------|--------
+|--------|--------
 | 4xM    | PanelView Plus 600 (Mozart?)
 | 4xX    | PanelView Plus 700-1500 (Raptor?)
 | 6xX    | PanelView Plus 6 700-1500
