@@ -1,4 +1,4 @@
-import filecmp
+import glob
 import time
 import unittest
 
@@ -610,8 +610,9 @@ class decompress_tests(unittest.TestCase):
 
     def test_decompress_fup(self):
         print('')
-        for path in PVP5_FUP_File_Paths:
-            me.firmware.fup_to_disk(path, os.path.join(LOCAL_OUTPUT_FUP_PATH, f'{os.path.basename(path)}.Extracted'))
+        for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
+            print(file)
+            me.firmware.fup_to_disk(file, os.path.join(LOCAL_OUTPUT_FUP_PATH, f'{os.path.basename(file)}.Extracted'))
 
     def test_decompress_mer(self):
         print('')

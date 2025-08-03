@@ -57,22 +57,25 @@ def _deserialize_me_fup_manifest(ini_content: str) -> types.MEFupManifest:
     fwc_section = config['FWC']
     fwc = types.MEFupCard(
         files=[],
-        ram_size_bytes=int(fwc_section['AddRAMSize']),
-        storage_size_bytes=int(fwc_section['AddISCSize']),
-        fp_size=int(fwc_section['AddFPSize'])
+        ram_size_bytes=int(fwc_section.get('AddRamSize', 0)),
+        storage_size_bytes=int(fwc_section.get('AddISCSize', 0)),
+        fp_size=int(fwc_section.get('AddFPSize', 0))
     )
 
     # Over-The-Wire
     otw_section = config['OTW']
     otw = types.MEFupCard(
         files=[],
-        ram_size_bytes=int(otw_section['AddRAMSize']),
-        storage_size_bytes=int(otw_section['AddISCSize']),
-        fp_size=int(otw_section['AddFPSize'])
+        ram_size_bytes=int(otw_section.get('AddRamSize', 0)),
+        storage_size_bytes=int(otw_section.get('AddISCSize', 0)),
+        fp_size=int(otw_section.get('AddFPSize', 0))
     )
 
     # Drivers
-    drivers_list = [(key, int(value)) for key, value in config.items('KEPDRIVERS')]
+    try:
+        drivers_list = [(key, int(value)) for key, value in config.items('KEPDRIVERS')]
+    except:
+        drivers_list = []
     drivers = types.MEFupDrivers(
         drivers=drivers_list
     )
