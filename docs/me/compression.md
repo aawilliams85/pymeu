@@ -4,13 +4,13 @@
 Inside an ME file (work targeted at *.FUP, may apply to *.APA, *.MER, and others) streams have some additional formatting that needs to be handled to extract them back into the expected files.  Many are also compressed with what seems to be some sort of LZ-based algorithm.  Some of this work is incomplete, but functional enough to decompress the files that have been tested so far.
 
 ##  Lexicon
-There is no officially provided frame-of-reference for interpreting the compressed streams inside some ME files (this work is targeted at *.FUP files, but may apply to *.APA and *.MER files) so this is an attempt to disambiguate them.
+There is no officially provided frame-of-reference for interpreting the compressed streams inside some ME files, so this is an attempt to disambiguate them.
 
 | Term        | Description
 |-------------|------------
 | Stream      | One file stream inside the OLE container (i.e. the *.FUP file).
 | Page        | One block of potentially multiple blocks of data that together form the original file.  May be compressed or uncompressed.
-| Chunk       | One block of potentially multiple blocks of data that together form a page.  In the decompressed form, there are a fixed number of tokens per chunk.
+| Chunk       | One block of potentially multiple blocks of data that together form a page.  In the compressed form, there are a fixed number of tokens per chunk.
 | Token       | One piece of data within a chunk.  In the compressed form, each token can be a literal byte value, or a pointer.  In the decompressed form, each token is a literal byte value.
 
 ## Page Structure

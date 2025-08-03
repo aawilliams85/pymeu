@@ -2,10 +2,10 @@ import glob
 import time
 import unittest
 
-from pymeu.me import actions
 from pymeu import comms
 from pymeu import MEUtility
 from pymeu import me
+from pymeu.me import actions
 from pymeu.me import types
 from pymeu.me import validation
 
@@ -612,7 +612,8 @@ class decompress_tests(unittest.TestCase):
         print('')
         for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
             print(file)
-            me.firmware.fup_to_disk(file, os.path.join(LOCAL_OUTPUT_FUP_PATH, f'{os.path.basename(file)}.Extracted'))
+            me.firmware.fup_to_disk(file, os.path.join(LOCAL_OUTPUT_FUP_PATH, f'{os.path.basename(file)}'))
+            raise Exception('Done')
 
     def test_decompress_mer(self):
         print('')

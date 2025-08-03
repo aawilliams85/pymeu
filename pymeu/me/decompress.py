@@ -3,12 +3,13 @@ import os
 
 from . import types
 
-CONTROL_SIZE = 2
-DATA_SIZE = 16
-LITERAL_SIZE = 1
+CHUNK_CONTROL_SIZE_BYTES = 2
+CHUNK_DATA_SIZE_TOKENS = 16
+PAGE_CONTEXT_SIZE_BYTES = 4095
 PAGE_CONTROL_SIZE_BYTES = 4
 PAGE_HEADER_SIZE_BYTES = 4
-TOKEN_SIZE = 2
+TOKEN_LITERAL_SIZE_BYTES = 1
+TOKEN_POINTER_SIZE_BYTES = 2
 
 STREAM_NAME_MAPPEE = '__MAPPEE'
 STREAM_NAME_MAPPER = '__MAPPER'
@@ -18,22 +19,55 @@ def _get_int8_nibbles(value: int):
     low_nibble = value & 0x0F
     return (low_nibble, high_nibble)
 
-def _get_control_values(bytes: bytearray):
+def _get_pointer_values(bytes: bytearray):
     (length, offset_msb) = _get_int8_nibbles(bytes[0])
     offset_lsb = bytes[1]
     offset = (offset_msb << 8) + offset_lsb
     length += 1
     return (length, offset)
 
-def _get_expected_length(bytes) -> int:
+def _get_expected_chunk_length(bytes) -> int:
     tokens = int.from_bytes(bytes, byteorder='little').bit_count()
-    literals = DATA_SIZE - tokens
+    literals = CHUNK_DATA_SIZE_TOKENS - tokens
     length = (tokens * 2) + literals
     return length
 
-def _is_token(bytes: bytes, index) -> bool:
-    tokens = int.from_bytes(bytes, byteorder='little')
-    return bool(tokens & (1 << index))
+def _is_pointer(control: int, index) -> bool:
+    return bool(control & (1 << index))
+
+def _decompress_chunk(input: bytearray, control: int, data: bytearray, length: int) -> bytearray:
+    output = bytearray(input)
+
+    # Each chunk is comprised of a fixed number of tokens (some literal, some pointers)
+    byte_index = 0
+    for data_index in range(CHUNK_DATA_SIZE_TOKENS):
+        if _is_pointer(control, data_index):
+            token_bytes = data[byte_index:byte_index+TOKEN_POINTER_SIZE_BYTES]
+            (token_length, token_offset) = _get_pointer_values(token_bytes)
+
+            head = len(output)
+            token_index = 0
+            while (token_index < token_length):
+                if (token_offset > 0):
+                    # Normally look back and slide forward.
+                    # This allows for the case where the length is
+                    # greater than the offset, so part of the new bytes
+                    # ends up used again within the same substitution.
+                    output.append(output[head - token_offset + token_index])
+                else:
+                    # Offset zero is a special case where the last char
+                    # is just repeated.
+                    output.append(output[head - 1])
+                token_index += 1
+
+            byte_index += TOKEN_POINTER_SIZE_BYTES
+        else:
+            output.append(data[byte_index])
+            byte_index += TOKEN_LITERAL_SIZE_BYTES
+        
+        if byte_index >= length: break
+
+    return output[len(input):]
 
 def _decompress_page(input: bytearray) -> bytearray:
     output = bytearray()
@@ -50,43 +84,18 @@ def _decompress_page(input: bytearray) -> bytearray:
     # Then parse through the rest of the page
     while offset < length:
         # At the start of each chunk is a pair of control bytes
-        control_bytes = input[offset:offset + CONTROL_SIZE]
-        if not control_bytes: break
-        control_length = _get_expected_length(control_bytes)
+        chunk_control_bytes = input[offset:offset + CHUNK_CONTROL_SIZE_BYTES]
+        chunk_control_int = int.from_bytes(chunk_control_bytes, 'little')
+        if not chunk_control_bytes: break
+        chunk_expected_length = _get_expected_chunk_length(chunk_control_bytes)
 
-        offset += CONTROL_SIZE
-        data_bytes = input[offset:offset + control_length]
-        actual_length = len(data_bytes)
-        offset += control_length
+        offset += CHUNK_CONTROL_SIZE_BYTES
+        chunk_data_bytes = input[offset:offset + chunk_expected_length]
+        chunk_actual_length = len(chunk_data_bytes)
+        offset += chunk_expected_length
 
-        # Each chunk is comprised of a fixed number of data tokens (some literal, some pointers)
-        byte_index = 0
-        for data_index in range(DATA_SIZE):
-            if _is_token(control_bytes, data_index):
-                token_bytes = data_bytes[byte_index:byte_index+TOKEN_SIZE]
-                (token_length, token_offset) = _get_control_values(token_bytes)
-
-                head = len(output)
-                token_index = 0
-                while (token_index < token_length):
-                    if (token_offset > 0):
-                        # Normally look back and slide forward.
-                        # This allows for the case where the length is
-                        # greater than the offset, so part of the new bytes
-                        # ends up used again within the same substitution.
-                        output.append(output[head - token_offset + token_index])
-                    else:
-                        # Offset zero is a special case where the last char
-                        # is just repeated.
-                        output.append(output[head - 1])
-                    token_index += 1
-
-                byte_index += TOKEN_SIZE
-            else:
-                output.append(data_bytes[byte_index])
-                byte_index += LITERAL_SIZE
-            
-            if byte_index >= actual_length: break
+        context = output[-PAGE_CONTEXT_SIZE_BYTES:]
+        output += _decompress_chunk(context, chunk_control_int, chunk_data_bytes, chunk_actual_length)
 
     # Return decompressed page bytes
     return output
