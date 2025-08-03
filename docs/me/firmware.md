@@ -52,11 +52,35 @@ graph LR;
 ```
 
 ## Folder Paths
-After installation of the FUW, the corresponding FUP should be available in this folder:<br>
+Helper binaries are installed to this folder, and get transferred to the terminal in order to supply functionality needed for firmware upgrade.  Some terminals (v7 series A?) maintain a copy onboard the terminal at \\Windows\\FUWhelper.dll.  Some files for v5 and earlier no longer provided in newer versions (v13+?).
+```code
+C:\Program Files (x86)\Rockwell Software\RSView Enterprise
+```
+| File             | Purpose
+|------------------|--------
+| FUWCover3xX.exe  | "Cover" program used only for terminals v5 and earlier to show firmware upgrade status.  Terminals v6+ have a progress bar integrated into the factory and don't use this or any equivalent.
+| FUWCover4xM.exe  | "Cover" program used only for terminals v5 and earlier to show firmware upgrade status.  Terminals v6+ have a progress bar integrated into the factory and don't use this or any equivalent.
+| FUWCover4xX.exe  | "Cover" program used only for terminals v5 and earlier to show firmware upgrade status.  Terminals v6+ have a progress bar integrated into the factory and don't use this or any equivalent.
+| FUWhelper3xX.dll | Firmware "Helper" file that works similar to the regular "Helper" file onboard the terminal and provides additional functions.
+| FUWhelper4xA.dll | Firmware "Helper" file that works similar to the regular "Helper" file onboard the terminal and provides additional functions.
+| FUWhelper4xM.dll | Firmware "Helper" file that works similar to the regular "Helper" file onboard the terminal and provides additional functions.
+| FUWhelper4xX.dll | Firmware "Helper" file that works similar to the regular "Helper" file onboard the terminal and provides additional functions.
+| FUWhelper6xA.dll | Firmware "Helper" file that works similar to the regular "Helper" file onboard the terminal and provides additional functions.
+| FUWhelper6xX.dll | Firmware "Helper" file that works similar to the regular "Helper" file onboard the terminal and provides additional functions.
+| RemoteHelper.dll | Regular "Helper" file that should already be onboard terminal.  Included here just as a note that it exists in the same location as the firmware helpers.
+
+It isn't clear which devices use which files in all cases.  General guidance:
+| Suffix | Platform
+---------|--------
+| 4xM    | PanelView Plus 600 (Mozart?)
+| 4xX    | PanelView Plus 700-1500 (Raptor?)
+| 6xX    | PanelView Plus 6 700-1500
+
+Each FUW should install the corresponding FUP to this folder:
 ```code
 C:\Program Files (x86)\Rockwell Software\RSView Enterprise\FUPs
 ```
-During creation of a FWC, or while transferring OTW, the selected FUP is expanded to the FUC in this folder.<br>
+During creation of a FWC, or while transferring OTW, the selected FUP is expanded to the FUC in this folder.
 ```code
 C:\Users\Public\Documents\RSView Enterprise\Temp\temp
 ```
