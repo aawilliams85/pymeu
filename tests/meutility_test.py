@@ -610,6 +610,7 @@ class decompress_tests(unittest.TestCase):
 
     def test_decompress_fup(self):
         print('')
+        test = 0
         for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
             print(file)
             start = time.time()
@@ -617,7 +618,8 @@ class decompress_tests(unittest.TestCase):
             end = time.time()
             elapsed_time = end - start
             print(elapsed_time)
-            raise Exception('Done')
+            test += 1
+            if test >= 1: raise Exception('Done')
 
     def test_decompress_mer(self):
         print('')

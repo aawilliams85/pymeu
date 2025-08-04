@@ -156,7 +156,8 @@ def decompress_archive(ole: olefile.OleFileIO, output_path: str) -> list[types.M
             try:
                 stream_data = _decompress_stream(stream_data)
             except Exception as e:
-                # Some streams aren't compressed AND 
+                # Some streams aren't compressed.
+                # TBD better way to handle retaining these in their original form.
                 print(e)
 
             stream_info = types.MEArchive(
@@ -167,7 +168,6 @@ def decompress_archive(ole: olefile.OleFileIO, output_path: str) -> list[types.M
             )
                 
             streams.append(stream_info)
-            print(f'Name: {stream_name}, Path: {stream_path}, Size: {len(stream_data)}')
     return streams
 
 def archive_to_disk(file_path: str, output_path: str):

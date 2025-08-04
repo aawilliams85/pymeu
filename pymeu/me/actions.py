@@ -190,21 +190,6 @@ def download_mer_file(
         
     return continue_download
 
-def deserialize_me_file_list(ini_content: str) -> types.MEv5FileList:
-    config = configparser.ConfigParser(allow_no_value=True)
-    config.read_string(ini_content)
-    info_section = config['info']
-    info = types.MEv5FileListHeader(
-        me=info_section['ME'],
-        size_on_disk=int(info_section['SizeOnDisk'])
-    )
-    me_files = types.MEv5FileListFiles(
-        files=list(config['MEFILES'].keys())
-    )
-    
-    # Return ConfigData instance
-    return types.MEv5FileList(info=info, mefiles=me_files)
-
 def flash_firmware(
     cip: comms.Driver, 
     device: types.MEDeviceInfo, 
@@ -282,161 +267,161 @@ def flash_firmware_pvp5(
 
     # Firmware image known files
     firmware_image_files = []
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='upgrade.inf',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'upgrade.inf'),
         remote_file='upgrade.inf',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='autorun.exe',
         local_path=os.path.join(firmware_image_path, 'autorun.exe'),
         remote_file='autorun.exe',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='MFCCE400.DLL',
         local_path=os.path.join(firmware_image_path, 'MFCCE400.DLL'),
         remote_file='MFCCE400.DLL',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='UpgradeOptions.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'),
         remote_file='FUWcleanup.exe',
         remote_folder='\\Storage Card\\upgrade',
         required=False
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='InstallME.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'InstallME.exe'),
         remote_file='InstallME.exe',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='KepwareCEInstall.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'KepwareCEInstall.exe'),
         remote_file='KepwareCEInstall.exe',
         remote_folder='\\Storage Card\\upgrade',
         required=False
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='Autoapp.bat',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'Autoapp.bat'),
         remote_file='Autoapp.bat',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='locOSUp.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'locOSUp.exe'),
         remote_file='locOSUp.exe',
         remote_folder='\\Windows\\upgrade',
         required=True
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='ebcbootrom.bin',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'ebcbootrom.bin'),
         remote_file='ebcbootrom.bin',
         remote_folder='\\Windows\\upgrade',
         required=False
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='EBCMOZ.EBC',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'EBCMOZ.EBC'),
         remote_file='EBCMOZ.EBC',
         remote_folder='\\Storage Card\\upgrade',
         required=False
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='PVPlus_Mozart_nkc.MCE',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'PVPlus_Mozart_nkc.MCE'),
         remote_file='PVPlus_Mozart_nkc.MCE',
         remote_folder='\\Storage Card\\upgrade',
         required=False
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='system.bin',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'system.bin'),
         remote_file='system.bin',
         remote_folder='\\Windows\\upgrade',
         required=False
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='UpgradeOptions.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'UpgradeOptions.exe'),
         remote_file='UpgradeOptions.exe',
         remote_folder='\\Windows\\upgrade',
         required=False
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='valOSPart.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'valOSPart.exe'),
         remote_file='valOSPart.exe',
         remote_folder='\\Windows\\upgrade',
         required=False
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='GetFreeRAM.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'GetFreeRAM.exe'),
         remote_file='GetFreeRAM.exe',
         remote_folder='\\Windows\\upgrade',
         required=True
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='RFOn.bat',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'RFOn.bat'),
         remote_file='RFOn.bat',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='RFOn1.bat',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'RFOn1.bat'),
         remote_file='RFOn1.bat',
         remote_folder='\\Storage Card\\upgrade',
         required=False
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='RFOn2.bat',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'RFOn2.bat'),
         remote_file='RFOn2.bat',
         remote_folder='\\Storage Card\\upgrade',
         required=False
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='RFOn3.bat',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'RFOn3.bat'),
         remote_file='RFOn3.bat',
         remote_folder='\\Storage Card\\upgrade',
         required=False
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='FUWInhibitor.exe',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'FUWInhibitor.exe'),
         remote_file='FUWInhibitor.exe',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='MEFileList.inf',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'MEFileList.inf'),
         remote_file='MEFileList.inf',
         remote_folder='\\Storage Card\\upgrade',
         required=True
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='FTVP.Cab',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'FTVP.Cab'),
         remote_file='FTVP.Cab',
         remote_folder='\\Storage Card\\upgrade',
         required=False
     ))
-    firmware_image_files.append(types.MEv5FileManifest(
+    firmware_image_files.append(types.MEv5FileManifest_zzz(
         local_file='WebServer.Cab',
         local_path=os.path.join(firmware_image_path, 'upgrade', 'WebServer.Cab'),
         remote_file='WebServer.Cab',
@@ -467,7 +452,7 @@ def flash_firmware_pvp5(
             else:
                 remote_folder = '\\Storage Card\\upgrade'
 
-            firmware_image_files.append(types.MEv5FileManifest(
+            firmware_image_files.append(types.MEv5FileManifest_zzz(
                 local_file=file,
                 local_path=os.path.join(firmware_image_path, 'upgrade', file),
                 remote_file=file,

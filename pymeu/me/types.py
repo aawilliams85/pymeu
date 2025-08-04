@@ -39,21 +39,17 @@ class MEFupManifest:
     drivers: MEFupDrivers
 
 @dataclass
-class MEv5FileListHeader:
+class MEFileListHeader:
     me: str
-    size_on_disk: int
+    size_on_disk_bytes: int
 
 @dataclass
-class MEv5FileListFiles:
-    files: list[str]
+class MEFileList:
+    info: MEFileListHeader
+    mefiles: list[str]
 
 @dataclass
-class MEv5FileList:
-    info: MEv5FileListHeader
-    mefiles: MEv5FileListFiles
-
-@dataclass
-class MEv5FileManifest:
+class MEv5FileManifest_zzz:
     local_file: str
     local_path: str
     remote_file: str
