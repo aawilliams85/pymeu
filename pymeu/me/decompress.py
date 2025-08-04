@@ -137,7 +137,7 @@ def _get_mapper_for_mappee(ole: olefile.OleFileIO, mappee_name: str) -> str:
     mapper_data = ole.openstream(mapper_name).read()
     return _get_mapper_filename(mapper_data)
 
-def decompress_archive(ole: olefile.OleFileIO, output_path: str) -> list[types.MEArchive]:
+def decompress_archive(ole: olefile.OleFileIO) -> list[types.MEArchive]:
     streams = []
     for stream_path in ole.listdir():
         stream_name = '/'.join(stream_path)
@@ -157,8 +157,11 @@ def decompress_archive(ole: olefile.OleFileIO, output_path: str) -> list[types.M
                 stream_data = _decompress_stream(stream_data)
             except Exception as e:
                 # Some streams aren't compressed.
-                # TBD better way to handle retaining these in their original form.
-                print(e)
+                #
+                # Is there a better way to retain them and still
+                # print exceptions for failed decompressions?
+                #print(e)
+                pass
 
             stream_info = types.MEArchive(
                 name=stream_name,

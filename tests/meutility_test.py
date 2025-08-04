@@ -608,18 +608,15 @@ class decompress_tests(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_decompress_fup(self):
+    def test_fup_to_fuc(self):
         print('')
-        #test = 0
         for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
             print(file)
             start = time.time()
-            me.firmware.fup_to_disk(file, os.path.join(LOCAL_OUTPUT_FUP_PATH, f'{os.path.basename(file)}'))
+            me.firmware.fup_to_fuc_folder(file, os.path.join(LOCAL_OUTPUT_FUC_PATH, f'{os.path.basename(file)}'))
             end = time.time()
             elapsed_time = end - start
             print(elapsed_time)
-            #test += 1
-            #if test >= 1: raise Exception('Done')
 
     def test_decompress_mer(self):
         print('')

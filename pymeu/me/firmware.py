@@ -114,27 +114,35 @@ def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
         drivers=drivers
     )
 
-def fup_to_disk(fup_path: str, output_path: str):
-    # Application-specific handling for *.FUP files
+def fup_to_fuc(input_path: str) -> list[types.MEArchive]:
+    # Application-specific handling for *.FUP files that
+    # keeps streams in memory.
     #
     # This results in an intermediate form that can be used to
     # form the firmware upgrade card or over-the-wire format.
-
-    # Create output folder if it doesn't exist yet
-    if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
-
-    with olefile.OleFileIO(fup_path) as ole:
-        streams = decompress.decompress_archive(ole, output_path)
+    with olefile.OleFileIO(input_path) as ole:
+        streams = decompress.decompress_archive(ole)
 
         # In the *.FUP packages specifically, there is some data
         # in the upgrade.inf file that needs to be arranged into
         # an Upgrade.dat file.
         streams.append(_get_upgrade_dat(streams))
-        for stream in streams:
-            # In *.FUP packages specifically, there are some _INFORMATION files
-            # that don't need to be exported
-            if stream.name.endswith(INFORMATION_NAME): continue
+        return streams
 
-            stream_output_path = decompress._create_subfolders(output_path, stream.path)
-            with open(stream_output_path, 'wb') as f:
-                f.write(stream.data)
+def fup_to_fuc_folder(input_path: str, output_path: str):
+    # Application-specific handling for *.FUP files that
+    # writes streams to a folder.
+    #
+    # This results in an intermediate form that can be used to
+    # form the firmware upgrade card or over-the-wire format.
+
+    if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
+    streams = fup_to_fuc(input_path)
+    for stream in streams:
+        # In *.FUP packages specifically, there are some _INFORMATION files
+        # that don't need to be exported
+        if stream.name.endswith(INFORMATION_NAME): continue
+
+        stream_output_path = decompress._create_subfolders(output_path, stream.path)
+        with open(stream_output_path, 'wb') as f:
+            f.write(stream.data)
