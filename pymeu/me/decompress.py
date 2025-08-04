@@ -32,8 +32,8 @@ def _get_expected_chunk_length(bytes) -> int:
     length = (tokens * 2) + literals
     return length
 
-def _is_pointer(control: int, index) -> bool:
-    return bool(control & (1 << index))
+def _is_pointer(control: int, index: int) -> bool:
+    return bool((control >> index) & 1)
 
 def _decompress_chunk(input: bytearray, control: int, data: bytearray, length: int) -> bytearray:
     output = bytearray(input)
