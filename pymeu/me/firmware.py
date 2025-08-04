@@ -7,11 +7,12 @@ from . import types
 
 INFORMATION_NAME = '_INFORMATION'
 
-def _create_upgrade_dat(version: types.MEFupVersion, card: types.MEFupCard, me_files: types.MEFileList) -> str:
+def _create_upgrade_dat(version: types.MEFupUpgradeInfVersion, card: types.MEFupUpgradeInfCard, me_files: types.MEFupMEFileListInf) -> str:
     # There is an upgrade.dat file which needs to be created
     # from the content in the upgrade.inf file.
     #
-    # TODO: Take Kepware drive selection into account for final size
+    # TODO: Take Kepware drive selection into account for final size,
+    #       once useroptions are being generated
     isc_size_bytes = card.storage_size_bytes + me_files.info.size_on_disk_bytes
     fields = [
         f'PLAT={version.plat}',
@@ -30,14 +31,17 @@ def _create_upgrade_dat(version: types.MEFupVersion, card: types.MEFupCard, me_f
 
 def _get_upgrade_dat(streams: list[types.MEArchive]) -> types.MEArchive:
     upgrade_inf = next(x for x in streams if x.name == 'upgrade.inf')
-    upgrade_inf_data = _deserialize_me_fup_manifest(upgrade_inf.data.decode('utf-8'))
+    upgrade_inf_data = _deserialize_fup_upgrade_inf(upgrade_inf.data.decode('utf-8'))
 
-    mefilelist_inf = next(x for x in streams if x.name == 'MEFileList.inf')
-    mefilelist_inf_data = _deserialize_me_file_list(mefilelist_inf.data.decode('utf-8'))
+    try:
+        mefilelist_inf = next(x for x in streams if x.name == 'MEFileList.inf')
+        mefilelist_inf_data = _deserialize_fup_mefilelist_inf(mefilelist_inf.data.decode('utf-8'))
+    except:
+        # v6+ don't use this at all so just enter default values
+        mefilelist_inf_data = types.MEFupMEFileListInf(info=types.MEFupMEFileListInfInfo(me='', size_on_disk_bytes=0), mefiles=[])
 
-    # Note that the Over-The-Wire values are being selected here which for v5 terminals
-    # will mean larger free RAM required.  Some logic may be required here if later
-    # generating FWC instead.
+    # It seems that the OTW and FWC sizes are the same.  Maybe just programmed as the larger
+    # of the two actual values for both of them?
     dat_file = _create_upgrade_dat(upgrade_inf_data.version, upgrade_inf_data.otw, mefilelist_inf_data)
     data = bytearray(dat_file, 'utf-16-le')
     return types.MEArchive(
@@ -47,26 +51,26 @@ def _get_upgrade_dat(streams: list[types.MEArchive]) -> types.MEArchive:
         size=len(data)
     )
 
-def _deserialize_me_file_list(input: str) -> types.MEFileList:
+def _deserialize_fup_mefilelist_inf(input: str) -> types.MEFupMEFileListInf:
     config = configparser.ConfigParser(allow_no_value=True)
     config.read_string(input)
     info_section = config['info']
-    info = types.MEFileListHeader(
+    info = types.MEFupMEFileListInfInfo(
         me=info_section.get('ME'),
         size_on_disk_bytes=info_section.getint('SizeOnDisk')
     )
-    me_files = list(config['MEFILES'].keys())
+    me_files = list(config.get('MEFILES').keys())
     
     # Return ConfigData instance
-    return types.MEFileList(info=info, mefiles=me_files)
+    return types.MEFupMEFileListInf(info=info, mefiles=me_files)
 
-def _deserialize_me_fup_manifest(input: str) -> types.MEFupManifest:
+def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
     config = configparser.ConfigParser(allow_no_value=True)
     config.read_string(input)
 
     # Version Header
     version_section = config['version']
-    version = types.MEFupVersion(
+    version = types.MEFupUpgradeInfVersion(
         plat=version_section.getint('Platform', 0),
         os=version_section.get('OS'),
         me=version_section.get('ME'),
@@ -78,7 +82,7 @@ def _deserialize_me_fup_manifest(input: str) -> types.MEFupManifest:
     
     # Firmware Card
     fwc_section = config['FWC']
-    fwc = types.MEFupCard(
+    fwc = types.MEFupUpgradeInfCard(
         files=[],
         ram_size_bytes=fwc_section.getint('AddRamSize', 0),
         storage_size_bytes=fwc_section.getint('AddISCSize', 0),
@@ -87,7 +91,7 @@ def _deserialize_me_fup_manifest(input: str) -> types.MEFupManifest:
 
     # Over-The-Wire
     otw_section = config['OTW']
-    otw = types.MEFupCard(
+    otw = types.MEFupUpgradeInfCard(
         files=[],
         ram_size_bytes=otw_section.getint('AddRamSize', 0),
         storage_size_bytes=otw_section.getint('AddISCSize', 0),
@@ -99,11 +103,11 @@ def _deserialize_me_fup_manifest(input: str) -> types.MEFupManifest:
         drivers_list = [(key, int(value)) for key, value in config.items('KEPDRIVERS')]
     except:
         drivers_list = []
-    drivers = types.MEFupDrivers(
+    drivers = types.MEFupUpgradeInfDrivers(
         drivers=drivers_list
     )
 
-    return types.MEFupManifest(
+    return types.MEFupUpgradeInf(
         version=version,
         fwc=fwc,
         otw=otw,

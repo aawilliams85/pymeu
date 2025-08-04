@@ -11,7 +11,7 @@ class MEArchive:
     size: int
 
 @dataclass
-class MEFupVersion:
+class MEFupUpgradeInfVersion:
     plat: int
     os: str
     me: str
@@ -21,40 +21,32 @@ class MEFupVersion:
     ard: int
 
 @dataclass
-class MEFupCard:
+class MEFupUpgradeInfCard:
     files: list[(str, str)]
     ram_size_bytes: int
     storage_size_bytes: int
     fp_size: int
 
 @dataclass
-class MEFupDrivers:
+class MEFupUpgradeInfDrivers:
     drivers: list[(str, int)]
 
 @dataclass
-class MEFupManifest:
-    version: MEFupVersion
-    fwc: MEFupCard
-    otw: MEFupCard
-    drivers: MEFupDrivers
+class MEFupUpgradeInf:
+    version: MEFupUpgradeInfVersion
+    fwc: MEFupUpgradeInfCard
+    otw: MEFupUpgradeInfCard
+    drivers: MEFupUpgradeInfDrivers
 
 @dataclass
-class MEFileListHeader:
+class MEFupMEFileListInfInfo:
     me: str
     size_on_disk_bytes: int
 
 @dataclass
-class MEFileList:
-    info: MEFileListHeader
+class MEFupMEFileListInf:
+    info: MEFupMEFileListInfInfo
     mefiles: list[str]
-
-@dataclass
-class MEv5FileManifest_zzz:
-    local_file: str
-    local_path: str
-    remote_file: str
-    remote_folder: str
-    required: bool
 
 @dataclass
 class MEFile:
