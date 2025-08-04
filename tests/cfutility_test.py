@@ -33,7 +33,7 @@ class dmk_tests(unittest.TestCase):
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_flash_pvp7b_direct_pylogix(self):
         print('')
@@ -56,7 +56,7 @@ class dmk_tests(unittest.TestCase):
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     '''
     def test_dmk_validate(self):
@@ -85,7 +85,7 @@ class dmk_tests(unittest.TestCase):
             resp = meu.flash_firmware_dmk(firmware_image_path, False)
             for s in resp.device.log: print(s)
             print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)
+            self.assertEqual(resp.status, types.ResponseStatus.FAILURE)
     '''
             
     def tearDown(self):

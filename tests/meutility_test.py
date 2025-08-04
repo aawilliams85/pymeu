@@ -306,7 +306,7 @@ class download_tests(unittest.TestCase):
             resp = meu.download(download_file_path, overwrite=True)
             for s in resp.device.log: print(s)
             print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)
+            self.assertEqual(resp.status, types.ResponseStatus.FAILURE)
 
     def test_download_multiple(self):
         print('')
@@ -324,7 +324,7 @@ class download_tests(unittest.TestCase):
                 resp = meu.download(download_file_path, overwrite=True, run_at_startup=False)
                 for s in resp.device.log: print(s)
                 print('')
-                self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+                self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_download_overwrite(self):
         print('')
@@ -342,7 +342,7 @@ class download_tests(unittest.TestCase):
             resp = meu.download(download_file_path, overwrite=True)
             for s in resp.device.log: print(s)
             print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+            self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
             count += 1
             if (count % len(DEVICES)) == 0: time.sleep(device.boot_time_sec)
 
@@ -362,7 +362,7 @@ class download_tests(unittest.TestCase):
             resp = meu.download(download_file_path, overwrite=True, run_at_startup=False, progress=progress_callback)
             for s in resp.device.log: print(s)
             print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+            self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
             count += 1
             #if (count % len(DEVICES)) == 0: time.sleep(device.boot_time_sec)
 
@@ -383,7 +383,7 @@ class download_tests(unittest.TestCase):
             resp = meu.download(download_file_path, overwrite=True, remote_file_name=device.mer_files[1])
             for s in resp.device.log: print(s)
             print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+            self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
             count += 1
             if (count % len(DEVICES)) == 0: time.sleep(device.boot_time_sec)
 
@@ -471,7 +471,7 @@ class reboot_tests(unittest.TestCase):
             resp = meu.reboot()
             for s in resp.device.log: print(s)
             print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+            self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
             count += 1
             if (count % len(DEVICES)) == 0: time.sleep(device.boot_time_sec)
 
@@ -497,7 +497,7 @@ class upload_tests(unittest.TestCase):
             resp = meu.upload(upload_file_path, overwrite=True)
             for s in resp.device.log: print(s)
             print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)
+            self.assertEqual(resp.status, types.ResponseStatus.FAILURE)
 
     def test_upload_overwrite(self):
         print('')
@@ -515,7 +515,7 @@ class upload_tests(unittest.TestCase):
             resp = meu.upload(upload_file_path, overwrite=True)
             for s in resp.device.log: print(s)
             print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+            self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
             #results.append(upload_file_path)
         #self.assertTrue(all(filecmp.cmp(results[0], x, shallow=False) for x in results))
 
@@ -535,7 +535,7 @@ class upload_tests(unittest.TestCase):
             resp = meu.upload(upload_file_path, overwrite=True, progress=progress_callback)
             for s in resp.device.log: print(s)
             print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+            self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
             #results.append(upload_file_path)
         #self.assertTrue(all(filecmp.cmp(results[0], x, shallow=False) for x in results))
 
@@ -554,7 +554,7 @@ class upload_tests(unittest.TestCase):
             resp = meu.upload_all(upload_folder_path, overwrite=True)
             for s in resp.device.log: print(s)
             print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+            self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_upload_all_overwrite_progress(self):
         print('')
@@ -571,7 +571,7 @@ class upload_tests(unittest.TestCase):
             resp = meu.upload_all(upload_folder_path, overwrite=True, progress=progress_callback)
             for s in resp.device.log: print(s)
             print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+            self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_upload_multiple_instances(self):
         print('')
@@ -596,7 +596,7 @@ class upload_tests(unittest.TestCase):
                 resp = meu.upload(upload_file_path, overwrite=True)
                 for s in resp.device.log: print(s)
                 print('')
-                self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+                self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
                 # Close parallel transfer instance
                 me.filetransfer.delete_transfer_instance(cip2, transfer_instance_2)
@@ -655,7 +655,7 @@ class fuw_tests(unittest.TestCase):
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_flash_pvp6_direct_pycomm3(self):
         print('')
@@ -680,7 +680,7 @@ class fuw_tests(unittest.TestCase):
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_flash_pvp6_direct_pylogix(self):
         print('')
@@ -705,7 +705,7 @@ class fuw_tests(unittest.TestCase):
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_flash_pvp6_routed_pycomm3(self):
         print('')
@@ -730,7 +730,7 @@ class fuw_tests(unittest.TestCase):
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_flash_pvp6_routed_pylogix(self):
         print('')
@@ -755,7 +755,7 @@ class fuw_tests(unittest.TestCase):
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_flash_pvp7a_direct_pycomm3(self):
         print('')
@@ -780,7 +780,7 @@ class fuw_tests(unittest.TestCase):
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_flash_pvp7a_direct_pylogix(self):
         print('')
@@ -805,7 +805,7 @@ class fuw_tests(unittest.TestCase):
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_flash_pvp7a_routed_pycomm3(self):
         print('')
@@ -830,7 +830,7 @@ class fuw_tests(unittest.TestCase):
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_flash_pvp7a_routed_pylogix(self):
         print('')
@@ -855,7 +855,7 @@ class fuw_tests(unittest.TestCase):
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def tearDown(self):
         pass
