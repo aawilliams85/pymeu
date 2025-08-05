@@ -627,6 +627,16 @@ class decompress_tests(unittest.TestCase):
             end = time.time()
             elapsed_time = end - start
             print(elapsed_time)
+
+    def test_fup_to_otw(self):
+        print('')
+        for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
+            print(file)
+            start = time.time()
+            me.firmware.fup_to_otw_folder(file, os.path.join(LOCAL_OUTPUT_OTW_PATH, f'{os.path.basename(file)}'))
+            end = time.time()
+            elapsed_time = end - start
+            print(elapsed_time)
             break
 
     def test_decompress_mer(self):

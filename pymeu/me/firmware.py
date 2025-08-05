@@ -183,7 +183,6 @@ def fup_to_fwc(input_path: str) -> list[types.MEArchive]:
     
     streams_fwc = []
     for (file, outfile) in upgrade_inf.fwc.files:
-        #print(f'{file} {outfile}')
         stream = _get_stream_by_name(streams, file)
         stream.path = _path_to_list(outfile)
         streams_fwc.append(stream)
@@ -194,12 +193,46 @@ def fup_to_fwc_folder(input_path: str, output_path: str):
     # Application-specific handling for *.FUP files that
     # writes streams to a folder.
     #
-    # This results in an intermediate form that can be used to
-    # form the firmware upgrade card or over-the-wire format.
+    # This results in the Firmware Card format (FWC) that
+    # can be used to flash a terminal via removable media.
 
     if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
     streams = fup_to_fwc(input_path)
     for stream in streams:
+        stream_output_path = decompress._create_subfolders(output_path, stream.path)
+        with open(stream_output_path, 'wb') as f:
+            f.write(stream.data)
+
+def fup_to_otw(input_path: str) -> list[types.MEArchive]:
+    # Application-specific handling for *.FUP files that
+    # keeps streams in memory.
+    #
+    # This results in the Over-The-Wire format (OTW) that
+    # can be sent via a network connection.
+    streams = fup_to_fuc(input_path)
+    upgrade_inf = _get_upgrade_inf(streams)
+    
+    streams_otw = []
+    for (file, outfile) in upgrade_inf.otw.files:
+        stream = _get_stream_by_name(streams, file)
+        stream.path = _path_to_list(outfile)
+        streams_otw.append(stream)
+
+    return streams_otw
+
+def fup_to_otw_folder(input_path: str, output_path: str):
+    # Application-specific handling for *.FUP files that
+    # writes streams to a folder.
+    #
+    # This results in the Over-The-Wire format (OTW) that
+    # can be sent via a network connection.  Note that OTW
+    # is not usually stored in a folder so this is intended
+    # just for debug.
+
+    if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
+    streams = fup_to_otw(input_path)
+    for stream in streams:
+        print(stream.path)
         stream_output_path = decompress._create_subfolders(output_path, stream.path)
         with open(stream_output_path, 'wb') as f:
             f.write(stream.data)
