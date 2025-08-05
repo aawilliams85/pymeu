@@ -153,3 +153,5 @@ SizeOnDisk=(size in bytes)
 [MEFILES]
 (file paths, 1 line per entry)
 ```
+
+For v5 terminals, 'upgrade.dat' calculates the Internal Storage Card (ISC) size as the sum of the 'upgrade.inf' AddISCSize and 'MEFileList.inf' SizeOnDisk values.  If KepDrivers are in use, it also sums in the 'MEFileList.inf' Overhead size, plus the size of the selected drivers.
