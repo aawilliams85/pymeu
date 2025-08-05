@@ -623,7 +623,7 @@ class decompress_tests(unittest.TestCase):
         for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
             print(file)
             start = time.time()
-            me.firmware.fup_to_fwc(file)
+            me.firmware.fup_to_fwc_folder(file, os.path.join(LOCAL_OUTPUT_FWC_PATH, f'{os.path.basename(file)}'))
             end = time.time()
             elapsed_time = end - start
             print(elapsed_time)

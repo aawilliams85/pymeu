@@ -134,6 +134,11 @@ def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
         drivers=drivers
     )
 
+def _path_to_list(path: str) -> list[str]:
+    path = path.replace('\\', '/').lower()
+    components = [comp for comp in path.split('/') if comp]
+    return components if components else [path]
+
 def fup_to_fuc(input_path: str) -> list[types.MEArchive]:
     # Application-specific handling for *.FUP files that
     # keeps streams in memory.
@@ -178,7 +183,23 @@ def fup_to_fwc(input_path: str) -> list[types.MEArchive]:
     
     streams_fwc = []
     for (file, outfile) in upgrade_inf.fwc.files:
-        print(f'{file} {outfile}')
+        #print(f'{file} {outfile}')
         stream = _get_stream_by_name(streams, file)
-        stream.path[-1] = outfile
+        stream.path = _path_to_list(outfile)
         streams_fwc.append(stream)
+
+    return streams_fwc
+
+def fup_to_fwc_folder(input_path: str, output_path: str):
+    # Application-specific handling for *.FUP files that
+    # writes streams to a folder.
+    #
+    # This results in an intermediate form that can be used to
+    # form the firmware upgrade card or over-the-wire format.
+
+    if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
+    streams = fup_to_fwc(input_path)
+    for stream in streams:
+        stream_output_path = decompress._create_subfolders(output_path, stream.path)
+        with open(stream_output_path, 'wb') as f:
+            f.write(stream.data)
