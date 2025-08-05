@@ -22,14 +22,14 @@ class MEFupUpgradeInfVersion:
 
 @dataclass
 class MEFupUpgradeInfCard:
-    files: list[(str, str)]
+    files: list[tuple[str, str]]
     ram_size_bytes: int
     storage_size_bytes: int
     fp_size: int
 
 @dataclass
 class MEFupUpgradeInfDrivers:
-    drivers: list[(str, int)]
+    drivers: list[tuple[str, int]]
 
 @dataclass
 class MEFupUpgradeInf:

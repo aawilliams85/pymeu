@@ -142,17 +142,20 @@ def decompress_archive(ole: olefile.OleFileIO) -> list[types.MEArchive]:
     for stream_path in ole.listdir():
         stream_name = '/'.join(stream_path)
         if (ole.exists(stream_name) and not ole.get_type(stream_name) == olefile.STGTY_STORAGE):
+            original_name = stream_name
             # If a stream name starts with __MAPPEE it has the content of the file.
             # If a stream name starts with __MAPPER it has the name of the file.
             #
             # This logic restores the name from the MAPPER to the MAPPEE and
             # excludes the MAPPER from the stream list.
             if stream_name.startswith(STREAM_NAME_MAPPEE):
-                stream_path[-1] = _get_mapper_for_mappee(ole, stream_name)
+                actual_name = _get_mapper_for_mappee(ole, original_name)
+                stream_name = actual_name
+                stream_path[-1] = actual_name
             if stream_name.startswith(STREAM_NAME_MAPPER):
                 continue
             
-            stream_data = ole.openstream(stream_name).read()
+            stream_data = ole.openstream(original_name).read()
             try:
                 stream_data = _decompress_stream(stream_data)
             except Exception as e:

@@ -29,16 +29,25 @@ def _create_upgrade_dat(version: types.MEFupUpgradeInfVersion, card: types.MEFup
     result = ';'.join(fields) + ';\r\n'
     return result
 
-def _get_upgrade_dat(streams: list[types.MEArchive]) -> types.MEArchive:
-    upgrade_inf = next(x for x in streams if x.name == 'upgrade.inf')
-    upgrade_inf_data = _deserialize_fup_upgrade_inf(upgrade_inf.data.decode('utf-8'))
+def _get_stream_by_name(streams: list[types.MEArchive], name: str, case_insensitive=True) -> types.MEArchive:
+    if case_insensitive:
+        return next(x for x in streams if x.name.lower() == name.lower())
+    else:
+        return next(x for x in streams if x.name == name)
 
+def _get_upgrade_inf(streams: list[types.MEArchive]) -> types.MEFupUpgradeInf:
+    return _deserialize_fup_upgrade_inf(_get_stream_by_name(streams, 'upgrade.inf').data.decode('utf-8'))
+
+def _get_mefilelist_inf(streams: list[types.MEArchive]) -> types.MEFupMEFileListInf:
     try:
-        mefilelist_inf = next(x for x in streams if x.name == 'MEFileList.inf')
-        mefilelist_inf_data = _deserialize_fup_mefilelist_inf(mefilelist_inf.data.decode('utf-8'))
+        return _deserialize_fup_mefilelist_inf(_get_stream_by_name(streams, 'MEFileList.inf').data.decode('utf-8'))
     except:
         # v6+ don't use this at all so just enter default values
-        mefilelist_inf_data = types.MEFupMEFileListInf(info=types.MEFupMEFileListInfInfo(me='', size_on_disk_bytes=0), mefiles=[])
+        return types.MEFupMEFileListInf(info=types.MEFupMEFileListInfInfo(me='', size_on_disk_bytes=0), mefiles=[])
+
+def _get_upgrade_dat(streams: list[types.MEArchive]) -> types.MEArchive:
+    upgrade_inf_data = _get_upgrade_inf(streams)
+    mefilelist_inf_data = _get_mefilelist_inf(streams)
 
     # It seems that the OTW and FWC sizes are the same.  Maybe just programmed as the larger
     # of the two actual values for both of them?
@@ -53,7 +62,9 @@ def _get_upgrade_dat(streams: list[types.MEArchive]) -> types.MEArchive:
 
 def _deserialize_fup_mefilelist_inf(input: str) -> types.MEFupMEFileListInf:
     config = configparser.ConfigParser(allow_no_value=True)
+    config.optionxform = str
     config.read_string(input)
+
     info_section = config['info']
     info = types.MEFupMEFileListInfInfo(
         me=info_section.get('ME'),
@@ -66,6 +77,7 @@ def _deserialize_fup_mefilelist_inf(input: str) -> types.MEFupMEFileListInf:
 
 def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
     config = configparser.ConfigParser(allow_no_value=True)
+    config.optionxform = str
     config.read_string(input)
 
     # Version Header
@@ -82,25 +94,33 @@ def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
     
     # Firmware Card
     fwc_section = config['FWC']
+    fwc_files = [
+        (key, value) for key, value in fwc_section.items()
+        if key not in ['AddRAMSize', 'AddISCSize', 'AddFPSize']
+    ]
     fwc = types.MEFupUpgradeInfCard(
-        files=[],
-        ram_size_bytes=fwc_section.getint('AddRamSize', 0),
+        files=fwc_files,
+        ram_size_bytes=fwc_section.getint('AddRAMSize', 0),
         storage_size_bytes=fwc_section.getint('AddISCSize', 0),
         fp_size=fwc_section.getint('AddFPSize', 0)
     )
 
     # Over-The-Wire
     otw_section = config['OTW']
+    otw_files = [
+        (key, value) for key, value in otw_section.items()
+        if key not in ['AddRAMSize', 'AddISCSize', 'AddFPSize']
+    ]
     otw = types.MEFupUpgradeInfCard(
-        files=[],
-        ram_size_bytes=otw_section.getint('AddRamSize', 0),
+        files=otw_files,
+        ram_size_bytes=otw_section.getint('AddRAMSize', 0),
         storage_size_bytes=otw_section.getint('AddISCSize', 0),
         fp_size=otw_section.getint('AddFPSize', 0)
     )
 
     # Drivers
     try:
-        drivers_list = [(key, int(value)) for key, value in config.items('KEPDRIVERS')]
+        drivers_list = [tuple[key, int(value)] for key, value in config.items('KEPDRIVERS')]
     except:
         drivers_list = []
     drivers = types.MEFupUpgradeInfDrivers(
@@ -146,3 +166,19 @@ def fup_to_fuc_folder(input_path: str, output_path: str):
         stream_output_path = decompress._create_subfolders(output_path, stream.path)
         with open(stream_output_path, 'wb') as f:
             f.write(stream.data)
+
+def fup_to_fwc(input_path: str) -> list[types.MEArchive]:
+    # Application-specific handling for *.FUP files that
+    # keeps streams in memory.
+    #
+    # This results in the Firmware Card format (FWC) that
+    # can be used to flash a terminal via removable media.
+    streams = fup_to_fuc(input_path)
+    upgrade_inf = _get_upgrade_inf(streams)
+    
+    streams_fwc = []
+    for (file, outfile) in upgrade_inf.fwc.files:
+        print(f'{file} {outfile}')
+        stream = _get_stream_by_name(streams, file)
+        stream.path[-1] = outfile
+        streams_fwc.append(stream)

@@ -618,6 +618,17 @@ class decompress_tests(unittest.TestCase):
             elapsed_time = end - start
             print(elapsed_time)
 
+    def test_fup_to_fwc(self):
+        print('')
+        for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
+            print(file)
+            start = time.time()
+            me.firmware.fup_to_fwc(file)
+            end = time.time()
+            elapsed_time = end - start
+            print(elapsed_time)
+            break
+
     def test_decompress_mer(self):
         print('')
         me.decompress.archive_to_disk(os.path.join(LOCAL_INPUT_MER_PATH, PVP5_MER_Files[0]), os.path.join(LOCAL_OUTPUT_MER_PATH, f'{PVP5_MER_Files[0]}.Extracted'))
