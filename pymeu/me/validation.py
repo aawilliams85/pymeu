@@ -1,3 +1,4 @@
+import os
 import struct
 
 from .. import comms
@@ -213,10 +214,19 @@ def is_valid_me_terminal(device: types.MEDeviceInfo) -> bool:
     if not is_version_matched(device.me_identity.me_version, ME_VERSIONS): return False
     return True
 
-def is_valid_download(cip: comms.Driver, device: types.MEDeviceInfo, file: types.MEFile) -> bool:
+def is_valid_download(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo, 
+    file_path_local: str, 
+    file_name_terminal: str,
+    overwrite: bool
+) -> bool:
+    file_name_local = os.path.basename(file_path_local)
+    file_size_local = os.path.getsize(file_path_local)
+
     # Check that file is correct extension
-    if (file.get_ext() != '.mer'):
-        device.log.append(f'File {file.name} is not a *.mer file')
+    if (os.path.splitext(file_path_local)[1].lower() != '.mer'):
+        device.log.append(f'File {file_path_local} is not a *.mer file')
         return False
 
     # Check that storage folder exists
@@ -227,27 +237,21 @@ def is_valid_download(cip: comms.Driver, device: types.MEDeviceInfo, file: types
 
     # Check free space
     resp_free_space = helper.get_free_space_runtime(cip, device.me_paths)
-    if (resp_free_space > file.get_size()):
-        device.log.append(f'File {file.name} requires {file.get_size()} byes.  Free space on terminal {resp_free_space} bytes.')
+    if (resp_free_space > file_size_local):
+        device.log.append(f'File {file_name_local} requires {file_size_local} byes.  Free space on terminal {resp_free_space} bytes.')
     else:
-        device.log.append(f'File {file.name} requires {file.get_size()} bytes.  Free space on terminal {resp_free_space} bytes is insufficient.')
+        device.log.append(f'File {file_name_local} requires {file_size_local} bytes.  Free space on terminal {resp_free_space} bytes is insufficient.')
         return False
 
     # Check if file name already exists
-    resp_file_exists = helper.get_file_exists_mer(cip, device.me_paths, file.name)
-    file.overwrite_required = False
-    if (resp_file_exists and file.overwrite_requested):
-        device.log.append(f'File {file.name} already exists on terminal, and overwrite was requested.  Setting overwrite to required.')
-        file.overwrite_required = True
-    if (resp_file_exists and not(file.overwrite_requested)):
-        device.log.append(f'File {file.name} already exists on terminal, and overwrite was NOT requested.  Use kwarg overwrite_requested=True to overwrite existing.')
+    resp_file_exists = helper.get_file_exists_mer(cip, device.me_paths, file_name_terminal)
+    if (resp_file_exists and not overwrite):
+        device.log.append(f'File {file_name_local} already exists on terminal, and overwrite was NOT requested.  Use overwrite_requested=True to overwrite existing.')
         return False
-    if not(resp_file_exists):
-        device.log.append(f'File {file.name} does not exist on terminal.  Setting overwrite to not required.')
 
     # Check space consumed by file if it exists
     if resp_file_exists:
-        resp_file_size = helper.get_file_size_mer(cip, device.me_paths, file.name)
-        device.log.append(f'File {file.name} on terminal is {resp_file_size} bytes.')
+        resp_file_size = helper.get_file_size_mer(cip, device.me_paths, file_name_local)
+        device.log.append(f'File {file_name_local} on terminal is {resp_file_size} bytes.')
 
     return True

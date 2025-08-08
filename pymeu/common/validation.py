@@ -1,7 +1,7 @@
 import struct
 
 from .. import comms
-from .. import messages
+from . import messages
 from . import types
 
 def get_cip_identity(cip: comms.Driver) -> types.CIPIdentity:

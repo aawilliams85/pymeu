@@ -5,7 +5,7 @@ import unittest
 from pymeu import comms
 from pymeu import MEUtility
 from pymeu import me
-from pymeu.me import actions
+from pymeu.me import util
 from pymeu.me import types
 from pymeu.me import validation
 
@@ -359,13 +359,12 @@ class download_tests(unittest.TestCase):
                     f'Function: download({download_file_path}, overwrite=True)\n'
             )
             print(result)
-            resp = meu.download(download_file_path, overwrite=True, run_at_startup=False, progress=progress_callback)
+            resp = meu.download(download_file_path, overwrite=True, progress=progress_callback)
             for s in resp.device.log: print(s)
             print('')
             self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
             count += 1
-            #if (count % len(DEVICES)) == 0: time.sleep(device.boot_time_sec)
-
+            if (count % len(DEVICES)) == 0: time.sleep(device.boot_time_sec)
 
     def test_download_as_overwrite(self):
         print('')
@@ -380,7 +379,7 @@ class download_tests(unittest.TestCase):
                     f'Function: download({download_file_path}, overwrite=True, remote_file_name={device.mer_files[1]})\n'
             )
             print(result)
-            resp = meu.download(download_file_path, overwrite=True, remote_file_name=device.mer_files[1])
+            resp = meu.download(download_file_path, overwrite=True, file_name_terminal=os.path.basename(device.mer_files[1]))
             for s in resp.device.log: print(s)
             print('')
             self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
@@ -590,7 +589,7 @@ class upload_tests(unittest.TestCase):
                 # Open parallel transfer instance (normally transfer instance 1)
                 device2 = validation.get_terminal_info(cip2)
                 path2 = f'{device2.me_paths.runtime}\\{device.mer_files[0]}'
-                transfer_instance_2, transfer_size_2 = me.filetransfer.create_transfer_instance_upload(cip2, path2)
+                transfer_instance_2, transfer_size_2 = me.transfer._create_upload(cip2, path2)
 
                 # Perform upload (normally transfer instance 2)
                 resp = meu.upload(upload_file_path, overwrite=True)
@@ -599,7 +598,7 @@ class upload_tests(unittest.TestCase):
                 self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
                 # Close parallel transfer instance
-                me.filetransfer.delete_transfer_instance(cip2, transfer_instance_2)
+                me.transfer._delete(cip2, transfer_instance_2)
 
     def tearDown(self):
         pass
@@ -637,7 +636,6 @@ class decompress_tests(unittest.TestCase):
             end = time.time()
             elapsed_time = end - start
             print(elapsed_time)
-            break
 
     def test_decompress_mer(self):
         print('')
@@ -891,7 +889,7 @@ class fuwhelper_tests(unittest.TestCase):
                                                 True,
                                                 True,
                                                 device.local_firmware_helper_path)
-                    resp = actions.download_file(cip, device2, fuw_helper_file, '\\Storage Card')
+                    resp = util.download_file(cip, device2, fuw_helper_file, '\\Storage Card')
 
     def test_get_process_running(self):
         print('')

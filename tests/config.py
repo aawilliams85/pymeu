@@ -197,9 +197,9 @@ DEVICE_PVP7B = METestDevice(
 )
 
 DEVICES = [
-    DEVICE_PVP5,
+    #DEVICE_PVP5,
     DEVICE_PVP6,
-    DEVICE_PVP7A,
+    #DEVICE_PVP7A,
     #DEVICE_PVP7B    
 ]
 

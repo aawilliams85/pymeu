@@ -3,7 +3,7 @@ from enum import StrEnum
 from warnings import warn
 
 from .. import comms
-from .. import messages
+from . import messages
 from . import types 
 
 

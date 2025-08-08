@@ -13,6 +13,13 @@ class CIPIdentity:
     status: int
     vendor_id: int
 
+@dataclass
+class CIPMessagePreset:
+    service: int
+    class_code: int
+    instance: int
+    attribute: int
+
 class ResponseStatus(StrEnum):
     SUCCESS = 'Success'
     FAILURE = 'Failure'

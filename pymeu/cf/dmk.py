@@ -7,7 +7,7 @@ from warnings import warn
 import zipfile
 
 from .. import comms
-from .. import messages
+from ..common import messages
 from . import types
 
 FILE_NANE_CONTENT = 'Content.txt'
