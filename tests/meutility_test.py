@@ -607,7 +607,7 @@ class decompress_tests(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_fup_to_fuc(self):
+    def test_fup_to_fuc_folder(self):
         print('')
         for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
             print(file)
@@ -617,7 +617,7 @@ class decompress_tests(unittest.TestCase):
             elapsed_time = end - start
             print(elapsed_time)
 
-    def test_fup_to_fwc(self):
+    def test_fup_to_fwc_folder(self):
         print('')
         for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
             print(file)
@@ -627,7 +627,7 @@ class decompress_tests(unittest.TestCase):
             elapsed_time = end - start
             print(elapsed_time)
 
-    def test_fup_to_otw(self):
+    def test_fup_to_otw_folder(self):
         print('')
         for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
             print(file)
@@ -637,9 +637,25 @@ class decompress_tests(unittest.TestCase):
             elapsed_time = end - start
             print(elapsed_time)
 
-    def test_decompress_mer(self):
+    def test_apa_to_med_folder(self):
         print('')
-        me.decompress.archive_to_disk(os.path.join(LOCAL_INPUT_MER_PATH, PVP5_MER_Files[0]), os.path.join(LOCAL_OUTPUT_MER_PATH, f'{PVP5_MER_Files[0]}.Extracted'))
+        for file in STANDALONE_APA_FILES:
+            print(file)
+            start = time.time()
+            me.application.apa_to_med_folder(file, os.path.join(LOCAL_OUTPUT_APA_PATH, f'{os.path.basename(file)}'))
+            end = time.time()
+            elapsed_time = end - start
+            print(elapsed_time)
+
+    def test_mer_to_med_folder(self):
+        print('')
+        for file in STANDALONE_MER_FILES:
+            print(file)
+            start = time.time()
+            me.application.mer_to_med_folder(file, os.path.join(LOCAL_OUTPUT_MER_PATH, f'{os.path.basename(file)}'))
+            end = time.time()
+            elapsed_time = end - start
+            print(elapsed_time)
 
     def tearDown(self):
         pass

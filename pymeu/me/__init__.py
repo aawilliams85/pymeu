@@ -1,3 +1,4 @@
+from . import application
 from . import decompress
 from . import firmware
 from . import fuwhelper

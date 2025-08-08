@@ -47,10 +47,12 @@ def progress_callback(description: str, total_bytes: int, current_bytes: int):
 LOCAL_BASE_PATH = os.path.abspath(os.path.dirname(__file__))
 LOCAL_INPUT_PATH = os.path.join(LOCAL_BASE_PATH, 'input_files')
 LOCAL_OUTPUT_PATH = os.path.join(LOCAL_BASE_PATH, 'output_files')
+LOCAL_INPUT_APA_PATH = os.path.join(LOCAL_INPUT_PATH, 'APA')
 LOCAL_INPUT_DMK_PATH = os.path.join(LOCAL_INPUT_PATH, 'DMK')
 LOCAL_INPUT_FUP_PATH = os.path.join(LOCAL_INPUT_PATH, 'FUP')
 LOCAL_INPUT_HELPER_PATH = os.path.join(LOCAL_INPUT_PATH, 'Helper')
 LOCAL_INPUT_MER_PATH = os.path.join(LOCAL_INPUT_PATH, 'MER')
+LOCAL_OUTPUT_APA_PATH = os.path.join(LOCAL_OUTPUT_PATH, 'APA')
 LOCAL_OUTPUT_FUC_PATH = os.path.join(LOCAL_OUTPUT_PATH, 'FUC')
 LOCAL_OUTPUT_FUP_PATH = os.path.join(LOCAL_OUTPUT_PATH, 'FUP')
 LOCAL_OUTPUT_FWC_PATH = os.path.join(LOCAL_OUTPUT_PATH, 'FWC')
@@ -65,6 +67,22 @@ NONEXISTENT_FILE = '\\NonexistentPath\\NonexistentFile.ext'
 NONEXISTENT_FOLDER = '\\NonexistentPath'
 MERUNTIME_PROCESS = 'MERuntime.exe'
 NONEXISTENT_PROCESS = 'NonexistentProcess.exe'
+
+# *.APA configuration for standalone tests
+STANDALONE_APA_FILES = [
+    os.path.join(LOCAL_INPUT_APA_PATH, 'Test_v15_640x480_A.apa'),
+    os.path.join(LOCAL_INPUT_APA_PATH, 'Test_v15_640x480_A_Password.apa')
+]
+
+# *.MER configuration for standalone tests
+STANDALONE_MER_FILES = [
+    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_640x480_A.mer'),
+    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_640x480_A_NoConvert.mer'),
+    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_640x480_A_Password.mer'),
+    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A.mer'),
+    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A_NoConvert.mer'),
+    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A_Password.mer'),
+]
 
 # PanelView Plus configuration
 PVP5 = '2711P_PanelViewPlus_v5'

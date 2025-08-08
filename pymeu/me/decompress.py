@@ -184,7 +184,7 @@ def archive_to_disk(file_path: str, output_path: str):
     if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
 
     with olefile.OleFileIO(file_path) as ole:
-        streams = decompress_archive(ole, output_path)
+        streams = decompress_archive(ole)
         for stream in streams:
             stream_output_path = _create_subfolders(output_path, stream.path)
             with open(stream_output_path, 'wb') as f:
