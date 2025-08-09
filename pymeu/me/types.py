@@ -28,15 +28,12 @@ class MEFupUpgradeInfCard:
     fp_size: int
 
 @dataclass
-class MEFupUpgradeInfDrivers:
-    drivers: list[tuple[str, int]]
-
-@dataclass
 class MEFupUpgradeInf:
     version: MEFupUpgradeInfVersion
     fwc: MEFupUpgradeInfCard
     otw: MEFupUpgradeInfCard
-    drivers: MEFupUpgradeInfDrivers
+    drivers: list[tuple[str, int]]
+    ce: list[tuple[str, str]]
 
 @dataclass
 class MEFupMEFileListInfInfo:

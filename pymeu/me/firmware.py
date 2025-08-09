@@ -98,7 +98,7 @@ def _deserialize_fup_mefilelist_inf(input: str) -> types.MEFupMEFileListInf:
     return types.MEFupMEFileListInf(info=info, mefiles=me_files)
 
 def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
-    config = configparser.ConfigParser(allow_no_value=True)
+    config = configparser.ConfigParser(allow_no_value=True, strict=False)
     config.optionxform = str
     config.read_string(input)
 
@@ -142,18 +142,27 @@ def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
 
     # Drivers
     try:
-        drivers_list = [tuple[key, int(value)] for key, value in config.items('KEPDRIVERS')]
+        drivers = [tuple[key, int(value)] for key, value in config.items('KEPDRIVERS')]
     except:
-        drivers_list = []
-    drivers = types.MEFupUpgradeInfDrivers(
-        drivers=drivers_list
-    )
+        drivers = []
+
+    # CE Components
+    #
+    # This is where the CE files will be listed out.
+    #
+    # Currently does not work because there are duplicates that configparser
+    # doesn't like.
+    try:
+        ce = [tuple[key, value] for key, value in config.items('PVPCE')]
+    except:
+        ce = []
 
     return types.MEFupUpgradeInf(
         version=version,
         fwc=fwc,
         otw=otw,
-        drivers=drivers
+        drivers=drivers,
+        ce=ce
     )
 
 def _path_to_list(path: str) -> list[str]:

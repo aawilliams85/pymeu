@@ -82,8 +82,9 @@ It isn't clear which devices use which files in all cases.  General guidance:
 
 | Suffix | Platform
 |--------|--------
-| 4xM    | PanelView Plus 600 (Mozart?)
+| 4xM    | PanelView Plus 400/600 (Mozart?)
 | 4xX    | PanelView Plus 700-1500 (Raptor?)
+| 6xA    | PanelView Plus 6 400/600
 | 6xX    | PanelView Plus 6 700-1500
 
 Each FUW should install the corresponding FUP to this folder:
@@ -141,6 +142,9 @@ AddFPSize:(size in ???)
 
 [KEPDRIVERS]
 (driver name=size in bytes, 1 line per entry)
+
+[PVPCE]
+(filename in FUC=file path in terminal, 1 line per entry)
 ```
 
 For v5 terminals, 'MEFileList.inf' is a manifest that describes which existing files to delete on the terminal.<br>
