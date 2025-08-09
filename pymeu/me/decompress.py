@@ -105,7 +105,7 @@ def _decompress_page(input: bytearray) -> bytearray:
 def _decompress_stream(
     input: bytearray,
     progress_desc: str = None,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bytearray:
     output = bytearray()
     length = len(input)
@@ -121,7 +121,7 @@ def _decompress_stream(
         if progress:
             desc = f'Decompressing'
             if progress_desc: desc += f' {progress_desc}'
-            progress(desc, length, offset)
+            progress(desc, 'bytes', length, offset)
 
     return output
 
@@ -149,7 +149,7 @@ def _get_mapper_for_mappee(ole: olefile.OleFileIO, mappee_name: str) -> str:
 
 def decompress_archive(
     ole: olefile.OleFileIO,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[types.MEArchive]:
     streams = []
     for stream_path in ole.listdir():

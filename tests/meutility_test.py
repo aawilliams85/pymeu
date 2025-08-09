@@ -649,22 +649,6 @@ class decompress_tests(unittest.TestCase):
             elapsed_time = end - start
             print(elapsed_time)
 
-    def test_fup_to_otw_folder_single(self):
-        print('')
-        if True:
-            file = os.path.join(LOCAL_INPUT_FUP_PATH, 'ME_PVP4xX_5.10.16.09.fup')
-            print(file)
-            start = time.time()
-            me.firmware.fup_to_otw_folder(
-                input_path=file,
-                output_path=os.path.join(LOCAL_OUTPUT_OTW_PATH, f'{os.path.basename(file)}'),
-                progress=progress_callback
-            )
-            end = time.time()
-            elapsed_time = end - start
-            print(elapsed_time)
-
-
     def test_apa_to_med_folder(self):
         print('')
         for file in STANDALONE_APA_FILES:
@@ -943,13 +927,26 @@ class fuwhelper_tests(unittest.TestCase):
         print('')
         for (device, driver, comms_path) in test_combinations:
             with comms.Driver(comms_path, driver=driver) as cip:
-                device2 = validation.get_terminal_info(cip)
-                if device.local_firmware_helper_path is not None and device.transfer_firmware_helper:
-                    fuw_helper_file = types.MEFile('FUWhelper.dll',
-                                                True,
-                                                True,
-                                                device.local_firmware_helper_path)
-                    resp = util.download_file(cip, device2, fuw_helper_file, '\\Storage Card')
+                if device.transfer_firmware_helper:
+                    device2 = validation.get_terminal_info(cip)
+
+                    # Determine if firmware upgrade helper already exists in one
+                    # of the expected locations and use it, or else transfer the
+                    # helper file specified.
+                    if me.helper.get_file_exists(cip, device2.me_paths, '\\Windows\\FUWhelper.dll'):
+                        device2.me_paths.fuwhelper_file = '\\Windows\\FUWhelper.dll'
+                    elif me.helper.get_file_exists(cip, device2.me_paths, device2.me_paths.fuwhelper_file):
+                        pass
+                    else:
+                        me.transfer.download_file(
+                            cip=cip,
+                            device=device2,
+                            file_path_local=device.local_firmware_helper_path,
+                            file_path_terminal=device2.me_paths.fuwhelper_file,
+                            overwrite=True,
+                            progress=progress_callback
+                        )
+                        me.util.wait(time_sec=5, progress=progress_callback)
 
     def test_get_process_running(self):
         print('')

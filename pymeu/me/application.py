@@ -8,7 +8,7 @@ from . import types
 
 def apa_to_med(
     input_path: str,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[types.MEArchive]:
     # Application-specific handling for *.APA files that
     # keeps streams in memory.
@@ -24,7 +24,7 @@ def apa_to_med(
 def apa_to_med_folder(
     input_path: str, 
     output_path: str,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ):
     # Application-specific handling for *.APA files that
     # writes streams to a folder.
@@ -42,7 +42,7 @@ def apa_to_med_folder(
 
 def mer_to_med(
     input_path: str,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[types.MEArchive]:
     # Application-specific handling for *.MER files that
     # keeps streams in memory.
@@ -58,7 +58,7 @@ def mer_to_med(
 def mer_to_med_folder(
     input_path: str,
     output_path: str,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ):
     # Application-specific handling for *.MER files that
     # writes streams to a folder.

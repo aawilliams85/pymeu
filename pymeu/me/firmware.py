@@ -11,8 +11,19 @@ from . import fuwhelper
 from . import helper
 from . import transfer
 from . import types
+from . import util
 
 INFORMATION_NAME = '_INFORMATION'
+OTW_USE_WIN_DIR = [
+    'locOSup.exe',
+    'ebcbootrom.bin',
+    'system.bin',
+    'upgradeoptions.exe',
+    'valOSpart.exe',
+    'GetFreeRAM.exe',
+    'PVPlus_Mozart_nkc.MCE',
+    'EBCMOZ.EBC'
+]
 
 def _create_upgrade_dat(version: types.MEFupUpgradeInfVersion, card: types.MEFupUpgradeInfCard, me_files: types.MEFupMEFileListInf) -> str:
     # There is an upgrade.dat file which needs to be created
@@ -152,7 +163,7 @@ def _path_to_list(path: str) -> list[str]:
 
 def fup_to_fuc(
     input_path: str,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[types.MEArchive]:
     # Application-specific handling for *.FUP files that
     # keeps streams in memory.
@@ -174,7 +185,7 @@ def fup_to_fuc(
 def fup_to_fuc_folder(
     input_path: str,
     output_path: str,
-    progress: Optional[Callable[[str, int, int], None]] = None,
+    progress: Optional[Callable[[str, str, int, int], None]] = None,
 ):
     # Application-specific handling for *.FUP files that
     # writes streams to a folder.
@@ -198,7 +209,7 @@ def fup_to_fuc_folder(
 
 def fup_to_fwc(
     input_path: str,
-    progress: Optional[Callable[[str, int, int], None]] = None,
+    progress: Optional[Callable[[str, str, int, int], None]] = None,
 ) -> list[types.MEArchive]:
     # Application-specific handling for *.FUP files that
     # keeps streams in memory.
@@ -222,7 +233,7 @@ def fup_to_fwc(
 def fup_to_fwc_folder(
     input_path: str,
     output_path: str,
-    progress: Optional[Callable[[str, int, int], None]] = None,
+    progress: Optional[Callable[[str, str, int, int], None]] = None,
 ):
     # Application-specific handling for *.FUP files that
     # writes streams to a folder.
@@ -242,7 +253,7 @@ def fup_to_fwc_folder(
 
 def fup_to_otw(
     input_path: str,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[types.MEArchive]:
     # Application-specific handling for *.FUP files that
     # keeps streams in memory.
@@ -266,7 +277,7 @@ def fup_to_otw(
 def fup_to_otw_folder(
     input_path: str,
     output_path: str,
-    progress: Optional[Callable[[str, int, int], None]] = None,
+    progress: Optional[Callable[[str, str, int, int], None]] = None,
 ):
     # Application-specific handling for *.FUP files that
     # writes streams to a folder.
@@ -292,7 +303,7 @@ def flash_fup_to_terminal(
     fup_path_local: str,
     fuwhelper_path_local: str,
     fuwcover_path_local: str = None,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ):
     # Read FUP into memory
     streams_otw = fup_to_otw(
@@ -316,7 +327,7 @@ def flash_fup_to_terminal(
             overwrite=True,
             progress=progress
         )
-        time.sleep(10)
+        util.wait(time_sec=5, progress=progress)
 
     # Check major rev.  v5 process is a bit different than v6/v7A
     major_rev = int(device.me_identity.me_version.split(".")[0])
@@ -327,11 +338,8 @@ def flash_fup_to_terminal(
         fuwhelper.set_screensaver(cip, device.me_paths, False)
         fuwhelper.set_me_corrupt_screen(cip, device.me_paths, False)
         os_rev = fuwhelper.get_os_rev(cip, device.me_paths)
-        print(os_rev)
         part_size = fuwhelper.get_partition_size(cip, device.me_paths)
-        print(part_size)
         restore = fuwhelper.get_file_exists(cip, device.me_paths, '\\Storage Card\\_restore_reserve.cmd')
-        print(restore)
         fuwhelper.start_process(cip, device.me_paths, 'GenReserve:0')
 
         if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage_Card')):
@@ -353,13 +361,9 @@ def flash_fup_to_terminal(
                 print(e)
 
         storage_free_space = fuwhelper.get_free_space(cip, device.me_paths, '\\Storage Card')
-        print(storage_free_space)
         storage_total_space = fuwhelper.get_total_space(cip, device.me_paths, '\\Storage Card')
-        print(storage_total_space)
         windows_free_space = fuwhelper.get_free_space(cip, device.me_paths, '\\Windows')
-        print(windows_free_space)
         windows_total_space = fuwhelper.get_total_space(cip, device.me_paths, '\\Windows')
-        print(windows_total_space)
 
         # Check files from MEFileInfo.inf?
         for file in mefilelist_inf_data.mefiles:
@@ -391,7 +395,20 @@ def flash_fup_to_terminal(
             fuwhelper.delete_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
 
         for stream in streams_otw:
-            stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
+            # Some streams need to be redirected to the Windows directory
+            # instead of the Storage Card directory.  There is no cue in the 
+            # upgrade.inf file for this.
+            #
+            # Current guesses...
+            # [1] Always redirect files after Autoapp.bat and before RFOn.bat?
+            # [2] Some way to parse contents of autoapp.bat to see which are referenced?
+            # [3] All binary/executable files except for known ones that belong to Storage Card?
+            # [4] There is no logic to it.
+            if stream.path[-1].lower() in [f.lower() for f in OTW_USE_WIN_DIR]:
+                stream_path_terminal = '\\Windows\\' + '\\'.join(stream.path)
+            else:
+                stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
+
             transfer.download(
                 cip=cip,
                 device=device,
@@ -404,7 +421,7 @@ def flash_fup_to_terminal(
         # Initiate install
         fuwhelper.set_screensaver(cip, device.me_paths, True)
         fuwhelper.set_me_corrupt_screen(cip, device.me_paths, True)
-        time.sleep(5)
+        util.wait(time_sec=5, progress=progress)
         fuwhelper.stop_process(cip, device.me_paths, 'FUWCover.exe')
         fuwhelper.start_process(cip, device.me_paths, '\\Storage Card\\upgrade\\autorun.exe')
     if major_rev > 5:

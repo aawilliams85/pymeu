@@ -125,7 +125,7 @@ def _write_download(
     file_data: bytearray, 
     instance: int, 
     progress_desc: str = None, 
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bool:
     """
     Downloads a file from the local device to the remote terminal.
@@ -172,7 +172,7 @@ def _write_download(
 
         # Update progress callback
         current_bytes = req_offset + len(req_chunk)
-        if progress: progress(f'Download {progress_desc}',total_bytes, current_bytes)
+        if progress: progress(f'Download {progress_desc}','bytes', total_bytes, current_bytes)
 
         # Continue to next chunk
         req_chunk_number += 1
@@ -187,7 +187,7 @@ def _read_upload(
     cip: comms.Driver, 
     file_size: int, 
     instance: int, 
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bytearray:
     """
     Uploads a file from the remote terminal to the local device.
@@ -236,7 +236,7 @@ def _read_upload(
         resp_binary += resp_data
 
         # Update progress callback
-        if progress: progress('Upload',file_size,len(resp_binary))
+        if progress: progress('Upload','bytes', file_size,len(resp_binary))
 
         # Continue to next chunk
         req_chunk_number += 1
@@ -281,11 +281,11 @@ def download(
     file_data: bytearray, 
     file_path_terminal: str, 
     overwrite: bool = True,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bool:
     instance = None
     try:
-        file_exists = helper.get_file_exists_mer(cip, device.me_paths, file_path_terminal)
+        file_exists = helper.get_file_exists(cip, device.me_paths, file_path_terminal)
         if (overwrite and not file_exists): overwrite = False
         if (file_exists and not overwrite): raise FileExistsError(f'File {file_path_terminal} exists on terminal already and overwrite was not specified.')
 
@@ -323,7 +323,7 @@ def download_file(
     file_path_local: str,
     file_path_terminal: str,
     overwrite: bool = True,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bool:
     with open(file_path_local, 'rb') as source_file:
         return download(
@@ -344,7 +344,7 @@ def download_file_mer(
     run_at_startup: bool,
     replace_comms: bool,
     delete_logs: bool,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bool:
     file_path_terminal = f'{device.me_paths.runtime}\\{file_name_terminal}'
     helper.create_folder_runtime(cip, device.me_paths)
@@ -371,7 +371,7 @@ def upload(
     cip: comms.Driver, 
     device: types.MEDeviceInfo, 
     file_path_terminal: str, 
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bytearray:
     instance = None
     try:
@@ -393,7 +393,7 @@ def upload_file(
     device: types.MEDeviceInfo, 
     file_path_local: str,
     file_path_terminal: str,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ):
     resp_binary = upload(
         cip=cip,
@@ -409,7 +409,7 @@ def upload_file_mer(
     device: types.MEDeviceInfo, 
     file_path_local,
     file_name_terminal,
-    progress: Optional[Callable[[str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bool:
     file_path_terminal = f'{device.me_paths.runtime}\\{file_name_terminal}'
     if helper.get_file_exists(cip, device.me_paths, file_path_terminal):

@@ -115,3 +115,15 @@ def reboot(
         if (str(e) != 'failed to receive reply'): raise e
     
     cip1.close()
+
+def wait(
+    time_sec: int,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+):
+    elapsed = 0
+    if time_sec < 0: time_sec = 1
+    while elapsed < time_sec:
+        elapsed += 1
+        time.sleep(1)
+        if progress:
+            progress('Waiting', 'seconds', time_sec, elapsed)

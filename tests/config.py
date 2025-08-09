@@ -39,9 +39,9 @@ def generate_test_combinations(devices: list[METestDevice], drivers: list[str]) 
     
     return combinations
 
-def progress_callback(description: str, total_bytes: int, current_bytes: int):
+def progress_callback(description: str, units: str, total_bytes: int, current_bytes: int):
     progress = 100* current_bytes / total_bytes
-    print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
+    print(f"{description}: {progress:.2f}%, {current_bytes} of {total_bytes} {units}.")
 
 # Shared paths - computer
 LOCAL_BASE_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -86,7 +86,7 @@ STANDALONE_MER_FILES = [
 
 # PanelView Plus configuration
 PVP5 = '2711P_PanelViewPlus_v5'
-PVP5_Comms_Paths = ['192.168.1.20','192.168.40.11,bp,3,enet,192.168.1.20']
+PVP5_Comms_Paths = ['192.168.1.20']
 #PVP5_Comms_Paths = ['192.168.40.20','192.168.40.11,bp,3,enet,192.168.1.20']
 PVP5_Device_Paths = types.MEPaths(
     f'\\Storage Card\\Rockwell Software\\RSViewME\\{HELPER_FILE_NAME}',
@@ -217,8 +217,8 @@ DEVICE_PVP7B = METestDevice(
 
 DEVICES = [
     DEVICE_PVP5,
-    DEVICE_PVP6,
-    DEVICE_PVP7A,
+    #DEVICE_PVP6,
+    #DEVICE_PVP7A,
     #DEVICE_PVP7B    
 ]
 
