@@ -48,7 +48,7 @@ def _get_upgrade_inf(streams: list[types.MEArchive]) -> types.MEFupUpgradeInf:
 def _get_mefilelist_inf(streams: list[types.MEArchive]) -> types.MEFupMEFileListInf:
     try:
         return _deserialize_fup_mefilelist_inf(_get_stream_by_name(streams, 'MEFileList.inf').data.decode('utf-8'))
-    except:
+    except Exception as e:
         # v6+ don't use this at all so just enter default values
         return types.MEFupMEFileListInf(info=types.MEFupMEFileListInfInfo(me='', size_on_disk_bytes=0), mefiles=[])
 
@@ -75,9 +75,13 @@ def _deserialize_fup_mefilelist_inf(input: str) -> types.MEFupMEFileListInf:
     info_section = config['info']
     info = types.MEFupMEFileListInfInfo(
         me=info_section.get('ME'),
-        size_on_disk_bytes=info_section.getint('SizeOnDisk')
+        size_on_disk_bytes=info_section.getint('SizeOnDisk', 0)
     )
-    me_files = list(config.get('MEFILES').keys())
+
+    me_files_section = config['MEFILES']
+    me_files = [
+        value for value in me_files_section.items()
+    ]
     
     # Return ConfigData instance
     return types.MEFupMEFileListInf(info=info, mefiles=me_files)
@@ -387,7 +391,7 @@ def flash_fup_to_terminal(
             fuwhelper.delete_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
 
         for stream in streams_otw:
-            stream_path_terminal = '\\' + '\\'.join(stream.path)
+            stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
             transfer.download(
                 cip=cip,
                 device=device,

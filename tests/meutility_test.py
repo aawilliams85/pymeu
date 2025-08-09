@@ -649,6 +649,22 @@ class decompress_tests(unittest.TestCase):
             elapsed_time = end - start
             print(elapsed_time)
 
+    def test_fup_to_otw_folder_single(self):
+        print('')
+        if True:
+            file = os.path.join(LOCAL_INPUT_FUP_PATH, 'ME_PVP4xX_5.10.16.09.fup')
+            print(file)
+            start = time.time()
+            me.firmware.fup_to_otw_folder(
+                input_path=file,
+                output_path=os.path.join(LOCAL_OUTPUT_OTW_PATH, f'{os.path.basename(file)}'),
+                progress=progress_callback
+            )
+            end = time.time()
+            elapsed_time = end - start
+            print(elapsed_time)
+
+
     def test_apa_to_med_folder(self):
         print('')
         for file in STANDALONE_APA_FILES:
