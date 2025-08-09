@@ -35,7 +35,7 @@ class CFUtility(object):
         self, 
         firmware_image_path: str, 
         dry_run: bool = False,
-        progress: Optional[Callable[[str, int, int], None]] = None
+        progress: Optional[Callable[[str, str, int, int], None]] = None
     ) -> types.CFResponse:
         """
         Flashes a firmware image to the remote terminal.

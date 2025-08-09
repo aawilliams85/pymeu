@@ -163,7 +163,14 @@ def send_dmk_update_preamble(cip: comms.Driver, instance: int, serial_number: st
     if (resp_unk2 != 0): raise Exception(f'Response UNK2: {resp_unk2}.  Update failed.')
     return resp_chunk_size
 
-def send_dmk_update_file(cip: comms.Driver, instance: int, chunk_size: int, source_data: bytearray, description: str, progress: Optional[Callable[[str, int, int], None]] = None):
+def send_dmk_update_file(
+    cip: comms.Driver, 
+    instance: int, 
+    chunk_size: int, 
+    source_data: bytearray, 
+    description: str, 
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+):
     req_offset = 0
     current_bytes = 0
     total_bytes = len(source_data)
@@ -188,7 +195,7 @@ def send_dmk_update_file(cip: comms.Driver, instance: int, chunk_size: int, sour
             current_bytes = resp_offset_next
 
         # Update progress callback
-        if progress: progress(f'{description}',total_bytes, current_bytes)
+        if progress: progress(f'{description}','bytes', total_bytes, current_bytes)
             
         # Continue to next chunk
         req_offset = resp_offset_next
@@ -205,7 +212,13 @@ def send_dmk_reset(cip: comms.Driver):
     resp = messages.reset(cip, req_data)
     if not resp: raise Exception(f'Failed to reset terminal.')
 
-def send_dmk_updates(cip: comms.Driver, device: types.CFDeviceInfo, dmk_file_path: str, nvs: types.DMKNvsFile, progress: Optional[Callable[[str, int, int], None]] = None):
+def send_dmk_updates(
+    cip: comms.Driver,
+    device: types.CFDeviceInfo,
+    dmk_file_path: str,
+    nvs: types.DMKNvsFile,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+):
     cip.close()
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
         instance = 0
@@ -241,7 +254,13 @@ def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
                 if (actual_size != update.file_size):
                     raise Exception(f'File: {update.data_file_name}, Expected Size: {update.file_size}, Actual Size: {actual_size}')
 
-def process_dmk(cip: comms.Driver, device: types.CFDeviceInfo, dmk_file_path: str, dry_run: bool, progress: Optional[Callable[[str, int, int], None]] = None):
+def process_dmk(
+    cip: comms.Driver,
+    device: types.CFDeviceInfo,
+    dmk_file_path: str,
+    dry_run: bool,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+):
     config_content = configparser.ConfigParser(allow_unnamed_section=True)
     config_nvs = configparser.ConfigParser(allow_unnamed_section=True, allow_no_value=True)
     with zipfile.ZipFile(dmk_file_path, 'r') as zf:
