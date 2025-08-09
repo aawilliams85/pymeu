@@ -100,8 +100,8 @@ PVP5_FUP_File_Paths = [
 PVP5_Local_Firmware_Cover_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v11', 'FUWCover4xX.exe')
 PVP5_Local_Firmware_Helper_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v11', 'FUWhelper4xX.dll')
 PVP5_Local_Firmware_Image_Paths = [
-    os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP5, 'ME_PVP4xX_5.10.16.09'),
-    os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP5, 'ME_PVP4xX_5.10.16.09.WithViewPoint'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUP', 'ME_PVP4xX_5.10.16.09.fup'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUP', 'ME_PVP4xX_5.10.16.09.WithViewPoint.fup'),
 ]
 PVP5_MER_Files = [
     'Test_v5_640x480_A.mer',
@@ -120,8 +120,8 @@ PVP6_Device_Paths = types.MEPaths(
 )
 PVP6_Local_Firmware_Helper_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
 PVP6_Local_Firmware_Image_Paths = [
-    os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP6, 'ME_PVP6xX_11.00-20190915', 'upgrade', 'SC.IMG'),
-    os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP6, 'ME_PVP6xX_12.00-20200922', 'upgrade', 'SC.IMG'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUP', 'ME_PVP6xX_11.00-20190915.fup'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUP', 'ME_PVP6xX_12.00-20200922.fup'),
 ]
 PVP6_MER_Files = [
     'Test_v11_640x480_A.mer',
@@ -140,8 +140,8 @@ PVP7A_Device_Paths = types.MEPaths(
 )
 PVP7A_Local_Firmware_Helper_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
 PVP7A_Local_Firmware_Image_Paths = [
-    os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP7A, 'ME_PVP7xX_11.00-20190916', 'upgrade', 'SC.IMG'),
-    os.path.join(LOCAL_INPUT_PATH, 'FUC', PVP7A, 'ME_PVP7xX_15.00-20240926', 'upgrade', 'SC.IMG'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUP', 'ME_PVP7xX_11.00-20190916.fup'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUP', 'ME_PVP7xX_15.00-20240926.fup'),
 ]
 PVP7A_MER_Files = [
     'Test_v11_1024x768_A.mer',

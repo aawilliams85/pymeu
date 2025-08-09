@@ -64,65 +64,6 @@ def create_log(
     device.log.append(line)
     if print_log: print(f'{line}')
 
-def flash_firmware(
-    cip: comms.Driver, 
-    device: types.MEDeviceInfo, 
-    firmware_image_path: str,
-    firmware_helper_path: str, 
-    firmware_cover_path: str = None,
-    dry_run: bool = False,
-    progress: Optional[Callable[[str, int, int], None]] = None
-):
-
-    # Determine if firmware upgrade helepr exists already
-    transfer_fuwhelper = True
-    if helper.get_file_exists(cip, device.me_paths, '\\Windows\\FUWhelper.dll'):
-        transfer_fuwhelper = False
-        device.me_paths.fuwhelper_file = '\\Windows\\FUWhelper.dll'
-        device.log.append(f'Firmware upgrade helper already present on terminal.')
-    else:
-        if helper.get_file_exists(cip, device.me_paths, device.me_paths.fuwhelper_file):
-            transfer_fuwhelper = False
-            device.log.append(f'Firmware upgrade helper already present on terminal.')
-
-    # Download firmware upgrade wizard helper to terminal
-    if transfer_fuwhelper:
-        try:
-            fuw_helper_file = types.MEFile('FUWhelper.dll',
-                                        True,
-                                        True,
-                                        firmware_helper_path)
-            resp = download_file(cip, device, fuw_helper_file, '\\Storage Card', progress)
-            if not(resp):
-                device.log.append(f'Failed to upgrade terminal.')
-                return False
-            
-            time.sleep(10)
-        except Exception as e:
-            device.log.append(f'Exception: {str(e)}')
-            device.log.append(f'Traceback: {traceback.format_exc()}')
-            device.log.append(f'Failed to upgrade terminal.')
-            return False
-
-    # Determine which process to run
-    major_rev = int(device.me_identity.me_version.split(".")[0])
-    if (major_rev <= 5):
-        flash_firmware_pvp5(
-            cip=cip,
-            device=device,
-            firmware_image_path=firmware_image_path,
-            firmware_cover_path=firmware_cover_path,
-            progress=progress
-        )
-    else:
-        flash_firmware_pvp6(
-            cip=cip,
-            device=device,
-            firmware_image_path=firmware_image_path,
-            progress=progress
-        )
-    return True
-
 def flash_firmware_pvp5(
     cip: comms.Driver, 
     device: types.MEDeviceInfo,
@@ -435,50 +376,6 @@ def flash_firmware_pvp5(
     time.sleep(5)
     fuwhelper.stop_process(cip, device.me_paths, 'FUWCover.exe')
     fuwhelper.start_process(cip, device.me_paths, '\\Storage Card\\upgrade\\autorun.exe')
-    return True
-
-def flash_firmware_pvp6(
-    cip: comms.Driver, 
-    device: types.MEDeviceInfo,
-    firmware_image_path: str,
-    progress: Optional[Callable[[str, int, int], None]] = None
-):
-    # Prepare terminal for firmware upgrade card
-    try:
-        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card')):
-            fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card')
-        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\vfs')):
-            fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card\\vfs')
-        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\vfs\\platform firmware')):
-            fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card\\vfs\\platform firmware')
-        if (fuwhelper.get_file_exists(cip, device.me_paths, '\\Storage Card\\Step2.dat')):
-            fuwhelper.delete_file(cip, device.me_paths, '\\Storage Card\\Step2.dat')
-        if fuwhelper.get_process_running(cip, device.me_paths, 'MERuntime.exe'):
-            fuwhelper.stop_process_me(cip, device.me_paths)
-
-        fuwhelper.get_file_exists(cip, device.me_paths, '\\Windows\\useroptions.txt')
-    except Exception as e:
-        device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Traceback: {traceback.format_exc()}')
-        device.log.append(f'Failed to upgrade terminal.')
-        return False
-
-    # Download firmware upgrade card to terminal
-    try:
-        fuw_image_file = types.MEFile('SC.IMG',
-                                    True,
-                                    True,
-                                    firmware_image_path)
-        resp = download_file(cip, device, fuw_image_file, '\\vfs\\platform firmware', progress)
-        if not(resp):
-            device.log.append(f'Failed to upgrade terminal.')
-            return False
-    except Exception as e:
-        device.log.append(f'Exception: {str(e)}')
-        device.log.append(f'Traceback: {traceback.format_exc()}')
-        device.log.append(f'Failed to upgrade terminal.')
-        return False
-
     return True
 
 def reboot(

@@ -4,12 +4,15 @@ from typing import Optional
 from warnings import warn
 
 from . import comms
+from .me import firmware
 from .me import transfer
 from .me import types
 from .me import util
 from .me import validation
 
 LOCAL_RUNTIME_PATH = "C:\\Users\\Public\\Documents\\RSView Enterprise\\ME\\Runtime"
+LOCAL_BIN_PATH = "C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise"
+LOCAL_FUP_PATH = "C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUPs"
 
 class MEUtility(object):
     def __init__(
@@ -18,7 +21,9 @@ class MEUtility(object):
         driver: str = None, 
         ignore_terminal_valid: bool = False, 
         ignore_driver_valid: bool = False,
-        local_runtime_path: str = None
+        local_bin_path: str = None,
+        local_fup_path: str = None,
+        local_runtime_path: str = None,
     ):
         """
         Initializes an instance of the MEUtility class.
@@ -35,10 +40,10 @@ class MEUtility(object):
         self.driver = driver
         self.ignore_terminal_valid = ignore_terminal_valid
         self.ignore_driver_valid = ignore_driver_valid
-        if local_runtime_path is None:
-            self.local_runtime_path = LOCAL_RUNTIME_PATH
-        else:
-            self.local_runtime_path = local_runtime_path
+
+        self.local_bin_path = LOCAL_BIN_PATH if local_bin_path is None else local_bin_path
+        self.local_fup_path = LOCAL_FUP_PATH if local_fup_path is None else local_fup_path 
+        self.local_runtime_path = LOCAL_RUNTIME_PATH if local_runtime_path is None else local_runtime_path
 
     def download(
         self, 
@@ -126,10 +131,9 @@ class MEUtility(object):
     
     def flash_firmware(
         self, 
-        firmware_image_path: str, 
-        firmware_helper_path: str, 
-        firmware_cover_path: str = None,
-        dry_run: bool = False,
+        fup_path_local: str, 
+        fuwhelper_path_local: str, 
+        fuwcover_path_local: str = None,
         progress: Optional[Callable[[str, int, int], None]] = None
     ) -> types.MEResponse:
         """
@@ -141,10 +145,20 @@ class MEUtility(object):
             progress : Optional callback for progress indication.
         """
         # Use default RSView directory if one is not specified
-        if not os.path.isfile(firmware_helper_path):
-            if os.path.sep not in firmware_helper_path:
-                base_path = "C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise"
-                firmware_helper_path = os.path.join(base_path, firmware_helper_path)
+        if not os.path.isfile(fuwhelper_path_local):
+            if os.path.sep not in fuwhelper_path_local:
+                fuwhelper_path_local = os.path.join(self.local_bin_path, fuwhelper_path_local)
+
+        # Use default RSView directory if one is not specified
+        if fuwcover_path_local is not None:
+            if not os.path.isfile(fuwcover_path_local):
+                if os.path.sep not in fuwcover_path_local:
+                    fuwcover_path_local = os.path.join(self.local_bin_path, fuwcover_path_local)
+
+        # Use default RSView directory if one is not specified
+        if not os.path.isfile(fup_path_local):
+            if os.path.sep not in fup_path_local:
+                fup_path_local = os.path.join(self.local_fup_path, fup_path_local)
 
         with comms.Driver(self.comms_path, self.driver) as cip:
             if (self.driver == comms.DRIVER_NAME_PYCOMM3) and comms.is_routed_path(self.comms_path):
@@ -170,19 +184,18 @@ class MEUtility(object):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
-                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
+                    raise Exception('Invalid device selected.  Use ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
             # Perform firmware flash to terminal
             try:
-                resp = util.flash_firmware(
+                resp = firmware.flash_fup_to_terminal(
                     cip=cip,
                     device=self.device,
-                    firmware_image_path=firmware_image_path,
-                    firmware_helper_path=firmware_helper_path,
-                    firmware_cover_path=firmware_cover_path,
-                    dry_run=dry_run,
-                    progress=progress)
-
+                    fup_path_local=fup_path_local,
+                    fuwhelper_path_local=fuwhelper_path_local,
+                    fuwcover_path_local=fuwcover_path_local,
+                    progress=progress
+                )
                 if not(resp):
                     self.device.log.append(f'Failed to flash terminal.')
                     return types.MEResponse(self.device, types.ResponseStatus.FAILURE)

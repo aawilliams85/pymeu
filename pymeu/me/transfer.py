@@ -65,7 +65,7 @@ def _create_download(
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     resp = messages.create_transfer(cip, req_data)
-    resp_exception_text = 'Failed to create transfer instance for download'
+    resp_exception_text = f'Failed to create transfer instance for download of {file_path_terminal}.'
     if not resp: raise Exception(f'{resp_exception_text}.  No message response.')
  
     resp_msg_instance, resp_unk1, resp_transfer_instance, resp_chunk_size = struct.unpack('<HHHH', resp.value)
@@ -108,7 +108,7 @@ def _create_upload(
     req_data = req_header + b''.join(arg.encode() + b'\x00' for arg in req_args)
 
     resp = messages.create_transfer(cip, req_data)
-    resp_exception_text = 'Failed to create transfer instance for upload'
+    resp_exception_text = f'Failed to create transfer instance for upload of {file_path_terminal}.'
     if not resp: raise Exception(f'{resp_exception_text}.  No message response.')
 
     resp_msg_instance, resp_unk1, resp_transfer_instance, resp_chunk_size, resp_file_size = struct.unpack('<HHHHI', resp.value)
@@ -285,22 +285,19 @@ def download(
 ) -> bool:
     instance = None
     try:
-        if not(_is_ready(cip)):
-            device.log.append(f'Terminal not ready for file transfer lock.')
-            return False
+        file_exists = helper.get_file_exists_mer(cip, device.me_paths, file_path_terminal)
+        if (overwrite and not file_exists): overwrite = False
+        if (file_exists and not overwrite): raise FileExistsError(f'File {file_path_terminal} exists on terminal already and overwrite was not specified.')
 
+        if not(_is_ready(cip)): raise Exception('Terminal not ready for file transfer lock.')
         instance = _create_download(
             cip=cip,
             file_path_terminal=file_path_terminal,
             file_size=len(file_data),
             overwrite=overwrite
         )
-        device.log.append(f'Created transfer instance {instance} for download.')
 
-        if not(_set_ready(cip)):
-            device.log.append(f'Terminal refused file transfer lock.')
-            return False
-        
+        if not(_set_ready(cip)): raise Exception('Terminal refused file transfer lock.')
         _write_download(
             cip=cip,
             file_data=file_data,
@@ -314,12 +311,9 @@ def download(
             cip=cip,
             instance=instance
         )
-        device.log.append(f'Deleted transfer instance {instance}.')
     except Exception as e:
-        device.log.append(f'Download failed.')
-        # Try to clean up if there is a failure mid-way
         if instance is not None: _delete(cip=cip, instance=instance)
-        return False
+        raise Exception(f'Download {file_path_terminal} failed: {str(e)}')
 
     return True
 
@@ -391,11 +385,9 @@ def upload(
         _delete(cip=cip, instance=instance)
         return resp_binary
     except Exception as e:
-        device.log.append(f'Upload failed.')
-        # Try to clean up if there is a failure mid-way
         if instance is not None: _delete(cip=cip, instance=instance)
-        return None
-    
+        raise Exception(f'Upload {file_path_terminal} failed: {str(e)}')
+
 def upload_file(
     cip: comms.Driver, 
     device: types.MEDeviceInfo, 

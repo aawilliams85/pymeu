@@ -612,7 +612,11 @@ class decompress_tests(unittest.TestCase):
         for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
             print(file)
             start = time.time()
-            me.firmware.fup_to_fuc_folder(file, os.path.join(LOCAL_OUTPUT_FUC_PATH, f'{os.path.basename(file)}'))
+            me.firmware.fup_to_fuc_folder(
+                input_path=file,
+                output_path=os.path.join(LOCAL_OUTPUT_FUC_PATH, f'{os.path.basename(file)}'),
+                progress=progress_callback
+            )
             end = time.time()
             elapsed_time = end - start
             print(elapsed_time)
@@ -622,7 +626,11 @@ class decompress_tests(unittest.TestCase):
         for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
             print(file)
             start = time.time()
-            me.firmware.fup_to_fwc_folder(file, os.path.join(LOCAL_OUTPUT_FWC_PATH, f'{os.path.basename(file)}'))
+            me.firmware.fup_to_fwc_folder(
+                input_path=file,
+                output_path=os.path.join(LOCAL_OUTPUT_FWC_PATH, f'{os.path.basename(file)}'),
+                progress=progress_callback
+            )           
             end = time.time()
             elapsed_time = end - start
             print(elapsed_time)
@@ -632,7 +640,11 @@ class decompress_tests(unittest.TestCase):
         for file in glob.glob(os.path.join(LOCAL_INPUT_FUP_PATH, '*.fup')):
             print(file)
             start = time.time()
-            me.firmware.fup_to_otw_folder(file, os.path.join(LOCAL_OUTPUT_OTW_PATH, f'{os.path.basename(file)}'))
+            me.firmware.fup_to_otw_folder(
+                input_path=file,
+                output_path=os.path.join(LOCAL_OUTPUT_OTW_PATH, f'{os.path.basename(file)}'),
+                progress=progress_callback
+            )
             end = time.time()
             elapsed_time = end - start
             print(elapsed_time)
@@ -642,7 +654,11 @@ class decompress_tests(unittest.TestCase):
         for file in STANDALONE_APA_FILES:
             print(file)
             start = time.time()
-            me.application.apa_to_med_folder(file, os.path.join(LOCAL_OUTPUT_APA_PATH, f'{os.path.basename(file)}'))
+            me.application.apa_to_med_folder(
+                input_path=file,
+                output_path=os.path.join(LOCAL_OUTPUT_APA_PATH, f'{os.path.basename(file)}'),
+                progress=progress_callback
+            )
             end = time.time()
             elapsed_time = end - start
             print(elapsed_time)
@@ -652,7 +668,11 @@ class decompress_tests(unittest.TestCase):
         for file in STANDALONE_MER_FILES:
             print(file)
             start = time.time()
-            me.application.mer_to_med_folder(file, os.path.join(LOCAL_OUTPUT_MER_PATH, f'{os.path.basename(file)}'))
+            me.application.mer_to_med_folder(
+                input_path=file,
+                output_path=os.path.join(LOCAL_OUTPUT_MER_PATH, f'{os.path.basename(file)}'),
+                progress=progress_callback
+            )
             end = time.time()
             elapsed_time = end - start
             print(elapsed_time)
@@ -708,10 +728,11 @@ class fuw_tests(unittest.TestCase):
         )
         print(result)
         resp = meu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            firmware_helper_path=firmware_helper_path,
-            dry_run=False,
-            progress=progress_callback)
+            fup_path_local=firmware_image_path,
+            fuwhelper_path_local=firmware_helper_path,
+            fuwcover_path_local=None,
+            progress=progress_callback
+        )
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
@@ -733,10 +754,11 @@ class fuw_tests(unittest.TestCase):
         )
         print(result)
         resp = meu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            firmware_helper_path=firmware_helper_path,
-            dry_run=False,
-            progress=progress_callback)
+            fup_path_local=firmware_image_path,
+            fuwhelper_path_local=firmware_helper_path,
+            fuwcover_path_local=None,
+            progress=progress_callback
+        )
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
@@ -758,10 +780,11 @@ class fuw_tests(unittest.TestCase):
         )
         print(result)
         resp = meu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            firmware_helper_path=firmware_helper_path,
-            dry_run=False,
-            progress=progress_callback)
+            fup_path_local=firmware_image_path,
+            fuwhelper_path_local=firmware_helper_path,
+            fuwcover_path_local=None,
+            progress=progress_callback
+        )
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
@@ -783,10 +806,11 @@ class fuw_tests(unittest.TestCase):
         )
         print(result)
         resp = meu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            firmware_helper_path=firmware_helper_path,
-            dry_run=False,
-            progress=progress_callback)
+            fup_path_local=firmware_image_path,
+            fuwhelper_path_local=firmware_helper_path,
+            fuwcover_path_local=None,
+            progress=progress_callback
+        )
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
@@ -808,10 +832,11 @@ class fuw_tests(unittest.TestCase):
         )
         print(result)
         resp = meu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            firmware_helper_path=firmware_helper_path,
-            dry_run=False,
-            progress=progress_callback)
+            fup_path_local=firmware_image_path,
+            fuwhelper_path_local=firmware_helper_path,
+            fuwcover_path_local=None,
+            progress=progress_callback
+        )
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
@@ -833,10 +858,11 @@ class fuw_tests(unittest.TestCase):
         )
         print(result)
         resp = meu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            firmware_helper_path=firmware_helper_path,
-            dry_run=False,
-            progress=progress_callback)
+            fup_path_local=firmware_image_path,
+            fuwhelper_path_local=firmware_helper_path,
+            fuwcover_path_local=None,
+            progress=progress_callback
+        )
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
@@ -858,10 +884,11 @@ class fuw_tests(unittest.TestCase):
         )
         print(result)
         resp = meu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            firmware_helper_path=firmware_helper_path,
-            dry_run=False,
-            progress=progress_callback)
+            fup_path_local=firmware_image_path,
+            fuwhelper_path_local=firmware_helper_path,
+            fuwcover_path_local=None,
+            progress=progress_callback
+        )
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
@@ -883,10 +910,11 @@ class fuw_tests(unittest.TestCase):
         )
         print(result)
         resp = meu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            firmware_helper_path=firmware_helper_path,
-            dry_run=False,
-            progress=progress_callback)
+            fup_path_local=firmware_image_path,
+            fuwhelper_path_local=firmware_helper_path,
+            fuwcover_path_local=None,
+            progress=progress_callback
+        )
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)

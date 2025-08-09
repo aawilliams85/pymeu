@@ -1,5 +1,7 @@
+from collections.abc import Callable
 import olefile
 import os
+from typing import Optional
 
 from . import types
 
@@ -100,7 +102,11 @@ def _decompress_page(input: bytearray) -> bytearray:
     # Return decompressed page bytes
     return output
 
-def _decompress_stream(input: bytearray) -> bytearray:
+def _decompress_stream(
+    input: bytearray,
+    progress_desc: str = None,
+    progress: Optional[Callable[[str, int, int], None]] = None
+) -> bytearray:
     output = bytearray()
     length = len(input)
     offset = 0
@@ -112,6 +118,10 @@ def _decompress_stream(input: bytearray) -> bytearray:
         offset += page_size
 
         output += _decompress_page(page_bytes)
+        if progress:
+            desc = f'Decompressing'
+            if progress_desc: desc += f' {progress_desc}'
+            progress(desc, length, offset)
 
     return output
 
@@ -137,7 +147,10 @@ def _get_mapper_for_mappee(ole: olefile.OleFileIO, mappee_name: str) -> str:
     mapper_data = ole.openstream(mapper_name).read()
     return _get_mapper_filename(mapper_data)
 
-def decompress_archive(ole: olefile.OleFileIO) -> list[types.MEArchive]:
+def decompress_archive(
+    ole: olefile.OleFileIO,
+    progress: Optional[Callable[[str, int, int], None]] = None
+) -> list[types.MEArchive]:
     streams = []
     for stream_path in ole.listdir():
         stream_name = '/'.join(stream_path)
@@ -157,7 +170,11 @@ def decompress_archive(ole: olefile.OleFileIO) -> list[types.MEArchive]:
             
             stream_data = ole.openstream(original_name).read()
             try:
-                stream_data = _decompress_stream(stream_data)
+                stream_data = _decompress_stream(
+                    input=stream_data,
+                    progress_desc=stream_name,
+                    progress=progress
+                )
             except Exception as e:
                 # Some streams aren't compressed.
                 #
