@@ -318,6 +318,8 @@ def flash_fup_to_terminal(
     major_rev = int(device.me_identity.me_version.split(".")[0])
 
     if major_rev <= 5:
+        mefilelist_inf_data = _get_mefilelist_inf(streams_otw)
+
         fuwhelper.set_screensaver(cip, device.me_paths, False)
         fuwhelper.set_me_corrupt_screen(cip, device.me_paths, False)
         os_rev = fuwhelper.get_os_rev(cip, device.me_paths)
@@ -355,9 +357,9 @@ def flash_fup_to_terminal(
         windows_total_space = fuwhelper.get_total_space(cip, device.me_paths, '\\Windows')
         print(windows_total_space)
 
-        ## Check files from MEFileInfo.inf?
-        #for file in me_file_list.mefiles.files:
-        #    fuwhelper.get_file_exists(cip, device.me_paths, f'\\Storage Card{file}')
+        # Check files from MEFileInfo.inf?
+        for file in mefilelist_inf_data.mefiles:
+            fuwhelper.get_file_exists(cip, device.me_paths, f'\\Storage Card{file}')
 
         transfer.download_file(
             cip=cip,
@@ -371,13 +373,13 @@ def flash_fup_to_terminal(
         fuwhelper.stop_process(cip, device.me_paths, 'MERuntime.exe')
         fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\Rockwell Software\\RSViewME')
 
-        ## Delete files from MEFileInfo.inf?
-        #for file in me_file_list.mefiles.files:
-        #    if fuwhelper.get_file_exists(cip, device.me_paths, f'\\Storage Card{file}'):
-        #        try:
-        #            fuwhelper.delete_file(cip, device.me_paths, f'\\Storage Card{file}')
-        #        except Exception as e:
-        #            print(e)
+        # Delete files from MEFileInfo.inf?
+        for file in mefilelist_inf_data.mefiles:
+            if fuwhelper.get_file_exists(cip, device.me_paths, f'\\Storage Card{file}'):
+                try:
+                    fuwhelper.delete_file(cip, device.me_paths, f'\\Storage Card{file}')
+                except Exception as e:
+                    print(e)
 
         # Delete KEPServer
         if fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise'):
@@ -415,7 +417,7 @@ def flash_fup_to_terminal(
         fuwhelper.get_file_exists(cip, device.me_paths, '\\Windows\\useroptions.txt')
 
         for stream in streams_otw:
-            stream_path_terminal = '\\' + '\\'.join(stream.path)
+            stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
             transfer.download(
                 cip=cip,
                 device=device,
