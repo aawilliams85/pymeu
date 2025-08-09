@@ -702,11 +702,11 @@ class fuw_tests(unittest.TestCase):
         )
         print(result)
         resp = meu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            firmware_helper_path=firmware_helper_path,
-            firmware_cover_path=firmware_cover_path,
-            dry_run=False,
-            progress=progress_callback)
+            fup_path_local=firmware_image_path,
+            fuwhelper_path_local=firmware_helper_path,
+            fuwcover_path_local=firmware_cover_path,
+            progress=progress_callback
+        )
         for s in resp.device.log: print(s)
         print('')
         self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)

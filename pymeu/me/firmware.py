@@ -299,14 +299,10 @@ def flash_fup_to_terminal(
     # Determine if firmware upgrade helper already exists in one
     # of the expected locations and use it, or else transfer the
     # helper file specified.
-    transfer_fuwhelper = True
     if helper.get_file_exists(cip, device.me_paths, '\\Windows\\FUWhelper.dll'):
-        transfer_fuwhelper = False
         device.me_paths.fuwhelper_file = '\\Windows\\FUWhelper.dll'
-        device.log.append(f'Firmware upgrade helper already present on terminal.')
     elif helper.get_file_exists(cip, device.me_paths, device.me_paths.fuwhelper_file):
-        transfer_fuwhelper = False
-        device.log.append(f'Firmware upgrade helper already present on terminal.')
+        pass
     else:
         transfer.download_file(
             cip=cip,
@@ -316,14 +312,95 @@ def flash_fup_to_terminal(
             overwrite=True,
             progress=progress
         )
-        device.log.append(f'Firmware upgrade helper downloaded.')
         time.sleep(10)
 
     # Check major rev.  v5 process is a bit different than v6/v7A
     major_rev = int(device.me_identity.me_version.split(".")[0])
 
     if major_rev <= 5:
-        pass
+        fuwhelper.set_screensaver(cip, device.me_paths, False)
+        fuwhelper.set_me_corrupt_screen(cip, device.me_paths, False)
+        os_rev = fuwhelper.get_os_rev(cip, device.me_paths)
+        print(os_rev)
+        part_size = fuwhelper.get_partition_size(cip, device.me_paths)
+        print(part_size)
+        restore = fuwhelper.get_file_exists(cip, device.me_paths, '\\Storage Card\\_restore_reserve.cmd')
+        print(restore)
+        fuwhelper.start_process(cip, device.me_paths, 'GenReserve:0')
+
+        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage_Card')):
+            fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card')
+        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\upgrade')):
+            fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card\\upgrade')
+        fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\upgrade')
+
+        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Windows')):
+            fuwhelper.create_folder(cip, device.me_paths, '\\Windows')
+        if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Windows\\upgrade')):
+            fuwhelper.create_folder(cip, device.me_paths, '\\Windows\\upgrade')
+        fuwhelper.clear_folder(cip, device.me_paths, '\\Windows\\upgrade')
+
+        if (fuwhelper.get_file_exists(cip, device.me_paths, '\\Storage Card\\Step2.dat')):
+            try:
+                fuwhelper.delete_file(cip, device.me_paths, '\\Storage Card\\Step2.dat')
+            except Exception as e:
+                print(e)
+
+        storage_free_space = fuwhelper.get_free_space(cip, device.me_paths, '\\Storage Card')
+        print(storage_free_space)
+        storage_total_space = fuwhelper.get_total_space(cip, device.me_paths, '\\Storage Card')
+        print(storage_total_space)
+        windows_free_space = fuwhelper.get_free_space(cip, device.me_paths, '\\Windows')
+        print(windows_free_space)
+        windows_total_space = fuwhelper.get_total_space(cip, device.me_paths, '\\Windows')
+        print(windows_total_space)
+
+        ## Check files from MEFileInfo.inf?
+        #for file in me_file_list.mefiles.files:
+        #    fuwhelper.get_file_exists(cip, device.me_paths, f'\\Storage Card{file}')
+
+        transfer.download_file(
+            cip=cip,
+            device=device,
+            file_path_local=fuwcover_path_local,
+            file_path_terminal='\\Windows\\FUWCover.exe',
+            overwrite=True,
+            progress=progress
+        )
+        fuwhelper.start_process(cip, device.me_paths, '\\Windows\\FUWCover.exe')
+        fuwhelper.stop_process(cip, device.me_paths, 'MERuntime.exe')
+        fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\Rockwell Software\\RSViewME')
+
+        ## Delete files from MEFileInfo.inf?
+        #for file in me_file_list.mefiles.files:
+        #    if fuwhelper.get_file_exists(cip, device.me_paths, f'\\Storage Card{file}'):
+        #        try:
+        #            fuwhelper.delete_file(cip, device.me_paths, f'\\Storage Card{file}')
+        #        except Exception as e:
+        #            print(e)
+
+        # Delete KEPServer
+        if fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise'):
+            fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
+            fuwhelper.delete_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
+
+        for stream in streams_otw:
+            stream_path_terminal = '\\' + '\\'.join(stream.path)
+            transfer.download(
+                cip=cip,
+                device=device,
+                file_data=stream.data,
+                file_path_terminal=stream_path_terminal,
+                overwrite=True,
+                progress=progress
+            )
+
+        # Initiate install
+        fuwhelper.set_screensaver(cip, device.me_paths, True)
+        fuwhelper.set_me_corrupt_screen(cip, device.me_paths, True)
+        time.sleep(5)
+        fuwhelper.stop_process(cip, device.me_paths, 'FUWCover.exe')
+        fuwhelper.start_process(cip, device.me_paths, '\\Storage Card\\upgrade\\autorun.exe')
     if major_rev > 5:
         if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card')):
             fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card')
