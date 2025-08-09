@@ -221,9 +221,7 @@ def convert_path_pycomm3_to_pylogix(path: str):
         route = [tuple(parts[i:i+2]) for i in range(0, len(parts), 2)]
     return ip_address, route
 
-
 class Response(object):
-
     def __init__(self, value, type, error):
         self.tag = 'generic'
         self.value = value

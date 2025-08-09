@@ -11,8 +11,8 @@ def progress_callback(description: str, total_bytes: int, current_bytes: int):
     progress = 100* current_bytes / total_bytes
     print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
 
-cfu = CFUtility('YourPanelViewIpAddress')
+cfu = CFUtility(comms_path='YourPanelViewIpAddress')
 cfu.flash_firmware(
-    firmware_image_path='C:\\YourFolder\\YourFirmwareImage.DMK',
-    dry_run=False,
-    progress=progress_callback)
+    dmk_path_local='C:\\YourFolder\\YourFirmwareImage.DMK',
+    progress=progress_callback
+)

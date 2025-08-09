@@ -28,8 +28,7 @@ class dmk_tests(unittest.TestCase):
         )
         print(result)
         resp = cfu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            dry_run=False,
+            dmk_path_local=firmware_image_path,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
@@ -51,8 +50,7 @@ class dmk_tests(unittest.TestCase):
         )
         print(result)
         resp = cfu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            dry_run=False,
+            dmk_path_local=firmware_image_path,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')

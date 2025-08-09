@@ -7,13 +7,15 @@ from warnings import warn
 import zipfile
 
 from .. import comms
-from ..common import messages
+from ..common.messages import reset
+
+from . import messages
 from . import types
 
 FILE_NANE_CONTENT = 'Content.txt'
 FILE_NAME_NVS = 'RA_PVPApps_FTviewME_AllRegions.nvs'
 
-def deserialize_dmk_content_header(config: configparser) -> types.DMKContentHeader:
+def _deserialize_dmk_content_header(config: configparser) -> types.DMKContentHeader:
     section_name = 'Content'
     if section_name not in config:
         raise ValueError(f"Section '{section_name}' not found in configuration.")
@@ -26,7 +28,7 @@ def deserialize_dmk_content_header(config: configparser) -> types.DMKContentHead
         number_catalogs=section.getint('NumberCatalogs',0)
     )
 
-def deserialize_dmk_content_catalog(config: configparser, catalog_num: int) -> types.DMKContentCatalog:
+def _deserialize_dmk_content_catalog(config: configparser, catalog_num: int) -> types.DMKContentCatalog:
     section_name = f'Catalog{catalog_num}'
     if section_name not in config:
         raise ValueError(f"Section '{section_name}' not found in configuration.")
@@ -46,18 +48,18 @@ def deserialize_dmk_content_catalog(config: configparser, catalog_num: int) -> t
         driver_name=section.get('DriverName','')
     )
 
-def deserialize_dmk_content_file(config: configparser) -> types.DMKContentFile:
-    header = deserialize_dmk_content_header(config)
+def _deserialize_dmk_content_file(config: configparser) -> types.DMKContentFile:
+    header = _deserialize_dmk_content_header(config)
     catalogs = []
     for i in range(header.number_catalogs):
-        catalogs.append(deserialize_dmk_content_catalog(config, i+1))
+        catalogs.append(_deserialize_dmk_content_catalog(config, i+1))
 
     return types.DMKContentFile(
         header=header,
         catalogs=catalogs
     )
 
-def deserialize_dmk_nvs_header(config: configparser) -> types.DMKNvsHeader:
+def _deserialize_dmk_nvs_header(config: configparser) -> types.DMKNvsHeader:
     section_name = 'Device'
     if section_name not in config:
         raise ValueError(f"Section '{section_name}' not found in configuration.")
@@ -76,7 +78,7 @@ def deserialize_dmk_nvs_header(config: configparser) -> types.DMKNvsHeader:
         release_notes_file_name=section.get('ReleaseNotesFileName','')
     )
 
-def deserialize_dmk_nvs_update(config: configparser, update_num: int) -> types.DMKNvsUpdate:
+def _deserialize_dmk_nvs_update(config: configparser, update_num: int) -> types.DMKNvsUpdate:
     section_name = f'Update{update_num}'
     if section_name not in config:
         raise ValueError(f"Section '{section_name}' not found in configuration.")
@@ -99,18 +101,18 @@ def deserialize_dmk_nvs_update(config: configparser, update_num: int) -> types.D
         error_instructions=section.get('ErrorInstructions')
     )
 
-def deserialize_dmk_nvs_file(config: configparser) -> types.DMKNvsFile:
-    header = deserialize_dmk_nvs_header(config)
+def _deserialize_dmk_nvs_file(config: configparser) -> types.DMKNvsFile:
+    header = _deserialize_dmk_nvs_header(config)
     updates = []
     for i in range(header.number_updates):
-        updates.append(deserialize_dmk_nvs_update(config, i+1))
+        updates.append(_deserialize_dmk_nvs_update(config, i+1))
 
     return types.DMKNvsFile(
         header=header,
         updates=updates
     )
 
-def send_dmk_update_preamble(cip: comms.Driver, instance: int, serial_number: str, file_size: int) -> int:
+def _send_dmk_update_preamble(cip: comms.Driver, instance: int, serial_number: str, file_size: int) -> int:
     """
     Sends a DMK CAB file preamble message to the remote terminal.
     It responds with the chunk size to use for the actual file
@@ -163,7 +165,7 @@ def send_dmk_update_preamble(cip: comms.Driver, instance: int, serial_number: st
     if (resp_unk2 != 0): raise Exception(f'Response UNK2: {resp_unk2}.  Update failed.')
     return resp_chunk_size
 
-def send_dmk_update_file(
+def _send_dmk_update_file(
     cip: comms.Driver, 
     instance: int, 
     chunk_size: int, 
@@ -174,7 +176,7 @@ def send_dmk_update_file(
     req_offset = 0
     current_bytes = 0
     total_bytes = len(source_data)
-    if progress: progress(f'{description}',total_bytes, current_bytes)
+    if progress: progress(f'{description}', 'bytes', total_bytes, current_bytes)
     while current_bytes < total_bytes:
         req_chunk = source_data[req_offset:req_offset + chunk_size]
         req_header = struct.pack('<I', req_offset)
@@ -209,7 +211,7 @@ def send_dmk_reset(cip: comms.Driver):
         cip (comms.Driver): CIP driver to communicate with the terminal
     """
     req_data = struct.pack('<B', 0x00)
-    resp = messages.reset(cip, req_data)
+    resp = reset(cip, req_data)
     if not resp: raise Exception(f'Failed to reset terminal.')
 
 def send_dmk_updates(
@@ -228,14 +230,14 @@ def send_dmk_updates(
             cip.forward_open()
             cip.sequence_reset()
 
-            chunk_size = send_dmk_update_preamble(
+            chunk_size = _send_dmk_update_preamble(
                 cip=cip,
                 instance=instance,
                 serial_number=device.cip_identity.serial_number,
                 file_size=update.file_size
             )
             with zf.open(update.data_file_name) as file:
-                send_dmk_update_file(
+                _send_dmk_update_file(
                     cip=cip,
                     instance=instance,
                     chunk_size=chunk_size,
@@ -257,13 +259,13 @@ def validate_update_size(dmk_file_path: str, nvs: types.DMKNvsFile):
 def process_dmk(
     cip: comms.Driver,
     device: types.CFDeviceInfo,
-    dmk_file_path: str,
+    dmk_path_local: str,
     dry_run: bool,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ):
     config_content = configparser.ConfigParser(allow_unnamed_section=True)
     config_nvs = configparser.ConfigParser(allow_unnamed_section=True, allow_no_value=True)
-    with zipfile.ZipFile(dmk_file_path, 'r') as zf:
+    with zipfile.ZipFile(dmk_path_local, 'r') as zf:
         with zf.open(FILE_NANE_CONTENT) as file:
             raw_file = file.read().decode('utf-8')
             config_content.read_string(raw_file)
@@ -272,15 +274,16 @@ def process_dmk(
             config_nvs.read_string(raw_file)
 
     dmk_file = types.DMKFile(
-        content=deserialize_dmk_content_file(config_content),
-        nvs=deserialize_dmk_nvs_file(config_nvs)
+        content=_deserialize_dmk_content_file(config_content),
+        nvs=_deserialize_dmk_nvs_file(config_nvs)
     )
-    validate_update_size(dmk_file_path, dmk_file.nvs)
+    validate_update_size(dmk_path_local, dmk_file.nvs)
+    validate_dmk_for_terminal(device, dmk_file.content)
     if not(dry_run):
         send_dmk_updates(
             cip=cip,
             device=device,
-            dmk_file_path=dmk_file_path,
+            dmk_file_path=dmk_path_local,
             nvs=dmk_file.nvs,
             progress=progress
         )
@@ -289,10 +292,10 @@ def process_dmk(
 def masked_equals(mask: int, a: int, b: int) -> bool:
     return (mask & a) == (mask & b)
 
-def validate_dmk_for_terminal(device: types.CFDeviceInfo, content: types.DMKContentFile) -> bool:
+def validate_dmk_for_terminal(device: types.CFDeviceInfo, content: types.DMKContentFile):
     for catalog in content.catalogs:
         if not(masked_equals(catalog.vendor_id_mask, catalog.vendor_id, device.cip_identity.vendor_id)): continue
         if not(masked_equals(catalog.product_type_mask, catalog.product_type, device.cip_identity.product_type)): continue
         if not(masked_equals(catalog.product_code_mask, catalog.product_code, device.cip_identity.product_code)): continue
-        return True # Device matches this catalog
-    return False # Device doesn't match any catalogs
+        return # Device matches this catalog
+    raise Exception(f'Device catalog does not match DMK file.  Device: {device}, DMK: {content}')
