@@ -79,9 +79,9 @@ def _deserialize_fup_mefilelist_inf(input: str) -> types.MEFupMEFileListInf:
     )
 
     me_files_section = config['MEFILES']
-    me_files = [
-        value for value in me_files_section.items()
-    ]
+    me_files = []
+    for key, value in me_files_section.items():
+        me_files.append(key)
     
     # Return ConfigData instance
     return types.MEFupMEFileListInf(info=info, mefiles=me_files)
