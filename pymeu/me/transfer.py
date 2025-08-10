@@ -280,7 +280,7 @@ def download(
     device: types.MEDeviceInfo, 
     file_data: bytearray, 
     file_path_terminal: str, 
-    overwrite: bool = True,
+    overwrite: bool = False,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bool:
     instance = None
@@ -375,15 +375,18 @@ def upload(
 ) -> bytearray:
     instance = None
     try:
-        instance, file_size = _create_upload(cip=cip, file_path_terminal=file_path_terminal)
-        resp_binary = _read_upload(
-            cip=cip,
-            file_size=file_size,
-            instance=instance,
-            progress=progress
-        )
-        _delete(cip=cip, instance=instance)
-        return resp_binary
+        file_exists = helper.get_file_exists(cip=cip, paths=device.me_paths, file_path=file_path_terminal)
+        if file_exists:
+            instance, file_size = _create_upload(cip=cip, file_path_terminal=file_path_terminal)
+            resp_binary = _read_upload(
+                cip=cip,
+                file_size=file_size,
+                instance=instance,
+                progress=progress
+            )
+            _delete(cip=cip, instance=instance)
+            return resp_binary
+        raise FileNotFoundError(f'File {file_path_terminal} does not exist on terminal.')
     except Exception as e:
         if instance is not None: _delete(cip=cip, instance=instance)
         raise Exception(f'Upload {file_path_terminal} failed: {str(e)}')
@@ -412,16 +415,14 @@ def upload_file_mer(
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bool:
     file_path_terminal = f'{device.me_paths.runtime}\\{file_name_terminal}'
-    if helper.get_file_exists(cip, device.me_paths, file_path_terminal):
-        upload_file(
-            cip=cip,
-            device=device,
-            file_path_local=file_path_local,
-            file_path_terminal=file_path_terminal,
-            progress=progress
-        )
-        return True
-    return False
+    upload_file(
+        cip=cip,
+        device=device,
+        file_path_local=file_path_local,
+        file_path_terminal=file_path_terminal,
+        progress=progress
+    )
+    return True
 
 def upload_list(
     cip: comms.Driver,

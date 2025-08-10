@@ -246,7 +246,7 @@ def is_valid_download(
     # Check if file name already exists
     resp_file_exists = helper.get_file_exists_mer(cip, device.me_paths, file_name_terminal)
     if (resp_file_exists and not overwrite):
-        device.log.append(f'File {file_name_local} already exists on terminal, and overwrite was NOT requested.  Use overwrite_requested=True to overwrite existing.')
+        device.log.append(f'File {file_name_local} already exists on terminal, and overwrite was NOT requested.  Use overwrite=True to overwrite existing.')
         return False
 
     # Check space consumed by file if it exists

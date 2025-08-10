@@ -321,7 +321,15 @@ class download_tests(unittest.TestCase):
                         f'Function: download({download_file_path}, overwrite=True)\n'
                 )
                 print(result)
-                resp = meu.download(download_file_path, overwrite=True, run_at_startup=False)
+                resp = meu.download(
+                    file_path_local=download_file_path,
+                    file_name_terminal=None,
+                    delete_logs=False,
+                    overwrite=True,
+                    replace_comms=False,
+                    run_at_startup=False,
+                    progress=progress_callback
+                )
                 for s in resp.device.log: print(s)
                 print('')
                 self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
@@ -365,6 +373,34 @@ class download_tests(unittest.TestCase):
             self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
             count += 1
             if (count % len(DEVICES)) == 0: time.sleep(device.boot_time_sec)
+
+    def test_download_overwrite_single_progress(self):
+        print('')
+        count = 0
+        for device in DEVICES:
+            comms_path = device.comms_paths[0]
+            driver = DRIVERS[0]
+            meu = MEUtility(comms_path=comms_path, driver=driver)
+            download_file_path = os.path.join(LOCAL_INPUT_MER_PATH, device.mer_files[0])
+            result = (
+                    f'Device: {device.name}\n'
+                    f'Driver: {driver}\n'
+                    f'Path: {comms_path}\n'
+                    f'Function: download({download_file_path}, overwrite=True)\n'
+            )
+            print(result)
+            resp = meu.download(
+                file_path_local=download_file_path,
+                file_name_terminal=None,
+                delete_logs=False,
+                overwrite=True,
+                replace_comms=False,
+                run_at_startup=False,
+                progress=progress_callback
+            )
+            for s in resp.device.log: print(s)
+            print('')
+            self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_download_as_overwrite(self):
         print('')

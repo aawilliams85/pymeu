@@ -150,8 +150,7 @@ PVP7A_MER_Files = [
 
 #PanelView Plus 7B configuration
 PVP7B = '2711P_PanelViewPlus_v7B'
-PVP7B_Comms_Paths = ['192.168.1.23', '192.168.1.23']
-#PVP7B_Comms_Paths = ['192.168.40.23','192.168.40.11,bp,3,enet,192.168.1.23']
+PVP7B_Comms_Paths = ['192.168.40.23','192.168.40.11,bp,3,enet,192.168.1.23']
 PVP7B_Device_Paths = types.MEPaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
@@ -171,7 +170,7 @@ DEVICE_PVP5 = METestDevice(
     name=PVP5, 
     comms_paths=PVP5_Comms_Paths,
     device_paths=PVP5_Device_Paths, 
-    boot_time_sec=75, 
+    boot_time_sec=120, 
     mer_files=PVP5_MER_Files,
     local_firmware_cover_path=PVP5_Local_Firmware_Cover_Path,
     local_firmware_helper_path=PVP5_Local_Firmware_Helper_Path,
@@ -183,7 +182,7 @@ DEVICE_PVP6 = METestDevice(
     name=PVP6, 
     comms_paths=PVP6_Comms_Paths,
     device_paths=PVP6_Device_Paths, 
-    boot_time_sec=75, 
+    boot_time_sec=120, 
     mer_files=PVP6_MER_Files,
     local_firmware_cover_path='',
     local_firmware_helper_path=PVP6_Local_Firmware_Helper_Path,
@@ -195,7 +194,7 @@ DEVICE_PVP7A = METestDevice(
     name=PVP7A, 
     comms_paths=PVP7A_Comms_Paths,
     device_paths=PVP7A_Device_Paths, 
-    boot_time_sec=75, 
+    boot_time_sec=120, 
     mer_files=PVP7A_MER_Files,
     local_firmware_cover_path='',
     local_firmware_helper_path=PVP7A_Local_Firmware_Helper_Path,
@@ -207,7 +206,7 @@ DEVICE_PVP7B = METestDevice(
     name=PVP7B, 
     comms_paths=PVP7B_Comms_Paths,
     device_paths=PVP7B_Device_Paths, 
-    boot_time_sec=75, 
+    boot_time_sec=120, 
     mer_files=PVP7B_MER_Files,
     local_firmware_cover_path='',
     local_firmware_helper_path='',
