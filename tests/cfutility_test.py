@@ -1,12 +1,7 @@
-import os
-import time
 import unittest
 
-from pymeu import comms
 from pymeu import CFUtility
-from pymeu import terminal
-from pymeu import types
-from pymeu import validation
+from pymeu.cf import types
 
 from config import *
 
@@ -33,12 +28,11 @@ class dmk_tests(unittest.TestCase):
         )
         print(result)
         resp = cfu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            dry_run=False,
+            dmk_path_local=firmware_image_path,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     def test_flash_pvp7b_direct_pylogix(self):
         print('')
@@ -56,12 +50,11 @@ class dmk_tests(unittest.TestCase):
         )
         print(result)
         resp = cfu.flash_firmware(
-            firmware_image_path=firmware_image_path,
-            dry_run=False,
+            dmk_path_local=firmware_image_path,
             progress=progress_callback)
         for s in resp.device.log: print(s)
         print('')
-        self.assertEqual(resp.status, types.MEResponseStatus.SUCCESS)
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
     '''
     def test_dmk_validate(self):
@@ -90,7 +83,7 @@ class dmk_tests(unittest.TestCase):
             resp = meu.flash_firmware_dmk(firmware_image_path, False)
             for s in resp.device.log: print(s)
             print('')
-            self.assertEqual(resp.status, types.MEResponseStatus.FAILURE)
+            self.assertEqual(resp.status, types.ResponseStatus.FAILURE)
     '''
             
     def tearDown(self):

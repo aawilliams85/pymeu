@@ -7,8 +7,8 @@ terminals = ['YourPanelViewIpAddress1',
 file = 'C:\\YourFolder\\YourProgram.mer'
 
 def download(comms_path):
-    meu = MEUtility(comms_path)
-    meu.download(file, overwrite=True)
+    meu = MEUtility(comms_path=comms_path)
+    meu.download(file_path_local=file, overwrite=True)
 
 if __name__ == "__main__":
     with Pool() as pool:

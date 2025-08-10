@@ -173,10 +173,7 @@ def get_me_chunk_size(path: str) -> int:
                 if segment_size % 2: segment_size += 1 # if segment length is odd, there is a pad byte
 
             working_size -= segment_size
-
-        chunk_size = working_size
-        warn(f'Chunk size set to {chunk_size} but still WIP for routed paths.')
-        return chunk_size
+        return working_size
     else:
         # Direct path
         # Tests up to 2000 bytes did succeed, >2000 bytes failed.
@@ -224,9 +221,7 @@ def convert_path_pycomm3_to_pylogix(path: str):
         route = [tuple(parts[i:i+2]) for i in range(0, len(parts), 2)]
     return ip_address, route
 
-
 class Response(object):
-
     def __init__(self, value, type, error):
         self.tag = 'generic'
         self.value = value

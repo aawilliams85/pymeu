@@ -4,9 +4,11 @@ from typing import Optional
 from warnings import warn
 
 from . import comms
-from . import dmk
-from . import types
-from . import validation
+from .cf import dmk
+from .cf import types
+from .cf import validation
+
+LOCAL_DMK_PATH = "C:\\Users\\Public\\Documents\\Rockwell Automation\\Firmware Kits"
 
 class CFUtility(object):
     def __init__(
@@ -14,7 +16,8 @@ class CFUtility(object):
         comms_path: str, 
         driver: str = None, 
         ignore_terminal_valid: bool = False, 
-        ignore_driver_valid: bool = False
+        ignore_driver_valid: bool = False,
+        local_dmk_path: str = None,
     ):
         """
         Initializes an instance of the MEUtility class.
@@ -30,21 +33,25 @@ class CFUtility(object):
         self.driver = driver
         self.ignore_terminal_valid = ignore_terminal_valid
         self.ignore_driver_valid = ignore_driver_valid
+        self.local_dmk_path = LOCAL_DMK_PATH if local_dmk_path is None else local_dmk_path
 
     def flash_firmware(
         self, 
-        firmware_image_path: str, 
-        dry_run: bool = False,
-        progress: Optional[Callable[[str, int, int], None]] = None
-    ) -> types.MEResponse:
+        dmk_path_local: str, 
+        progress: Optional[Callable[[str, str, int, int], None]] = None
+    ) -> types.CFResponse:
         """
         Flashes a firmware image to the remote terminal.
 
         Args:
-            firmware_image_path (str) : The local path to the firmware image file (ex: C:\\YourFolder\\\\FirmwareImage.DMK)
-            dry_run (bool) : If True, run through pre-processing but don't actually flash the device.
+            dmk_path_local (str) : The local path to the firmware image file (ex: C:\\YourFolder\\\\FirmwareImage.DMK)
             progress: Optional callback for progress indication.
         """
+
+        # Use default DMK directory if one is not specified
+        if not os.path.isfile(dmk_path_local):
+            if os.path.sep not in dmk_path_local:
+                dmk_path_local = os.path.join(self.local_dmk_path, dmk_path_local)
 
         with comms.Driver(self.comms_path, self.driver) as cip:
             if (self.driver == comms.DRIVER_NAME_PYLOGIX):
@@ -64,27 +71,22 @@ class CFUtility(object):
             cip.timeout = 255.0
 
             # Validate device at this communications path is a terminal of known version.
-            self.device = validation.get_terminal_info(cip)
-            if not(validation.is_valid_dmk_terminal(self.device)):
-                if self.ignore_terminal_valid:
-                    warn('Invalid device selected, but terminal validation is set to IGNORE.')
-                else:
-                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
+            self.device = validation.get_device_info(cip)
 
             # Perform firmware flash to terminal
             try:
                 resp = dmk.process_dmk(
                     cip=cip,
                     device=self.device,
-                    dmk_file_path=firmware_image_path,
-                    dry_run=dry_run,
+                    dmk_path_local=dmk_path_local,
+                    dry_run=False,
                     progress=progress)                    
                 if not(resp):
                     self.device.log.append(f'Failed to flash terminal.')
-                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    return types.CFResponse(self.device, types.ResponseStatus.FAILURE)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to flash terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.CFResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.CFResponse(self.device, types.ResponseStatus.SUCCESS)

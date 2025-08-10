@@ -2,29 +2,36 @@
 Warning - Firmware upgrade is experimental!
 If anything fails during this process, the terminal will require a factory reset.
 
-Warning - This example is for PanelView Plus 6 and PanelView Plus 7 Series A terminals only!
-PanelView Plus (v5 hardware) is not compatible and will require additional development.
+Firmware Upgrade Packs (FUP) are stored by default in:
+C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUPs
 
-First, use the ME Firmware Upgrade Wizard utility to create a
-Firmware Upgrade Card for the desired terminal type + version.
-Note the path to "SC.IMG" in the folder it creates as your
-firmware image path.
+Firmware Upgrade Cover files and Firmware Upgrade Helpers are stored by default in:
+C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise
 
-Next, locate the Firmware Upgrade Wizard helper DLL as your
-firmware helper path.  Default location:
-C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWhelper6xX.dll
+Example:
+PanelView Plus 1000 v11 uses the *6xX files.
+
+meu = MEUtility(comms_path='YourPanelViewIpAddress')
+meu.flash_firmware(
+    fup_path_local='ME_PVP6xX_11.00-20190915.fup',
+    fuwhelper_path_local='FUWhelper6xX.dll',
+    fuwcover_path_local=None,
+    progress=progress_callback
+)
 
 Cross fingers and flash firmware.
 """
 
 from pymeu import MEUtility
 
-def progress_callback(description: str, total_bytes: int, current_bytes: int):
+def progress_callback(description: str, units: str, total_bytes: int, current_bytes: int):
     progress = 100* current_bytes / total_bytes
-    print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} bytes.")
+    print(f"{description} progress: {progress:.2f}% complete, {current_bytes} of {total_bytes} {units}.")
 
-meu = MEUtility('YourPanelViewIpAddress')
+meu = MEUtility(comms_path='YourPanelViewIpAddress')
 meu.flash_firmware(
-    firmware_image_path='C:\\YourFirmwareUpgradeCard\\upgrade\\SC.IMG',
-    firmware_helper_path='C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWhelper6xX.dll',
-    progress=progress_callback)
+    fup_path_local='YourFirmwareUpgradePack.fup',
+    fuwhelper_path_local='YourFirmwareUpgradeHelper.dll',
+    fuwcover_path_local=None,
+    progress=progress_callback
+)

@@ -1,8 +1,8 @@
 import unittest
 
 from pymeu import comms
-from pymeu import terminal
-from pymeu import validation
+from pymeu import me
+from pymeu.common import validation
 
 from config import *
 

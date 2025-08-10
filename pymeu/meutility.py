@@ -3,10 +3,16 @@ import os
 from typing import Optional
 from warnings import warn
 
-from . import actions
 from . import comms
-from . import types
-from . import validation
+from .me import firmware
+from .me import transfer
+from .me import types
+from .me import util
+from .me import validation
+
+LOCAL_RUNTIME_PATH = "C:\\Users\\Public\\Documents\\RSView Enterprise\\ME\\Runtime"
+LOCAL_BIN_PATH = "C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise"
+LOCAL_FUP_PATH = "C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUPs"
 
 class MEUtility(object):
     def __init__(
@@ -14,30 +20,38 @@ class MEUtility(object):
         comms_path: str, 
         driver: str = None, 
         ignore_terminal_valid: bool = False, 
-        ignore_driver_valid: bool = False
+        ignore_driver_valid: bool = False,
+        local_bin_path: str = None,
+        local_fup_path: str = None,
+        local_runtime_path: str = None,
     ):
         """
         Initializes an instance of the MEUtility class.
 
         Args:
-            comms_path (str) : The path to the communications resource (ex: 192.168.1.20).
-            driver (str) : The driver name to use (ex: pycomm3 or pylogix).  If not specified, will default
+            comms_path (str): The path to the communications resource (ex: 192.168.1.20).
+            driver (str): The driver name to use (ex: pycomm3 or pylogix).  If not specified, will default
                 the first one installed that can be found.
-            ignore_terminal_valid (bool) : If True, ignore terminal validation checks.
-            ignore_driver_valid (bool) : If True, ignore driver validation checks.
+            ignore_terminal_valid (bool): If True, ignore terminal validation checks.
+            ignore_driver_valid (bool): If True, ignore driver validation checks.
+            local_runtime_path (str): The default directory where *.MER files are found.
         """
         self.comms_path = comms_path
         self.driver = driver
         self.ignore_terminal_valid = ignore_terminal_valid
         self.ignore_driver_valid = ignore_driver_valid
 
+        self.local_bin_path = LOCAL_BIN_PATH if local_bin_path is None else local_bin_path
+        self.local_fup_path = LOCAL_FUP_PATH if local_fup_path is None else local_fup_path 
+        self.local_runtime_path = LOCAL_RUNTIME_PATH if local_runtime_path is None else local_runtime_path
+
     def download(
         self, 
-        file_path: str, 
+        file_path_local: str,
+        file_name_terminal: str = None,
         delete_logs: bool = False,
         overwrite: bool = False,
         replace_comms: bool = False,
-        remote_file_name: str = None,
         run_at_startup: bool = True,
         progress: Optional[Callable[[str, int, int], None]] = None, 
     ) -> types.MEResponse:
@@ -56,62 +70,69 @@ class MEUtility(object):
             run_at_startup (bool) : If True, will also set this *.MER file to be run at terminal startup and
                 reboot the terminal now.  Defaults to True.
         """
-        self.delete_logs = delete_logs
-        self.overwrite = overwrite
-        self.replace_comms = replace_comms
-        if remote_file_name is None:
-            self.remote_file_name = os.path.basename(file_path)
-        else:
-            self.remote_file_name = remote_file_name
-        self.run_at_startup = run_at_startup
-
         # Use default MER directory if one is not specified
-        if not os.path.isfile(file_path):
-            if os.path.sep not in file_path:
-                base_path = "C:\\Users\\Public\\Documents\\RSView Enterprise\\ME\\Runtime"
-                file_path = os.path.join(base_path, file_path)
+        if not os.path.isfile(file_path_local):
+            if os.path.sep not in file_path_local:
+                file_path_local = os.path.join(self.local_runtime_path, file_path_local)
+
+        if file_name_terminal is None: file_name_terminal = os.path.basename(file_path_local)
 
         with comms.Driver(self.comms_path, self.driver) as cip:
-            file = types.MEFile(self.remote_file_name, self.overwrite, False, file_path)
-
             # Validate device at this communications path is a terminal of known version.
             self.device = validation.get_terminal_info(cip)
             if not(validation.is_valid_me_terminal(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
-                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
+                    raise Exception('Invalid device selected.  Use ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
                 
             # Validate that all starting conditions for downnload to terminal are good
             try:
-                resp = validation.is_valid_download(cip, self.device, file)
+                resp = validation.is_valid_download(
+                    cip=cip,
+                    device=self.device,
+                    file_path_local=file_path_local,
+                    file_name_terminal=file_name_terminal,
+                    overwrite=overwrite
+                )
                 if resp:
-                    self.device.log.append(f'Validated download for {file.name}.')
+                    self.device.log.append(f'Validated download for {file_path_local}.')
                 else:
                     self.device.log.append(f'Failed to validate download.')
-                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to validate download.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
             # Perform *.MER download to terminal
             try:
-                resp = actions.download_mer_file(cip, self.device, file, self.run_at_startup, self.replace_comms, self.delete_logs, progress)
+                resp = transfer.download_file_mer(
+                    cip=cip,
+                    device=self.device,
+                    file_path_local=file_path_local,
+                    file_name_terminal=file_name_terminal,
+                    overwrite=overwrite,
+                    run_at_startup=run_at_startup,
+                    replace_comms=replace_comms,
+                    delete_logs=delete_logs,
+                    progress=progress
+                )
                 if not(resp):
                     self.device.log.append(f'Failed to download to terminal.')
-                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to download to terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
     
     def flash_firmware(
         self, 
-        firmware_image_path: str, 
-        firmware_helper_path: str, 
+        fup_path_local: str, 
+        fuwhelper_path_local: str, 
+        fuwcover_path_local: str = None,
         progress: Optional[Callable[[str, int, int], None]] = None
     ) -> types.MEResponse:
         """
@@ -123,10 +144,20 @@ class MEUtility(object):
             progress : Optional callback for progress indication.
         """
         # Use default RSView directory if one is not specified
-        if not os.path.isfile(firmware_helper_path):
-            if os.path.sep not in firmware_helper_path:
-                base_path = "C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise"
-                firmware_helper_path = os.path.join(base_path, firmware_helper_path)
+        if not os.path.isfile(fuwhelper_path_local):
+            if os.path.sep not in fuwhelper_path_local:
+                fuwhelper_path_local = os.path.join(self.local_bin_path, fuwhelper_path_local)
+
+        # Use default RSView directory if one is not specified
+        if fuwcover_path_local is not None:
+            if not os.path.isfile(fuwcover_path_local):
+                if os.path.sep not in fuwcover_path_local:
+                    fuwcover_path_local = os.path.join(self.local_bin_path, fuwcover_path_local)
+
+        # Use default RSView directory if one is not specified
+        if not os.path.isfile(fup_path_local):
+            if os.path.sep not in fup_path_local:
+                fup_path_local = os.path.join(self.local_fup_path, fup_path_local)
 
         with comms.Driver(self.comms_path, self.driver) as cip:
             if (self.driver == comms.DRIVER_NAME_PYCOMM3) and comms.is_routed_path(self.comms_path):
@@ -152,26 +183,27 @@ class MEUtility(object):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
-                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
+                    raise Exception('Invalid device selected.  Use ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
             # Perform firmware flash to terminal
             try:
-                resp = actions.flash_firmware_upgrade_card(
+                resp = firmware.flash_fup_to_terminal(
                     cip=cip,
                     device=self.device,
-                    firmware_image_path=firmware_image_path,
-                    firmware_helper_path=firmware_helper_path,
-                    progress=progress)
-
+                    fup_path_local=fup_path_local,
+                    fuwhelper_path_local=fuwhelper_path_local,
+                    fuwcover_path_local=fuwcover_path_local,
+                    progress=progress
+                )
                 if not(resp):
                     self.device.log.append(f'Failed to flash terminal.')
-                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to flash terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
 
     def get_terminal_info(
         self, 
@@ -193,25 +225,22 @@ class MEUtility(object):
                 or transfers so that Diagnostics window doesn't pop up on the remote
                 terminal.  Defaults to False.
         """
-        self.print_log = print_log
-        self.redact_log = redact_log
-        self.silent_mode = silent_mode
         with comms.Driver(self.comms_path, self.driver) as cip:
             self.device = validation.get_terminal_info(cip)
-            if not((validation.is_valid_me_terminal(self.device) or validation.is_valid_dmk_terminal(self.device))):
+            if not(validation.is_valid_me_terminal(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
-                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
+                    raise Exception('Invalid device selected.  Use ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
             try:
-                actions.create_log(cip, self.device, self.print_log, self.redact_log, self.silent_mode)
+                util.create_log(cip, self.device, print_log, redact_log, silent_mode)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to get terminal info.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
 
     def reboot(
         self
@@ -229,18 +258,18 @@ class MEUtility(object):
                     raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
             try:
-                actions.reboot(cip, self.device)
+                util.reboot(cip, self.device)
             except Exception as e:
                 self.device.log.append(f'Failed to reboot terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
 
     def upload(
         self, 
-        file_path: str, 
+        file_path_local: str, 
+        file_name_terminal: str = None,
         overwrite: bool = False,
-        remote_file_name: str = None,
         progress: Optional[Callable[[str, int, int], None]] = None, 
     ) -> types.MEResponse:
         """
@@ -253,16 +282,11 @@ class MEUtility(object):
             remote_file_name (str) : If provided, is used to specify a different remote filename on
                 the terminal than the local filename specified as part of file_path where it will end up.
         """
-        file = types.MEFile(os.path.basename(file_path), False, False, file_path)
-        if (remote_file_name is None):
-            self.remote_file_name = file.name
-        else:
-            self.remote_file_name = remote_file_name
-        self.overwrite = overwrite
-        rem_file = types.MEFile(self.remote_file_name,False,False,file_path)
 
-        # Create upload folder if it doesn't exist yet
-        if not(os.path.exists(os.path.dirname(file.path))): os.makedirs(os.path.dirname(file.path))
+        # Create local path if it doesn't exist yet
+        if not(os.path.exists(os.path.dirname(file_path_local))): os.makedirs(os.path.dirname(file_path_local), exist_ok=True)
+
+        if file_name_terminal is None: file_name_terminal = os.path.basename(file_path_local)
 
         with comms.Driver(self.comms_path, self.driver) as cip:
             # Validate device at this communications path is a terminal of known version.
@@ -271,29 +295,35 @@ class MEUtility(object):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
-                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
+                    raise Exception('Invalid device selected.  Use ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
-            # Check for existing *.MER
-            if not(self.overwrite) and (os.path.exists(file.path)):
-                self.device.log.append(f'File {file.path} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+            # Check for existing file
+            if not(overwrite) and (os.path.exists(file_path_local)):
+                self.device.log.append(f'File {file_path_local} already exists.  Use overwrite=True to overwrite existing local file from the remote terminal.')
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
             # Perform *.MER upload from terminal
             try:
-                resp = actions.upload_mer_file(cip, self.device, file, rem_file, progress)
+                resp = transfer.upload_file_mer(
+                    cip=cip,
+                    device=self.device,
+                    file_path_local=file_path_local,
+                    file_name_terminal=file_name_terminal,
+                    progress=progress
+                )                    
                 if not(resp):
                     self.device.log.append(f'Failed to upload from terminal.')
-                    return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
             except Exception as e:
                 self.device.log.append(f'Exception: {str(e)}')
                 self.device.log.append(f'Failed to upload from terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
 
     def upload_all(
         self, 
-        file_path: str, 
+        folder_path_local: str, 
         overwrite: bool = False,
         progress: Optional[Callable[[str, int, int], None]] = None, 
     ) -> types.MEResponse:
@@ -305,10 +335,9 @@ class MEUtility(object):
             overwrite (bool) : If True, will replace the file on the local device with the 
                 uploaded copy from the remote terminal.  Defaults to False.
         """
-        self.overwrite = overwrite
 
         # Create upload folder if it doesn't exist yet
-        if not(os.path.exists(file_path)): os.makedirs(os.path.dirname(file_path))
+        if not(os.path.exists(folder_path_local)): os.makedirs(folder_path_local, exist_ok=True)
 
         with comms.Driver(self.comms_path, self.driver) as cip:
             # Validate device at this communications path is a terminal of known version.
@@ -317,34 +346,31 @@ class MEUtility(object):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
-                    raise Exception('Invalid device selected.  Use kwarg ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
+                    raise Exception('Invalid device selected.  Use ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
 
             try:
-                mer_list = actions.upload_mer_list(cip, self.device)
-            except Exception as e:
-                self.device.log.append(f'Exception: {str(e)}')
-                self.device.log.append(f'Failed to upload *.MER list from terminal.')
-                return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
-            
-            for mer in mer_list:
-                if len(mer) > 0:
-                    mer_path = os.path.join(file_path, mer)
-                    file = types.MEFile(os.path.basename(mer_path), self.overwrite, False, mer_path)
+                mer_list = transfer.upload_list_mer(cip, self.device)
+                mer_list = [mer for mer in mer_list if mer]
+                for file_name_terminal in mer_list:
+                    file_path_local = os.path.join(folder_path_local, file_name_terminal)
 
                     # Check for existing *.MER
-                    if not(self.overwrite) and (os.path.exists(mer_path)):
-                        self.device.log.append(f'File {mer_path} already exists.  Use kwarg overwrite=True to overwrite existing local file from the remote terminal.')
-                        return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
+                    if not(overwrite) and (os.path.exists(file_path_local)):
+                        self.device.log.append(f'File {file_path_local} already exists.  Use overwrite=True to overwrite existing local file from the remote terminal.')
+                        return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
                     
-                    # Perform *.MER upload from terminal
-                    try:
-                        resp = actions.upload_mer_file(cip, self.device, file, file, progress)
-                        if not(resp):
-                            self.device.log.append(f'Failed to upload from terminal.')
-                            return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
-                    except Exception as e:
-                        self.device.log.append(f'Exception: {str(e)}')
+                    resp = transfer.upload_file_mer(
+                        cip=cip,
+                        device=self.device,
+                        file_path_local=file_path_local,
+                        file_name_terminal=file_name_terminal,
+                        progress=progress
+                    )
+                    if not(resp):
                         self.device.log.append(f'Failed to upload from terminal.')
-                        return types.MEResponse(self.device, types.MEResponseStatus.FAILURE)
-
-        return types.MEResponse(self.device, types.MEResponseStatus.SUCCESS)
+                        return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
+            except Exception as e:
+                self.device.log.append(f'Exception: {str(e)}')
+                self.device.log.append(f'Failed to upload from terminal.')
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)

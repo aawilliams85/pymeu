@@ -16,5 +16,5 @@ Terminal startup file: Redacted.
 """
 
 from pymeu import MEUtility
-meu = MEUtility('YourPanelViewIpAddress')
-meu.get_terminal_info(print_log=True, redact_log=True)
+meu = MEUtility(comms_path='YourPanelViewIpAddress')
+meu.get_terminal_info(print_log=True, redact_log=True, silent_mode=False)

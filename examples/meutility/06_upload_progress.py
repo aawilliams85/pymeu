@@ -18,5 +18,10 @@ base_path = os.path.abspath(os.path.dirname(__file__))
 upload_file_path = os.path.join(base_path, 'YourProgram.mer')
 
 tracker = ProgressTracker("Upload")
-meu = MEUtility('YourPanelViewIpAddress')
-meu.upload(upload_file_path, tracker.update, overwrite=True)
+meu = MEUtility(comms_path='YourPanelViewIpAddress')
+meu.upload(
+    file_path_local=upload_file_path,
+    file_name_terminal=None,
+    overwrite=True,
+    progress=tracker.update
+)

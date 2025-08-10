@@ -49,11 +49,11 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
-# Uploads from tests
-/tests/upload/*
+#Input files for tests
+/tests/input_files/*
 
-# Firmware images
-/tests/firmware/*
+#Output files from tests
+/tests/output_files/*
 
 # pypi config
 *.pypirc
