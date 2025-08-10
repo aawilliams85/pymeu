@@ -8,7 +8,7 @@ authors = [
     { name = "aawilliams85", email = "adair.williams85@gmail.com" }
 ]
 dependencies = [
-    olefile>=0.47
+    "olefile>=0.47"
 ]
 
 [project.optional-dependencies]
