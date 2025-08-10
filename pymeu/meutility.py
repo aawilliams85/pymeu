@@ -337,7 +337,7 @@ class MEUtility(object):
         """
 
         # Create upload folder if it doesn't exist yet
-        if not(os.path.exists(folder_path_local)): os.makedirs(os.path.dirname(folder_path_local), exist_ok=True)
+        if not(os.path.exists(folder_path_local)): os.makedirs(folder_path_local, exist_ok=True)
 
         with comms.Driver(self.comms_path, self.driver) as cip:
             # Validate device at this communications path is a terminal of known version.

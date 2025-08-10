@@ -378,10 +378,10 @@ class download_tests(unittest.TestCase):
         print('')
         count = 0
         for device in DEVICES:
-            comms_path = device.comms_paths[1]
+            comms_path = device.comms_paths[0]
             driver = DRIVERS[1]
             meu = MEUtility(comms_path=comms_path, driver=driver)
-            download_file_path = os.path.join(LOCAL_INPUT_MER_PATH, device.mer_files[1])
+            download_file_path = os.path.join(LOCAL_INPUT_MER_PATH, device.mer_files[0])
             result = (
                     f'Device: {device.name}\n'
                     f'Driver: {driver}\n'

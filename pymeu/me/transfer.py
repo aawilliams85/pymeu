@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from enum import IntEnum
+import os
 import struct
 from typing import Optional
 from warnings import warn
@@ -187,6 +188,7 @@ def _read_upload(
     cip: comms.Driver, 
     file_size: int, 
     instance: int, 
+    progress_desc: str = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bytearray:
     """
@@ -224,8 +226,8 @@ def _read_upload(
         resp_chunk_size = int.from_bytes(resp.value[8:9], byteorder='little', signed=False)
         resp_data = bytes(resp.value[10:])
 
-        if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-        if (resp_chunk_number != req_chunk_number) and (resp_chunk_number != 0): raise Exception(f'Response chunk number {resp_chunk_number} did not match request chunk number {req_chunk_number}.')
+        if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes: {resp_unk1}, expected: 0.')
+        if (resp_chunk_number != req_chunk_number) and (resp_chunk_number != 0): raise Exception(f'Response chunk number: {resp_chunk_number}. expected: {req_chunk_number}.')
 
         # End of file
         if (resp_chunk_number == 0) and (resp_chunk_size == 2) and (resp_data == b'\xff\xff'):
@@ -236,7 +238,7 @@ def _read_upload(
         resp_binary += resp_data
 
         # Update progress callback
-        if progress: progress('Upload','bytes', file_size,len(resp_binary))
+        if progress: progress(f'Upload {progress_desc}','bytes', file_size,len(resp_binary))
 
         # Continue to next chunk
         req_chunk_number += 1
@@ -305,7 +307,7 @@ def download(
             cip=cip,
             file_data=file_data,
             instance=instance,
-            progress_desc=f'{file_path_terminal}',
+            progress_desc=file_path_terminal,
             progress=progress
         )
         device.log.append(f'Downloaded {file_path_terminal} using transfer instance {instance}.')
@@ -384,6 +386,7 @@ def upload(
                 cip=cip,
                 file_size=file_size,
                 instance=instance,
+                progress_desc=file_path_terminal,
                 progress=progress
             )
             _delete(cip=cip, instance=instance)
@@ -405,7 +408,8 @@ def upload_file(
         device=device,
         file_path_terminal=file_path_terminal,
         progress=progress
-    )    
+    )
+    if not(os.path.exists(file_path_local)): os.makedirs(os.path.dirname(file_path_local), exist_ok=True)
     with open(file_path_local, 'wb') as dest_file:
         dest_file.write(resp_binary)
 
