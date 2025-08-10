@@ -1,9 +1,9 @@
 # pymeu
 
-PyMEU (Python ME Utility) is a library for interfacing with Rockwell Automation 2711P PanelView Plus HMIs.<br>
-See [Compatibility](compatibility.md) for more details.  Use at your own risk.<br>
+PyMEU (Python ME Utility) is a library for interfacing with Rockwell Automation 2711P PanelView Plus terminals.<br>
+See [Compatibility](docs/me/compatibility.md) for more details.  Use at your own risk.<br>
 
-Looking for a desktop application?  See dmroeder's [pymeu_gui](https://github.com/dmroeder/pymeu_gui).<br>
+See dmroeder's [pymeu_gui](https://github.com/dmroeder/pymeu_gui) for a standalone desktop application.<br>
 
 ## Installation
 

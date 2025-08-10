@@ -170,7 +170,7 @@ DEVICE_PVP5 = METestDevice(
     name=PVP5, 
     comms_paths=PVP5_Comms_Paths,
     device_paths=PVP5_Device_Paths, 
-    boot_time_sec=120, 
+    boot_time_sec=75, 
     mer_files=PVP5_MER_Files,
     local_firmware_cover_path=PVP5_Local_Firmware_Cover_Path,
     local_firmware_helper_path=PVP5_Local_Firmware_Helper_Path,
@@ -182,7 +182,7 @@ DEVICE_PVP6 = METestDevice(
     name=PVP6, 
     comms_paths=PVP6_Comms_Paths,
     device_paths=PVP6_Device_Paths, 
-    boot_time_sec=120, 
+    boot_time_sec=75, 
     mer_files=PVP6_MER_Files,
     local_firmware_cover_path='',
     local_firmware_helper_path=PVP6_Local_Firmware_Helper_Path,
@@ -194,7 +194,7 @@ DEVICE_PVP7A = METestDevice(
     name=PVP7A, 
     comms_paths=PVP7A_Comms_Paths,
     device_paths=PVP7A_Device_Paths, 
-    boot_time_sec=120, 
+    boot_time_sec=75, 
     mer_files=PVP7A_MER_Files,
     local_firmware_cover_path='',
     local_firmware_helper_path=PVP7A_Local_Firmware_Helper_Path,
@@ -206,7 +206,7 @@ DEVICE_PVP7B = METestDevice(
     name=PVP7B, 
     comms_paths=PVP7B_Comms_Paths,
     device_paths=PVP7B_Device_Paths, 
-    boot_time_sec=120, 
+    boot_time_sec=75, 
     mer_files=PVP7B_MER_Files,
     local_firmware_cover_path='',
     local_firmware_helper_path='',
@@ -215,10 +215,10 @@ DEVICE_PVP7B = METestDevice(
 )
 
 DEVICES = [
-    #DEVICE_PVP5,
-    #DEVICE_PVP6,
-    #DEVICE_PVP7A,
-    DEVICE_PVP7B    
+    DEVICE_PVP5,
+    DEVICE_PVP6,
+    DEVICE_PVP7A,
+    #DEVICE_PVP7B    
 ]
 
 DRIVER_PYCOMM3 = 'pycomm3'

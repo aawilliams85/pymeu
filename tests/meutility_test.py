@@ -374,11 +374,11 @@ class download_tests(unittest.TestCase):
             count += 1
             if (count % len(DEVICES)) == 0: time.sleep(device.boot_time_sec)
 
-    def test_download_overwrite_single_progress(self):
+    def test_download_overwrite_single(self):
         print('')
         count = 0
         for device in DEVICES:
-            comms_path = device.comms_paths[0]
+            comms_path = device.comms_paths[1]
             driver = DRIVERS[1]
             meu = MEUtility(comms_path=comms_path, driver=driver)
             download_file_path = os.path.join(LOCAL_INPUT_MER_PATH, device.mer_files[0])

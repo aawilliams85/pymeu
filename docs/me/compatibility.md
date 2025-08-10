@@ -24,7 +24,7 @@ v13.00     | N/A                 | N/A               | N/A                      
 v14.00     | N/A                 | N/A               | Tested                    | Tested<sup>4</sup>
 v15.00     | N/A                 | N/A               | Tested<sup>3</sup>        | Tested<sup>3,4</sup>
 
-<sup>1</sup>Dedicated testing hardware used regularly during development.<br>
+<sup>1</sup>Tested regularly during development.<br>
 <sup>2</sup>get_terminal_info(): Startup *.MER file name is unavailable.<br>
 <sup>3</sup>get_terminal_info(): Running *.MED file name is unavailable.<br>
 <sup>4</sup>download() and reboot(): Reboot may be unavailable.<br>
