@@ -328,7 +328,7 @@ class download_tests(unittest.TestCase):
                     overwrite=True,
                     replace_comms=False,
                     run_at_startup=False,
-                    progress=progress_callback
+                    progress=None
                 )
                 for s in resp.device.log: print(s)
                 print('')
@@ -378,10 +378,10 @@ class download_tests(unittest.TestCase):
         print('')
         count = 0
         for device in DEVICES:
-            comms_path = device.comms_paths[0]
-            driver = DRIVERS[0]
+            comms_path = device.comms_paths[1]
+            driver = DRIVERS[1]
             meu = MEUtility(comms_path=comms_path, driver=driver)
-            download_file_path = os.path.join(LOCAL_INPUT_MER_PATH, device.mer_files[0])
+            download_file_path = os.path.join(LOCAL_INPUT_MER_PATH, device.mer_files[1])
             result = (
                     f'Device: {device.name}\n'
                     f'Driver: {driver}\n'
@@ -396,7 +396,7 @@ class download_tests(unittest.TestCase):
                 overwrite=True,
                 replace_comms=False,
                 run_at_startup=False,
-                progress=progress_callback
+                progress=None
             )
             for s in resp.device.log: print(s)
             print('')

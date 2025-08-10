@@ -93,12 +93,14 @@ def create_folder(cip: comms.Driver, paths: types.MEPaths, dir: str) -> bool:
     if (resp_code != CREATE_DIR_SUCCESS): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
     return True
 
-def create_folder_runtime(cip: comms.Driver, paths: types.MEPaths) -> bool:
-    subfolders = paths.runtime.split('\\')
+def create_folders(cip: comms.Driver, paths: types.MEPaths, folder_path_terminal: str) -> bool:
+    subfolders = folder_path_terminal.split('\\')
     current_path = subfolders[0]
     for folder in subfolders[1:]:
         current_path = f'{current_path}\\{folder}'
-        if not create_folder(cip, paths, current_path): return False
+        if not get_folder_exists(cip=cip, paths=paths, folder_path=current_path):
+            print(f'Create folder: {current_path}')
+            if not create_folder(cip, paths, current_path): return False
 
     return True
 
@@ -154,20 +156,12 @@ def get_file_exists(cip: comms.Driver, paths: types.MEPaths, file_path: str) -> 
     if (resp_code != 0): return False    
     return bool(int(resp_data))
 
-def get_file_exists_mer(cip: comms.Driver, paths: types.MEPaths, file_name: str) -> bool:
-    file_path = f'{paths.runtime}\\{file_name}'
-    return get_file_exists(cip, paths, file_path)
-
 def get_file_size(cip: comms.Driver, paths: types.MEPaths, file_path: str) -> int:
     if not(get_file_exists(cip, paths, file_path)): raise FileNotFoundError(f'File {file_path} does not exist on remote terminal.')
     req_args = [paths.helper_file, HelperFunctions.GET_FILE_SIZE, file_path]
     resp_code, resp_data = run_function(cip, req_args)
     if (resp_code != 0): raise Exception(f'Failed to execute function: {req_args}, response code: {resp_code}, response data: {resp_data}.')
     return int(resp_data)
-
-def get_file_size_mer(cip: comms.Driver, paths: types.MEPaths, file_name: str) -> int:
-    file_path = f'{paths.runtime}\\{file_name}'
-    return get_file_size(cip, paths, file_path)
 
 def get_folder_exists(cip: comms.Driver, paths: types.MEPaths, folder_path: str) -> bool:
     req_args = [paths.helper_file, HelperFunctions.GET_FOLDER_EXISTS, folder_path]

@@ -223,6 +223,7 @@ def is_valid_download(
 ) -> bool:
     file_name_local = os.path.basename(file_path_local)
     file_size_local = os.path.getsize(file_path_local)
+    file_path_terminal = f'{device.me_paths.runtime}\\{file_name_terminal}'
 
     # Check that file is correct extension
     if (os.path.splitext(file_path_local)[1].lower() != '.mer'):
@@ -244,14 +245,14 @@ def is_valid_download(
         return False
 
     # Check if file name already exists
-    resp_file_exists = helper.get_file_exists_mer(cip, device.me_paths, file_name_terminal)
+    resp_file_exists = helper.get_file_exists(cip, device.me_paths, file_path_terminal)
     if (resp_file_exists and not overwrite):
         device.log.append(f'File {file_name_local} already exists on terminal, and overwrite was NOT requested.  Use overwrite=True to overwrite existing.')
         return False
 
     # Check space consumed by file if it exists
     if resp_file_exists:
-        resp_file_size = helper.get_file_size_mer(cip, device.me_paths, file_name_local)
+        resp_file_size = helper.get_file_size(cip, device.me_paths, file_path_terminal)
         device.log.append(f'File {file_name_local} on terminal is {resp_file_size} bytes.')
 
     return True

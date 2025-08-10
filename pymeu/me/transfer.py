@@ -166,9 +166,9 @@ def _write_download(
         resp = messages.write_file_chunk(cip, instance, req_data)
         if not resp: raise Exception(f'Failed to write chunk {req_chunk_number} to terminal.')
         resp_unk1, resp_chunk_number, resp_next_chunk_number = struct.unpack('<III', resp.value)
-        if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes {resp_unk1} are not zero.  Examine packets.')
-        if (resp_chunk_number != req_chunk_number ): raise Exception(f'Response chunk number {resp_chunk_number} did not match request chunk number {req_chunk_number}.')
-        if (resp_next_chunk_number != req_next_chunk_number): raise Exception(f'Response next chunk number {resp_next_chunk_number} did not match expected next chunk number {req_next_chunk_number}.')
+        if (resp_unk1 != 0 ): raise Exception(f'Response unknown bytes: {resp_unk1}, expected: 0.')
+        if (resp_chunk_number != req_chunk_number ): raise Exception(f'Response chunk number: {resp_chunk_number}, expected: {req_chunk_number}.')
+        if (resp_next_chunk_number != req_next_chunk_number): raise Exception(f'Response next chunk number: {resp_next_chunk_number}, expected: {req_next_chunk_number}.')
 
         # Update progress callback
         current_bytes = req_offset + len(req_chunk)
@@ -285,6 +285,9 @@ def download(
 ) -> bool:
     instance = None
     try:
+        dirname, basename = util.split_file_path(file_path_terminal)
+        helper.create_folders(cip, device.me_paths, dirname)
+
         file_exists = helper.get_file_exists(cip, device.me_paths, file_path_terminal)
         if (overwrite and not file_exists): overwrite = False
         if (file_exists and not overwrite): raise FileExistsError(f'File {file_path_terminal} exists on terminal already and overwrite was not specified.')
@@ -347,7 +350,6 @@ def download_file_mer(
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bool:
     file_path_terminal = f'{device.me_paths.runtime}\\{file_name_terminal}'
-    helper.create_folder_runtime(cip, device.me_paths)
     download_file(
         cip=cip,
         device=device,

@@ -86,7 +86,6 @@ class MEUtility(object):
                 else:
                     raise Exception('Invalid device selected.  Use ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
                 
-
             # Validate that all starting conditions for downnload to terminal are good
             try:
                 resp = validation.is_valid_download(

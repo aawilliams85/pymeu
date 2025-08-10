@@ -1,11 +1,9 @@
 from collections.abc import Callable
 import os
 import time
-import traceback
 from typing import Optional
 
 from .. import comms
-from . import fuwhelper
 from . import helper
 from . import registry
 from . import transfer
@@ -115,6 +113,10 @@ def reboot(
         if (str(e) != 'failed to receive reply'): raise e
     
     cip1.close()
+
+def split_file_path(file_path_terminal: str) -> tuple[str, str]:
+    dirname, basename = file_path_terminal.rsplit('\\', 1)
+    return dirname, basename
 
 def wait(
     time_sec: int,
