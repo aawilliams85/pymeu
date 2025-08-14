@@ -25,7 +25,15 @@ OTW_USE_WIN_DIR = [
     'EBCMOZ.EBC'
 ]
 
-def _create_upgrade_dat(version: types.MEFupUpgradeInfVersion, card: types.MEFupUpgradeInfCard, me_files: types.MEFupMEFileListInf) -> str:
+def _create_upgrade_dat(
+    version: types.MEFupUpgradeInfVersion,
+    card: types.MEFupUpgradeInfCard, 
+    me_files: types.MEFupMEFileListInf,
+    ce: list[tuple[str, str]] = None
+) -> str:
+    # Always use windows-style
+    crlf = '\r\n'
+
     # There is an upgrade.dat file which needs to be created
     # from the content in the upgrade.inf file.
     #
@@ -44,7 +52,15 @@ def _create_upgrade_dat(version: types.MEFupUpgradeInfVersion, card: types.MEFup
         f'ISC={isc_size_bytes}',
         f'FP={card.fp_size}'
     ]
-    result = ';'.join(fields) + ';\r\n'
+    result = ';'.join(fields) + ';' + crlf
+
+    # If CE components are present
+    if ce:
+        cefiles = f'{crlf}[PVPCE]{crlf}'
+        for (infile, outfile) in ce: cefiles += f'{infile}={outfile}{crlf}'
+        cefiles += ('\x00')
+        result += cefiles
+
     return result
 
 def _get_stream_by_name(streams: list[types.MEArchive], name: str, case_insensitive=True) -> types.MEArchive:
@@ -67,10 +83,16 @@ def _get_upgrade_dat(streams: list[types.MEArchive]) -> types.MEArchive:
     upgrade_inf_data = _get_upgrade_inf(streams)
     mefilelist_inf_data = _get_mefilelist_inf(streams)
 
-    # It seems that the OTW and FWC sizes are the same.  Maybe just programmed as the larger
-    # of the two actual values for both of them?
-    dat_file = _create_upgrade_dat(upgrade_inf_data.version, upgrade_inf_data.otw, mefilelist_inf_data)
-    data = bytearray(dat_file, 'utf-16-le')
+    # Should really be the specified mode (FWC or OTW) because they can be different values.
+    dat_file = _create_upgrade_dat(
+        version=upgrade_inf_data.version,
+        card = upgrade_inf_data.otw,
+        me_files=mefilelist_inf_data,
+        ce=upgrade_inf_data.ce
+    )
+    
+    #data = bytearray(dat_file, encoding='utf-16-le')
+    data = dat_file.encode('utf-16-le', errors='ignore')
     return types.MEArchive(
         name='Upgrade.dat',
         data=data,
@@ -142,7 +164,8 @@ def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
 
     # Drivers
     try:
-        drivers = [tuple[key, int(value)] for key, value in config.items('KEPDRIVERS')]
+        drivers_section = config['KEPDRIVERS']
+        drivers = [(key, int(value)) for key, value in drivers_section.items()]
     except:
         drivers = []
 
@@ -153,7 +176,8 @@ def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
     # Currently does not work because there are duplicates that configparser
     # doesn't like.
     try:
-        ce = [tuple[key, value] for key, value in config.items('PVPCE')]
+        ce_section = config['PVPCE']
+        ce = [(key, value) for key, value in ce_section.items()]
     except:
         ce = []
 
@@ -237,6 +261,12 @@ def fup_to_fwc(
         stream.path = _path_to_list(outfile)
         streams_fwc.append(stream)
 
+    for (file, outfile) in upgrade_inf.ce:
+        dirname, basename = util.split_file_path(outfile)
+        stream = _get_stream_by_name(streams, file)
+        stream.path = ['upgrade', 'AddIns', basename]
+        streams_fwc.append(stream)
+
     return streams_fwc
 
 def fup_to_fwc_folder(
@@ -274,9 +304,14 @@ def fup_to_otw(
         progress=progress
     )
     upgrade_inf = _get_upgrade_inf(streams)
-    
+
     streams_otw = []
     for (file, outfile) in upgrade_inf.otw.files:
+        stream = _get_stream_by_name(streams, file)
+        stream.path = _path_to_list(outfile)
+        streams_otw.append(stream)
+
+    for (file, outfile) in upgrade_inf.ce:
         stream = _get_stream_by_name(streams, file)
         stream.path = _path_to_list(outfile)
         streams_otw.append(stream)
@@ -404,19 +439,20 @@ def flash_fup_to_terminal(
             fuwhelper.delete_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
 
         for stream in streams_otw:
-            # Some streams need to be redirected to the Windows directory
-            # instead of the Storage Card directory.  There is no cue in the 
-            # upgrade.inf file for this.
-            #
-            # Current guesses...
-            # [1] Always redirect files after Autoapp.bat and before RFOn.bat?
-            # [2] Some way to parse contents of autoapp.bat to see which are referenced?
-            # [3] All binary/executable files except for known ones that belong to Storage Card?
-            # [4] There is no logic to it.
-            if stream.path[-1].lower() in [f.lower() for f in OTW_USE_WIN_DIR]:
-                stream_path_terminal = '\\Windows\\' + '\\'.join(stream.path)
-            else:
-                stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
+            if stream.path[0] != 'Windows' and stream.path[0] != 'Storage Card':
+                # Some streams need to be redirected to the Windows directory
+                # instead of the Storage Card directory.  There is no cue in the 
+                # upgrade.inf file for this.
+                #
+                # Current guesses...
+                # [1] Always redirect files after Autoapp.bat and before RFOn.bat?
+                # [2] Some way to parse contents of autoapp.bat to see which are referenced?
+                # [3] All binary/executable files except for known ones that belong to Storage Card?
+                # [4] There is no logic to it.
+                if stream.path[-1].lower() in [f.lower() for f in OTW_USE_WIN_DIR]:
+                    stream_path_terminal = '\\Windows\\' + '\\'.join(stream.path)
+                else:
+                    stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
 
             transfer.download(
                 cip=cip,
