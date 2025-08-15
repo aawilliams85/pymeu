@@ -4,6 +4,7 @@ import olefile
 import os
 import time
 from typing import Optional
+from warnings import warn
 
 from .. import comms
 from . import decompress
@@ -23,6 +24,13 @@ OTW_USE_WIN_DIR = [
     'GetFreeRAM.exe',
     'PVPlus_Mozart_nkc.MCE',
     'EBCMOZ.EBC'
+]
+
+CE_BLACKLIST_FILES = [
+    'atlce400.dll',
+    'symbol.ttf',
+    'times.ttf',
+    'wingding.ttf'
 ]
 
 def _create_upgrade_dat(
@@ -439,10 +447,14 @@ def flash_fup_to_terminal(
             fuwhelper.delete_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
 
         for stream in streams_otw:
-            if stream.path[0] != 'Windows' and stream.path[0] != 'Storage Card':
-                # Some streams need to be redirected to the Windows directory
-                # instead of the Storage Card directory.  There is no cue in the 
-                # upgrade.inf file for this.
+            # Certain CE files fail to download, still investigating
+            if stream.name.lower() in CE_BLACKLIST_FILES: continue
+
+            if stream.path[0].lower() != 'windows' and stream.path[0].lower() != 'storage card':
+                # The normal files look to all have relative directories.
+                #
+                # Some go to \\Storage Card, others to \\Windows.
+                # There is no hint in upgrade.inf file for this.
                 #
                 # Current guesses...
                 # [1] Always redirect files after Autoapp.bat and before RFOn.bat?
@@ -453,15 +465,24 @@ def flash_fup_to_terminal(
                     stream_path_terminal = '\\Windows\\' + '\\'.join(stream.path)
                 else:
                     stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
+            else:
+                # The CE addon files look to all have absolute directories
+                stream_path_terminal = '\\' + '\\'.join(stream.path)
 
-            transfer.download(
-                cip=cip,
-                device=device,
-                file_data=stream.data,
-                file_path_terminal=stream_path_terminal,
-                overwrite=True,
-                progress=progress
-            )
+            try:
+                # Currently blocking this around TRY/EXCEPT just to see what happens on terminal.
+                # Remove prior to release.
+                warn('Still ignoring download failure for CE test!')
+                transfer.download(
+                    cip=cip,
+                    device=device,
+                    file_data=stream.data,
+                    file_path_terminal=stream_path_terminal,
+                    overwrite=True,
+                    progress=progress
+                )
+            except Exception as e:
+                print(e)
 
         # Initiate install
         fuwhelper.set_screensaver(cip, device.me_paths, True)

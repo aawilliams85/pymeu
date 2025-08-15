@@ -288,7 +288,12 @@ def download(
     instance = None
     try:
         dirname, basename = util.split_file_path(file_path_terminal)
-        helper.create_folders(cip, device.me_paths, dirname)
+        try:
+            # Attempt to ensure the directory exists
+            # Still having trouble with some directories
+            helper.create_folders(cip, device.me_paths, dirname)
+        except Exception as e:
+            print(e)
 
         file_exists = helper.get_file_exists(cip, device.me_paths, file_path_terminal)
         if (overwrite and not file_exists): overwrite = False

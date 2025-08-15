@@ -86,7 +86,7 @@ STANDALONE_MER_FILES = [
 
 # PanelView Plus configuration
 PVP5 = '2711P_PanelViewPlus_v5'
-PVP5_Comms_Paths = ['192.168.40.20','192.168.40.11,bp,3,enet,192.168.1.20']
+PVP5_Comms_Paths = ['192.168.1.20','192.168.40.11,bp,3,enet,192.168.1.20']
 PVP5_Device_Paths = types.MEPaths(
     f'\\Storage Card\\Rockwell Software\\RSViewME\\{HELPER_FILE_NAME}',
     '\\Storage Card',
@@ -94,14 +94,11 @@ PVP5_Device_Paths = types.MEPaths(
     f'\\Storage Card\\{RUNTIME_PATH}',
     '\\Storage Card\\FUWhelper.dll'
 )
-PVP5_FUP_File_Paths = [
-    os.path.join(LOCAL_INPUT_PATH, 'FUP', PVP5, 'ME_PVP4xX_5.10.16.09.fup')
-]
 PVP5_Local_Firmware_Cover_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v11', 'FUWCover4xX.exe')
 PVP5_Local_Firmware_Helper_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v11', 'FUWhelper4xX.dll')
 PVP5_Local_Firmware_Image_Paths = [
     os.path.join(LOCAL_INPUT_PATH, 'FUP', 'ME_PVP4xX_5.10.16.09.fup'),
-    os.path.join(LOCAL_INPUT_PATH, 'FUP', 'ME_PVP4xX_5.10.16.09.WithViewPoint.fup'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUP', 'ME_PVPCE4xX_5.10.16.09.WithAddins.fup'),
 ]
 PVP5_MER_Files = [
     'Test_v5_640x480_A.mer',
@@ -216,8 +213,8 @@ DEVICE_PVP7B = METestDevice(
 
 DEVICES = [
     DEVICE_PVP5,
-    DEVICE_PVP6,
-    DEVICE_PVP7A,
+    #DEVICE_PVP6,
+    #DEVICE_PVP7A,
     #DEVICE_PVP7B    
 ]
 
