@@ -716,9 +716,24 @@ class decompress_tests(unittest.TestCase):
     def tearDown(self):
         pass
 
-class fuw_tests(unittest.TestCase):
+class firmware_tests(unittest.TestCase):
     def setUp(self):
         pass
+
+    def test_firmware_card(self):
+        print('')
+        fup_path = os.path.join(LOCAL_INPUT_FUP_PATH, 'ME_PVPCE4xX_5.10.16.09.WithAddins.WithViewPoint.fup')
+        fwc_path = os.path.join(LOCAL_OUTPUT_FWC_PATH, 'ME_PVPCE4xX_5.10.16.09.WithAddins.WithViewPoint.fup')
+        start = time.time()
+        meu = MEUtility('localhost')
+        meu.create_firmware_card(
+            fup_path_local=fup_path,
+            fwc_path_local=fwc_path,
+            progress=progress_callback
+        )
+        end = time.time()
+        elapsed_time = end - start
+        print(elapsed_time)
 
     def test_flash_pvp5_direct_pycomm3(self):
         print('')
