@@ -94,12 +94,12 @@ def get_startup_replace_comms(cip: comms.Driver) -> bool:
     return bool(int(get_value(cip, [RegKeys.ME_STARTUP_REPLACE_COMMS])))
 
 def get_version_major(cip: comms.Driver) -> int:
-    # Doesn't always aliugn with ME/Helper versions.
+    # Doesn't always align with ME/Helper versions.
     # For example, v5.10 terminal returned version 3.x
     return int(get_value(cip, [RegKeys.CIP_VERSION_MAJOR]))
 
 def get_version_minor(cip: comms.Driver) -> int:
-    # Doesn't always aliugn with ME/Helper versions.
+    # Doesn't always align with ME/Helper versions.
     # For example, v5.10 terminal returned version 3.x
     return int(get_value(cip, [RegKeys.CIP_VERSION_MINOR]))
 
