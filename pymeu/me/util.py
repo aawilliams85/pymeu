@@ -62,6 +62,17 @@ def create_log(
     device.log.append(line)
     if print_log: print(f'{line}')
 
+def _get_stream_by_name(streams: list[types.MEArchive], name: str, case_insensitive=True) -> types.MEArchive:
+    if case_insensitive:
+        return next(x for x in streams if x.name.lower() == name.lower())
+    else:
+        return next(x for x in streams if x.name == name)
+    
+def _path_to_list(path: str) -> list[str]:
+    path = path.replace('\\', '/').lower()
+    components = [comp for comp in path.split('/') if comp]
+    return components if components else [path]
+
 def reboot(
     cip: comms.Driver, 
     device: types.MEDeviceInfo

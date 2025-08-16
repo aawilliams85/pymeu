@@ -71,18 +71,12 @@ def _create_upgrade_dat(
 
     return result
 
-def _get_stream_by_name(streams: list[types.MEArchive], name: str, case_insensitive=True) -> types.MEArchive:
-    if case_insensitive:
-        return next(x for x in streams if x.name.lower() == name.lower())
-    else:
-        return next(x for x in streams if x.name == name)
-
 def _get_upgrade_inf(streams: list[types.MEArchive]) -> types.MEFupUpgradeInf:
-    return _deserialize_fup_upgrade_inf(_get_stream_by_name(streams, 'upgrade.inf').data.decode('utf-8'))
+    return _deserialize_fup_upgrade_inf(util._get_stream_by_name(streams, 'upgrade.inf').data.decode('utf-8'))
 
 def _get_mefilelist_inf(streams: list[types.MEArchive]) -> types.MEFupMEFileListInf:
     try:
-        return _deserialize_fup_mefilelist_inf(_get_stream_by_name(streams, 'MEFileList.inf').data.decode('utf-8'))
+        return _deserialize_fup_mefilelist_inf(util._get_stream_by_name(streams, 'MEFileList.inf').data.decode('utf-8'))
     except Exception as e:
         # v6+ don't use this at all so just enter default values
         return types.MEFupMEFileListInf(info=types.MEFupMEFileListInfInfo(me='', size_on_disk_bytes=0), mefiles=[])
@@ -197,11 +191,6 @@ def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
         ce=ce
     )
 
-def _path_to_list(path: str) -> list[str]:
-    path = path.replace('\\', '/').lower()
-    components = [comp for comp in path.split('/') if comp]
-    return components if components else [path]
-
 def fup_to_fuc(
     input_path: str,
     progress: Optional[Callable[[str, str, int, int], None]] = None
@@ -265,13 +254,13 @@ def fup_to_fwc(
     
     streams_fwc = []
     for (file, outfile) in upgrade_inf.fwc.files:
-        stream = _get_stream_by_name(streams, file)
-        stream.path = _path_to_list(outfile)
+        stream = util._get_stream_by_name(streams, file)
+        stream.path = util._path_to_list(outfile)
         streams_fwc.append(stream)
 
     for (file, outfile) in upgrade_inf.ce:
         dirname, basename = util.split_file_path(outfile)
-        stream = _get_stream_by_name(streams, file)
+        stream = util._get_stream_by_name(streams, file)
         stream.path = ['upgrade', 'AddIns', basename]
         streams_fwc.append(stream)
 
@@ -315,13 +304,13 @@ def fup_to_otw(
 
     streams_otw = []
     for (file, outfile) in upgrade_inf.otw.files:
-        stream = _get_stream_by_name(streams, file)
-        stream.path = _path_to_list(outfile)
+        stream = util._get_stream_by_name(streams, file)
+        stream.path = util._path_to_list(outfile)
         streams_otw.append(stream)
 
     for (file, outfile) in upgrade_inf.ce:
-        stream = _get_stream_by_name(streams, file)
-        stream.path = _path_to_list(outfile)
+        stream = util._get_stream_by_name(streams, file)
+        stream.path = util._path_to_list(outfile)
         streams_otw.append(stream)
 
     return streams_otw

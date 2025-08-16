@@ -713,6 +713,20 @@ class decompress_tests(unittest.TestCase):
             elapsed_time = end - start
             print(elapsed_time)
 
+    def test_mer_get_shortcuts(self):
+        print('')
+        file = os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_FTLinx1.mer')
+        print(file)
+        start = time.time()
+        me.application.get_mer_shortcuts(
+            input_path=file,
+            print_summary=True,
+            progress=None
+        )
+        end = time.time()
+        elapsed_time = end - start
+        print(elapsed_time)        
+
     def tearDown(self):
         pass
 

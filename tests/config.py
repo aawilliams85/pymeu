@@ -76,9 +76,11 @@ STANDALONE_APA_FILES = [
 
 # *.MER configuration for standalone tests
 STANDALONE_MER_FILES = [
+    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_FTLinx1.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_640x480_A.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_640x480_A_NoConvert.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_640x480_A_Password.mer'),
+    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_FTLinx1.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A_NoConvert.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A_Password.mer'),
