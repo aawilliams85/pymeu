@@ -23,11 +23,12 @@ class CFUtility(object):
         Initializes an instance of the MEUtility class.
 
         Args:
-            comms_path (str) : The path to the communications resource (ex: 192.168.1.20).
-            driver (str) : The driver name to use (ex: pycomm3 or pylogix).  If not specified, will default
+            comms_path (str): The path to the communications resource (ex: 192.168.1.20).
+            driver (str): The driver name to use (ex: pycomm3 or pylogix).  If not specified, will default
                 the first one installed that can be found.
-            ignore_terminal_valid (bool) : If True, ignore terminal validation checks.
-            ignore_driver_valid (bool) : If True, ignore driver validation checks.
+            ignore_terminal_valid (bool): If True, ignore terminal validation checks.
+            ignore_driver_valid (bool): If True, ignore driver validation checks.
+            local_dmk_path (str): The default directory to assume *.DMK files are found.
         """
         self.comms_path = comms_path
         self.driver = driver
@@ -44,7 +45,7 @@ class CFUtility(object):
         Flashes a firmware image to the remote terminal.
 
         Args:
-            dmk_path_local (str) : The local path to the firmware image file (ex: C:\\YourFolder\\\\FirmwareImage.DMK)
+            dmk_path_local (str): The local path to the firmware image file (ex: C:\\YourFolder\\\\FirmwareImage.DMK)
             progress: Optional callback for progress indication.
         """
 

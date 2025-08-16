@@ -76,9 +76,11 @@ STANDALONE_APA_FILES = [
 
 # *.MER configuration for standalone tests
 STANDALONE_MER_FILES = [
+    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_FTLinx1.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_640x480_A.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_640x480_A_NoConvert.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_640x480_A_Password.mer'),
+    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_FTLinx1.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A_NoConvert.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A_Password.mer'),
@@ -94,14 +96,11 @@ PVP5_Device_Paths = types.MEPaths(
     f'\\Storage Card\\{RUNTIME_PATH}',
     '\\Storage Card\\FUWhelper.dll'
 )
-PVP5_FUP_File_Paths = [
-    os.path.join(LOCAL_INPUT_PATH, 'FUP', PVP5, 'ME_PVP4xX_5.10.16.09.fup')
-]
 PVP5_Local_Firmware_Cover_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v11', 'FUWCover4xX.exe')
 PVP5_Local_Firmware_Helper_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v11', 'FUWhelper4xX.dll')
 PVP5_Local_Firmware_Image_Paths = [
     os.path.join(LOCAL_INPUT_PATH, 'FUP', 'ME_PVP4xX_5.10.16.09.fup'),
-    os.path.join(LOCAL_INPUT_PATH, 'FUP', 'ME_PVP4xX_5.10.16.09.WithViewPoint.fup'),
+    os.path.join(LOCAL_INPUT_PATH, 'FUP', 'ME_PVPCE4xX_5.10.16.09.WithAddins.fup'),
 ]
 PVP5_MER_Files = [
     'Test_v5_640x480_A.mer',
@@ -158,6 +157,7 @@ PVP7B_Device_Paths = types.MEPaths(
     f'\\Application Data\\{RUNTIME_PATH}',
     '\\Storage Card\\FUWhelper.dll'
 )
+PVP7B_Local_Firmware_Helper_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
 PVP7B_Local_Firmware_Image_Paths = [
     os.path.join(LOCAL_INPUT_PATH, 'DMK', PVP7B, '2711P-PanelView_Plus_7_Performance_15.100.dmk')
 ]
@@ -209,7 +209,7 @@ DEVICE_PVP7B = METestDevice(
     boot_time_sec=75, 
     mer_files=PVP7B_MER_Files,
     local_firmware_cover_path='',
-    local_firmware_helper_path='',
+    local_firmware_helper_path=PVP7B_Local_Firmware_Helper_Path,
     local_firmware_image_paths=PVP7B_Local_Firmware_Image_Paths,
     transfer_firmware_helper=False
 )
@@ -218,7 +218,7 @@ DEVICES = [
     DEVICE_PVP5,
     DEVICE_PVP6,
     DEVICE_PVP7A,
-    #DEVICE_PVP7B    
+    DEVICE_PVP7B    
 ]
 
 DRIVER_PYCOMM3 = 'pycomm3'

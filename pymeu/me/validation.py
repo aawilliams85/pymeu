@@ -202,6 +202,12 @@ def extract_version_prefix(version: str) -> str:
     """Extracts the major and minor version (e.g., '12.00') from a version string."""
     return '.'.join(version.split('.')[:2])
 
+def is_native_me_terminal(device: types.MEDeviceInfo) -> bool:
+    """Indicate whether the terminal is a native ME terminal (PVP5,6,7A) or not (PVP7B)"""
+    if (device.cip_identity.hardware_rev is not None): return False
+    if (device.cip_identity.minor_rev >= 100): return False
+    return True
+
 def is_version_matched(device_version: str, known_versions: set) -> bool:
     """Checks if the device version prefix matches any of the known version prefixes."""
     device_version_prefix = extract_version_prefix(device_version)

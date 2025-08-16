@@ -44,7 +44,7 @@ The firmware for ME terminals can take various forms.  This is an attempt to dis
 | FUW          | Firmware Upgrade Wizard.  Installs the firmware kit to a computer.
 | FUP          | Firwmare Upgrade Pack.  The firmware kit in an archived form.
 | FUC          | Firmware Upgrade Card.  The firmware kit in an expanded form.  Note that while some tools refer to the Firmware Upgrade Card as the end product, here it is used to describe the intermediate form, so that the end product can follow one of the subsequent names.
-| FWC          | Firmware Card.  A firmware kit expanded in a form specifically for removable medai (i.e. USB or memory card).
+| FWC          | Firmware Card.  A firmware kit expanded in a form specifically for removable media (i.e. USB or memory card).
 | OTW          | Over-The-Wire.  A firmware kit expanded in a form specifically for transmission over a network.
 
 ```mermaid
@@ -67,9 +67,9 @@ C:\Program Files (x86)\Rockwell Software\RSView Enterprise
 
 | File             | Purpose
 |------------------|--------
-| FUWCover3xX.exe  | "Cover" program used only for terminals v5 and earlier to show firmware upgrade status.  Terminals v6+ have a progress bar integrated into the factory and don't use this or any equivalent.
-| FUWCover4xM.exe  | "Cover" program used only for terminals v5 and earlier to show firmware upgrade status.  Terminals v6+ have a progress bar integrated into the factory and don't use this or any equivalent.
-| FUWCover4xX.exe  | "Cover" program used only for terminals v5 and earlier to show firmware upgrade status.  Terminals v6+ have a progress bar integrated into the factory and don't use this or any equivalent.
+| FUWCover3xX.exe  | "Cover" program used only for terminals v5 and earlier to show firmware upgrade status.  Terminals v6+ have a progress bar integrated and don't use this or any equivalent.
+| FUWCover4xM.exe  | "Cover" program used only for terminals v5 and earlier to show firmware upgrade status.  Terminals v6+ have a progress bar integrated and don't use this or any equivalent.
+| FUWCover4xX.exe  | "Cover" program used only for terminals v5 and earlier to show firmware upgrade status.  Terminals v6+ have a progress bar integrated and don't use this or any equivalent.
 | FUWhelper3xX.dll | Firmware "Helper" file that works similar to the regular "Helper" file onboard the terminal and provides additional functions.
 | FUWhelper4xA.dll | Firmware "Helper" file that works similar to the regular "Helper" file onboard the terminal and provides additional functions.
 | FUWhelper4xM.dll | Firmware "Helper" file that works similar to the regular "Helper" file onboard the terminal and provides additional functions.

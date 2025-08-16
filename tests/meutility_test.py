@@ -513,6 +513,29 @@ class reboot_tests(unittest.TestCase):
     def tearDown(self):
         pass    
 
+class stop_tests(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_stop(self):
+        print('')
+        for (device, driver, comms_path) in test_combinations:
+            meu = MEUtility(comms_path, driver=driver)
+            result = (
+                    f'Device: {device.name}\n'
+                    f'Driver: {driver}\n'
+                    f'Path: {comms_path}\n'
+                    f'Function: stop({device.local_firmware_helper_path})\n'
+            )
+            print(result)
+            resp = meu.stop(
+                fuwhelper_path_local=device.local_firmware_helper_path,
+                progress=progress_callback
+            )
+            for s in resp.device.log: print(s)
+            print('')
+            self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
+
 class upload_tests(unittest.TestCase):
     def setUp(self):
         pass
@@ -713,12 +736,88 @@ class decompress_tests(unittest.TestCase):
             elapsed_time = end - start
             print(elapsed_time)
 
+    def test_mer_get_shortcuts(self):
+        print('')
+        file = os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_FTLinx1.mer')
+        print(file)
+        start = time.time()
+        me.application.get_mer_shortcuts(
+            input_path=file,
+            print_summary=True,
+            progress=None
+        )
+        end = time.time()
+        elapsed_time = end - start
+        print(elapsed_time)        
+
+    def test_get_running_mer_shortcuts_prep(self):
+        meu = MEUtility('192.168.40.21')
+        meu.download(
+            file_path_local=os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_FTLinx1.mer'),
+            file_name_terminal=None,
+            delete_logs=False,
+            overwrite=False,
+            replace_comms=False,
+            run_at_startup=True,
+            progress=progress_callback
+        )
+
+    def test_get_running_mer_shortcuts(self):
+        print('')
+        meu = MEUtility('192.168.40.21')
+        info = meu.get_terminal_info()
+        running = os.path.join(LOCAL_OUTPUT_MER_PATH, info.device.startup_mer_file)
+        mer = meu.upload(
+            file_path_local=running,
+            file_name_terminal=None,
+            overwrite=True,
+            progress=None
+        )
+        me.application.get_mer_shortcuts(
+            input_path=running,
+            print_summary=True,
+            progress=None
+        )
+
+    def test_get_running_mer_shortcuts_in_memory(self):
+        print('')
+        meu = MEUtility('192.168.40.21')
+        info = meu.get_terminal_info()
+        with comms.Driver(comms_path=meu.comms_path) as cip:
+            device = me.validation.get_terminal_info(cip)
+            mer = me.transfer.upload(
+                cip=cip,
+                device=device,
+                file_path_terminal=f'{device.me_paths.runtime}\\{info.device.startup_mer_file}',
+                progress=None
+            )
+            me.application.get_mer_shortcuts(
+                input_path=bytes(mer),
+                print_summary=True,
+                progress=None
+        )
+
     def tearDown(self):
         pass
 
-class fuw_tests(unittest.TestCase):
+class firmware_tests(unittest.TestCase):
     def setUp(self):
         pass
+
+    def test_firmware_card(self):
+        print('')
+        fup_path = os.path.join(LOCAL_INPUT_FUP_PATH, 'ME_PVPCE4xX_5.10.16.09.WithAddins.WithViewPoint.fup')
+        fwc_path = os.path.join(LOCAL_OUTPUT_FWC_PATH, 'ME_PVPCE4xX_5.10.16.09.WithAddins.WithViewPoint.fup')
+        start = time.time()
+        meu = MEUtility('localhost')
+        meu.create_firmware_card(
+            fup_path_local=fup_path,
+            fwc_path_local=fwc_path,
+            progress=progress_callback
+        )
+        end = time.time()
+        elapsed_time = end - start
+        print(elapsed_time)
 
     def test_flash_pvp5_direct_pycomm3(self):
         print('')

@@ -5,6 +5,7 @@ from warnings import warn
 
 from . import comms
 from .me import firmware
+from .me import fuwhelper
 from .me import transfer
 from .me import types
 from .me import util
@@ -17,7 +18,7 @@ LOCAL_FUP_PATH = "C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\
 class MEUtility(object):
     def __init__(
         self,
-        comms_path: str, 
+        comms_path: str = None, 
         driver: str = None, 
         ignore_terminal_valid: bool = False, 
         ignore_driver_valid: bool = False,
@@ -34,7 +35,9 @@ class MEUtility(object):
                 the first one installed that can be found.
             ignore_terminal_valid (bool): If True, ignore terminal validation checks.
             ignore_driver_valid (bool): If True, ignore driver validation checks.
-            local_runtime_path (str): The default directory where *.MER files are found.
+            local_bin_path (str): The default directory to assume Helper/Cover files are found.
+            local_fup_path (str): The default directory to assume *.FUP files are found.
+            local_runtime_path (str): The default directory to assume *.MER files are found.
         """
         self.comms_path = comms_path
         self.driver = driver
@@ -45,6 +48,39 @@ class MEUtility(object):
         self.local_fup_path = LOCAL_FUP_PATH if local_fup_path is None else local_fup_path 
         self.local_runtime_path = LOCAL_RUNTIME_PATH if local_runtime_path is None else local_runtime_path
 
+    def create_firmware_card(
+        self,
+        fup_path_local: str,
+        fwc_path_local: str,
+        progress: Optional[Callable[[str, int, int], None]] = None
+    ) -> types.MEResponse:
+        """
+        Creates a Firmware Card that can be used to update an ME terminal.
+
+        Args:
+            fup_path_local (str): The path to the *.FUP file to use.
+            fwc_path_local (str): The path to the firmware card that will be generated (i.e. USB/CF card).
+            progress: Optional callback for progress indication.
+        """
+
+        # Use default RSView directory if one is not specified
+        if not os.path.isfile(fup_path_local):
+            if os.path.sep not in fup_path_local:
+                fup_path_local = os.path.join(self.local_fup_path, fup_path_local)
+
+        # Perform firmware flash to terminal
+        try:
+            resp = firmware.fup_to_fwc_folder(
+                input_path=fup_path_local,
+                output_path=fwc_path_local,
+                progress=progress
+            )
+        except Exception as e:
+            print(e)
+            return types.MEResponse(None, types.ResponseStatus.FAILURE)
+
+        return types.MEResponse(None, types.ResponseStatus.SUCCESS)
+    
     def download(
         self, 
         file_path_local: str,
@@ -59,16 +95,16 @@ class MEUtility(object):
         Downloads a *.MER file from the local device to the remote terminal.
 
         Args:
-            file_path (str) : The local path to the *.MER file (ex: C:\\YourFolder\\YourProgram.MER)            
+            file_path_local (str): The local path to the *.MER file (ex: C:\\YourFolder\\YourProgram.MER)    
+            file_name_terminal (str): If the *.MER name on the terminal should be different, specify it here.
             delete_logs (bool) : If True, will configure the terminal to delete logs atstartup.  Defaults to false.
             overwrite (bool): If True, will allow the download to overwrite an existing *.MER file on the terminal
                 with the same file name.  Defaults to false.
             replace_comms (bool) : If True, will replace the terminal's communications setup with the one
                 from the *.MER file being downloaded.  Defaults to false.
-            remote_file_name (str) : If provided, is used to specify a different remote filename on the
-                terminal than the local filename specified as part of file_path.
             run_at_startup (bool) : If True, will also set this *.MER file to be run at terminal startup and
                 reboot the terminal now.  Defaults to True.
+            progress: Optional callback for progress indication.
         """
         # Use default MER directory if one is not specified
         if not os.path.isfile(file_path_local):
@@ -139,9 +175,10 @@ class MEUtility(object):
         Flashes a firmware image to the remote terminal.
 
         Args:
-            firmware_image_path (str) : The local path to the firmware image file (ex: C:\\YourFolder\\FirmwareUpgradeCard\\upgrade\\SC.IMG)
-            firmware_helper_path (str) : The local path to the firmware helper file (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWhelper6xX.dll)
-            progress : Optional callback for progress indication.
+            fup_path_local (str): The local path to the firmware file (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUPs\\ME_PVP6xX_12.00-20200922.fup)
+            fuwhelper_path_local (str): The local path to the firmware helper file (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWhelper6xX.dll)
+            fuwcover_path_local (str): The local path to the firmware cover file if applicable (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWCover4xX.exe)
+            progress: Optional callback for progress indication.
         """
         # Use default RSView directory if one is not specified
         if not os.path.isfile(fuwhelper_path_local):
@@ -217,11 +254,11 @@ class MEUtility(object):
         get information about the remote terminal.
 
         Args:
-            print_log (bool) : If True, will print values.  Please include
+            print_log (bool): If True, will print values.  Please include
                 a copy with any bug reports!  Defaults to false.
-            redact_log (bool) : If True, will exclude potentially sensitive values
+            redact_log (bool): If True, will exclude potentially sensitive values
                 such as the *.MER file names on the remote terminal. Defaults to False.
-            silent_mode (bool) : If True, will exclude values that require invocations
+            silent_mode (bool): If True, will exclude values that require invocations
                 or transfers so that Diagnostics window doesn't pop up on the remote
                 terminal.  Defaults to False.
         """
@@ -265,6 +302,57 @@ class MEUtility(object):
 
         return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
 
+    def stop(
+        self,
+        fuwhelper_path_local: str,
+        progress: Optional[Callable[[str, int, int], None]] = None
+    ) -> types.MEResponse:
+        """
+        Stops ME Station on the terminal.
+
+        Args:
+            fuwhelper_path_local (str): The local path to the firmware helper file (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWhelper6xX.dll)
+        """
+        with comms.Driver(self.comms_path, self.driver) as cip:
+            self.device = validation.get_terminal_info(cip)
+            if not(validation.is_valid_me_terminal(self.device)) or not(validation.is_native_me_terminal(self.device)):
+                if self.ignore_terminal_valid:
+                    warn('Invalid device selected, but terminal validation is set to IGNORE.')
+                else:
+                    raise Exception('Invalid device selected.  Use ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
+
+            try:
+                firmware.get_or_download_fuwhelper(
+                    cip=cip,
+                    device=self.device,
+                    fuwhelper_path_local=fuwhelper_path_local,
+                    progress=progress
+                )
+
+                if fuwhelper.get_process_running(
+                    cip=cip,
+                    paths=self.device.me_paths,
+                    process_name='MERuntime.exe'
+                ):
+                    # Check major rev.  v5 lacks dedicated termination function
+                    if util.get_major_rev(cip, self.device) <= 5:
+                        fuwhelper.stop_process(
+                            cip=cip,
+                            paths=self.device.me_paths,
+                            process='MERuntime.exe'
+                        )
+                    else:
+                        fuwhelper.stop_process_me(
+                            cip=cip,
+                            paths=self.device.me_paths
+                        )
+            except Exception as e:
+                self.device.log.append(f'Exception: {str(e)}')
+                self.device.log.append(f'Failed to stop ME Station.')
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
+
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
+
     def upload(
         self, 
         file_path_local: str, 
@@ -276,11 +364,11 @@ class MEUtility(object):
         Uploads a *.MER file from the remote terminal to the local device.
 
         Args:
-            file_path (str) : The local path to the *.MER file (ex: C:\\YourFolder\\YourProgram.MER)
+            file_path_local (str): The local path to the *.MER file (ex: C:\\YourFolder\\YourProgram.MER)
+            file_name_terminal (str): The remote name of the *.MER file if different from the name in the local path.
             overwrite (bool) : If True, will replace the file on the local device with the uploaded
                 copy from the remote terminal.  Defaults to False.
-            remote_file_name (str) : If provided, is used to specify a different remote filename on
-                the terminal than the local filename specified as part of file_path where it will end up.
+            progress: Optional callback for progress indication.
         """
 
         # Create local path if it doesn't exist yet
@@ -331,9 +419,10 @@ class MEUtility(object):
         Uploads all *.MER files from the remote terminal to the local device.
 
         Args:
-            file_path (str) : The local path to the target directory (ex: C:\\YourFolder)
+            folder_path_local (str) : The local path to the target directory (ex: C:\\YourFolder)
             overwrite (bool) : If True, will replace the file on the local device with the 
                 uploaded copy from the remote terminal.  Defaults to False.
+            progress: Optional callback for progress indication.
         """
 
         # Create upload folder if it doesn't exist yet

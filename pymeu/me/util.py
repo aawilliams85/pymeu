@@ -53,7 +53,7 @@ def create_log(
         line = f'Terminal startup file: {file}.'
         if file.lower().endswith('.mer'): device.startup_mer_file = file.split('\\')[-1]
     except:
-        if device.cip_identity.major_rev < 6:
+        if get_major_rev(cip, device) <= 5:
             # For PanelView Plus 5.10 and earlier this registry key appears to be unavailable.
             line = f'Terminal startup file: could not be determined due to hardware version.'
         else:
@@ -61,6 +61,24 @@ def create_log(
             line = f'Terminal startup file: not configured.'
     device.log.append(line)
     if print_log: print(f'{line}')
+
+def get_major_rev(
+    cip: comms.Driver,
+    device: types.MEDeviceInfo
+) -> int:
+    major_rev = int(device.me_identity.me_version.split(".")[0])
+    return major_rev
+
+def _get_stream_by_name(streams: list[types.MEArchive], name: str, case_insensitive=True) -> types.MEArchive:
+    if case_insensitive:
+        return next(x for x in streams if x.name.lower() == name.lower())
+    else:
+        return next(x for x in streams if x.name == name)
+    
+def _path_to_list(path: str) -> list[str]:
+    path = path.replace('\\', '/').lower()
+    components = [comp for comp in path.split('/') if comp]
+    return components if components else [path]
 
 def reboot(
     cip: comms.Driver, 

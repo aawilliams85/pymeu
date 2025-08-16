@@ -4,6 +4,7 @@ import olefile
 import os
 import time
 from typing import Optional
+from warnings import warn
 
 from .. import comms
 from . import decompress
@@ -25,7 +26,22 @@ OTW_USE_WIN_DIR = [
     'EBCMOZ.EBC'
 ]
 
-def _create_upgrade_dat(version: types.MEFupUpgradeInfVersion, card: types.MEFupUpgradeInfCard, me_files: types.MEFupMEFileListInf) -> str:
+CE_BLACKLIST_FILES = [
+    'atlce400.dll',
+    'symbol.ttf',
+    'times.ttf',
+    'wingding.ttf'
+]
+
+def _create_upgrade_dat(
+    version: types.MEFupUpgradeInfVersion,
+    card: types.MEFupUpgradeInfCard, 
+    me_files: types.MEFupMEFileListInf,
+    ce: list[tuple[str, str]] = None
+) -> str:
+    # Always use windows-style
+    crlf = '\r\n'
+
     # There is an upgrade.dat file which needs to be created
     # from the content in the upgrade.inf file.
     #
@@ -44,21 +60,23 @@ def _create_upgrade_dat(version: types.MEFupUpgradeInfVersion, card: types.MEFup
         f'ISC={isc_size_bytes}',
         f'FP={card.fp_size}'
     ]
-    result = ';'.join(fields) + ';\r\n'
+    result = ';'.join(fields) + ';' + crlf
+
+    # If CE components are present
+    if ce:
+        cefiles = f'{crlf}[PVPCE]{crlf}'
+        for (infile, outfile) in ce: cefiles += f'{infile}={outfile}{crlf}'
+        cefiles += ('\x00')
+        result += cefiles
+
     return result
 
-def _get_stream_by_name(streams: list[types.MEArchive], name: str, case_insensitive=True) -> types.MEArchive:
-    if case_insensitive:
-        return next(x for x in streams if x.name.lower() == name.lower())
-    else:
-        return next(x for x in streams if x.name == name)
-
 def _get_upgrade_inf(streams: list[types.MEArchive]) -> types.MEFupUpgradeInf:
-    return _deserialize_fup_upgrade_inf(_get_stream_by_name(streams, 'upgrade.inf').data.decode('utf-8'))
+    return _deserialize_fup_upgrade_inf(util._get_stream_by_name(streams, 'upgrade.inf').data.decode('utf-8'))
 
 def _get_mefilelist_inf(streams: list[types.MEArchive]) -> types.MEFupMEFileListInf:
     try:
-        return _deserialize_fup_mefilelist_inf(_get_stream_by_name(streams, 'MEFileList.inf').data.decode('utf-8'))
+        return _deserialize_fup_mefilelist_inf(util._get_stream_by_name(streams, 'MEFileList.inf').data.decode('utf-8'))
     except Exception as e:
         # v6+ don't use this at all so just enter default values
         return types.MEFupMEFileListInf(info=types.MEFupMEFileListInfInfo(me='', size_on_disk_bytes=0), mefiles=[])
@@ -67,10 +85,16 @@ def _get_upgrade_dat(streams: list[types.MEArchive]) -> types.MEArchive:
     upgrade_inf_data = _get_upgrade_inf(streams)
     mefilelist_inf_data = _get_mefilelist_inf(streams)
 
-    # It seems that the OTW and FWC sizes are the same.  Maybe just programmed as the larger
-    # of the two actual values for both of them?
-    dat_file = _create_upgrade_dat(upgrade_inf_data.version, upgrade_inf_data.otw, mefilelist_inf_data)
-    data = bytearray(dat_file, 'utf-16-le')
+    # Should really be the specified mode (FWC or OTW) because they can be different values.
+    dat_file = _create_upgrade_dat(
+        version=upgrade_inf_data.version,
+        card = upgrade_inf_data.otw,
+        me_files=mefilelist_inf_data,
+        ce=upgrade_inf_data.ce
+    )
+    
+    #data = bytearray(dat_file, encoding='utf-16-le')
+    data = dat_file.encode('utf-16-le', errors='ignore')
     return types.MEArchive(
         name='Upgrade.dat',
         data=data,
@@ -142,7 +166,8 @@ def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
 
     # Drivers
     try:
-        drivers = [tuple[key, int(value)] for key, value in config.items('KEPDRIVERS')]
+        drivers_section = config['KEPDRIVERS']
+        drivers = [(key, int(value)) for key, value in drivers_section.items()]
     except:
         drivers = []
 
@@ -153,7 +178,8 @@ def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
     # Currently does not work because there are duplicates that configparser
     # doesn't like.
     try:
-        ce = [tuple[key, value] for key, value in config.items('PVPCE')]
+        ce_section = config['PVPCE']
+        ce = [(key, value) for key, value in ce_section.items()]
     except:
         ce = []
 
@@ -164,11 +190,6 @@ def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
         drivers=drivers,
         ce=ce
     )
-
-def _path_to_list(path: str) -> list[str]:
-    path = path.replace('\\', '/').lower()
-    components = [comp for comp in path.split('/') if comp]
-    return components if components else [path]
 
 def fup_to_fuc(
     input_path: str,
@@ -233,8 +254,14 @@ def fup_to_fwc(
     
     streams_fwc = []
     for (file, outfile) in upgrade_inf.fwc.files:
-        stream = _get_stream_by_name(streams, file)
-        stream.path = _path_to_list(outfile)
+        stream = util._get_stream_by_name(streams, file)
+        stream.path = util._path_to_list(outfile)
+        streams_fwc.append(stream)
+
+    for (file, outfile) in upgrade_inf.ce:
+        dirname, basename = util.split_file_path(outfile)
+        stream = util._get_stream_by_name(streams, file)
+        stream.path = ['upgrade', 'AddIns', basename]
         streams_fwc.append(stream)
 
     return streams_fwc
@@ -274,11 +301,16 @@ def fup_to_otw(
         progress=progress
     )
     upgrade_inf = _get_upgrade_inf(streams)
-    
+
     streams_otw = []
     for (file, outfile) in upgrade_inf.otw.files:
-        stream = _get_stream_by_name(streams, file)
-        stream.path = _path_to_list(outfile)
+        stream = util._get_stream_by_name(streams, file)
+        stream.path = util._path_to_list(outfile)
+        streams_otw.append(stream)
+
+    for (file, outfile) in upgrade_inf.ce:
+        stream = util._get_stream_by_name(streams, file)
+        stream.path = util._path_to_list(outfile)
         streams_otw.append(stream)
 
     return streams_otw
@@ -306,20 +338,12 @@ def fup_to_otw_folder(
         with open(stream_output_path, 'wb') as f:
             f.write(stream.data)
 
-def flash_fup_to_terminal(
-    cip: comms.Driver, 
+def get_or_download_fuwhelper(
+    cip: comms.Driver,
     device: types.MEDeviceInfo,
-    fup_path_local: str,
     fuwhelper_path_local: str,
-    fuwcover_path_local: str = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ):
-    # Read FUP into memory
-    streams_otw = fup_to_otw(
-        input_path=fup_path_local,
-        progress=progress
-    )
-
     # Determine if firmware upgrade helper already exists in one
     # of the expected locations and use it, or else transfer the
     # helper file specified.
@@ -338,10 +362,29 @@ def flash_fup_to_terminal(
         )
         util.wait(time_sec=5, progress=progress)
 
-    # Check major rev.  v5 process is a bit different than v6/v7A
-    major_rev = int(device.me_identity.me_version.split(".")[0])
+def flash_fup_to_terminal(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo,
+    fup_path_local: str,
+    fuwhelper_path_local: str,
+    fuwcover_path_local: str = None,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+):
+    # Read FUP into memory
+    streams_otw = fup_to_otw(
+        input_path=fup_path_local,
+        progress=progress
+    )
 
-    if major_rev <= 5:
+    # Ensure firmware upgrade helper is in place
+    get_or_download_fuwhelper(
+        cip=cip,
+        device=device,
+        fuwhelper_path_local=fuwhelper_path_local,
+        progress=progress
+    )
+
+    if util.get_major_rev(cip, device) <= 5:
         mefilelist_inf_data = _get_mefilelist_inf(streams_otw)
 
         fuwhelper.set_screensaver(cip, device.me_paths, False)
@@ -404,28 +447,42 @@ def flash_fup_to_terminal(
             fuwhelper.delete_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
 
         for stream in streams_otw:
-            # Some streams need to be redirected to the Windows directory
-            # instead of the Storage Card directory.  There is no cue in the 
-            # upgrade.inf file for this.
-            #
-            # Current guesses...
-            # [1] Always redirect files after Autoapp.bat and before RFOn.bat?
-            # [2] Some way to parse contents of autoapp.bat to see which are referenced?
-            # [3] All binary/executable files except for known ones that belong to Storage Card?
-            # [4] There is no logic to it.
-            if stream.path[-1].lower() in [f.lower() for f in OTW_USE_WIN_DIR]:
-                stream_path_terminal = '\\Windows\\' + '\\'.join(stream.path)
-            else:
-                stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
+            # Certain CE files fail to download, still investigating
+            if stream.name.lower() in CE_BLACKLIST_FILES: continue
 
-            transfer.download(
-                cip=cip,
-                device=device,
-                file_data=stream.data,
-                file_path_terminal=stream_path_terminal,
-                overwrite=True,
-                progress=progress
-            )
+            if stream.path[0].lower() != 'windows' and stream.path[0].lower() != 'storage card':
+                # The normal files look to all have relative directories.
+                #
+                # Some go to \\Storage Card, others to \\Windows.
+                # There is no hint in upgrade.inf file for this.
+                #
+                # Current guesses...
+                # [1] Always redirect files after Autoapp.bat and before RFOn.bat?
+                # [2] Some way to parse contents of autoapp.bat to see which are referenced?
+                # [3] All binary/executable files except for known ones that belong to Storage Card?
+                # [4] There is no logic to it.
+                if stream.path[-1].lower() in [f.lower() for f in OTW_USE_WIN_DIR]:
+                    stream_path_terminal = '\\Windows\\' + '\\'.join(stream.path)
+                else:
+                    stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
+            else:
+                # The CE addon files look to all have absolute directories
+                stream_path_terminal = '\\' + '\\'.join(stream.path)
+
+            try:
+                # Currently blocking this around TRY/EXCEPT just to see what happens on terminal.
+                # Remove prior to release.
+                warn('Still ignoring download failure for CE test!')
+                transfer.download(
+                    cip=cip,
+                    device=device,
+                    file_data=stream.data,
+                    file_path_terminal=stream_path_terminal,
+                    overwrite=True,
+                    progress=progress
+                )
+            except Exception as e:
+                print(e)
 
         # Initiate install
         fuwhelper.set_screensaver(cip, device.me_paths, True)
@@ -433,7 +490,7 @@ def flash_fup_to_terminal(
         util.wait(time_sec=5, progress=progress)
         fuwhelper.stop_process(cip, device.me_paths, 'FUWCover.exe')
         fuwhelper.start_process(cip, device.me_paths, '\\Storage Card\\upgrade\\autorun.exe')
-    if major_rev > 5:
+    else:
         if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card')):
             fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card')
         if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\vfs')):
@@ -447,7 +504,13 @@ def flash_fup_to_terminal(
         fuwhelper.get_file_exists(cip, device.me_paths, '\\Windows\\useroptions.txt')
 
         for stream in streams_otw:
-            stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
+            if stream.path[0].lower() != 'windows' and stream.path[0].lower() != 'storage card' and stream.path[0].lower() != 'vfs':
+                # Files with relative directories will be redirected to Storage Card
+                stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
+            else:
+                # Files with absolute directories
+                stream_path_terminal = '\\' + '\\'.join(stream.path)
+
             transfer.download(
                 cip=cip,
                 device=device,
