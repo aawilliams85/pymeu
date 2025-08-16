@@ -1,15 +1,16 @@
 import os
 from pymeu import MEUtility
+from pymeu import comms
 from pymeu import me
 
 '''
 NOTE - Typically only the main MEUtility functions are intended
-to be exposed for use.  The inner functions (in this case from
-me.application) can allow for other interesting code to be written,
-but are more likely to have breaking changes over time.
+to be exposed for use.  Other functions (in this case from comms and
+me) can allow for other interesting code to be written, but are more
+likely to have breaking changes over time.
 
 This example finds the Startup *.MER file on the remote terminal,
-uploads it to the local device, and extracts the shortcut data.
+uploads it in memory, and extracts the shortcut data.
 
 me.application.get_mer_shortcuts() returns the relevant elements
 from RSLinxNG.xml, but an abbreviated form is printed like below:
@@ -31,18 +32,18 @@ Shortcut SHORTCUT_2_NAME Topology:
 │   │   │   │   │   │   │   ├── <port name="Backplane" address="0" portNumber="1" />
 │   │   │   │   │   │   │   │   └── <device name="PLC_2_NAME" NATPrivateAddress="" />
 '''
-
-meu = MEUtility(comms_path='YourTerminalIPAddress')
+meu = MEUtility(comms_path='YourTerminalIpAddress')
 info = meu.get_terminal_info()
-running = os.path.join('YourTempFolder', info.device.startup_mer_file)
-mer = meu.upload(
-    file_path_local=running,
-    file_name_terminal=None,
-    overwrite=True,
-    progress=None
-)
-me.application.get_mer_shortcuts(
-    input_path=running,
-    print_summary=True,
-    progress=None
+with comms.Driver(comms_path=meu.comms_path) as cip:
+    device = me.validation.get_terminal_info(cip)
+    mer = me.transfer.upload(
+        cip=cip,
+        device=device,
+        file_path_terminal=f'{device.me_paths.runtime}\\{info.device.startup_mer_file}',
+        progress=None
+    )
+    me.application.get_mer_shortcuts(
+        input_path=bytes(mer),
+        print_summary=True,
+        progress=None
 )

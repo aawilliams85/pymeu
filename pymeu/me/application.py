@@ -11,7 +11,7 @@ from . import util
 MER_FTLINX_ATTRIB_FILTER = {'name', 'address', 'portNumber', 'NATPrivateAddress'}
 
 def apa_to_med(
-    input_path: str,
+    input_path: str | bytes,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[types.MEArchive]:
     # Application-specific handling for *.APA files that
@@ -26,7 +26,7 @@ def apa_to_med(
         return streams
     
 def apa_to_med_folder(
-    input_path: str, 
+    input_path: str | bytes, 
     output_path: str,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ):
@@ -45,7 +45,7 @@ def apa_to_med_folder(
             f.write(stream.data)
 
 def mer_to_med(
-    input_path: str,
+    input_path: str | bytes,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[types.MEArchive]:
     # Application-specific handling for *.MER files that
@@ -60,7 +60,7 @@ def mer_to_med(
         return streams
     
 def mer_to_med_folder(
-    input_path: str,
+    input_path: str | bytes,
     output_path: str,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ):
@@ -163,7 +163,7 @@ def _print_mer_shortcut_nodes(
         print(f"{indent}{connector}{line}")
 
 def get_mer_shortcuts(
-    input_path: str,
+    input_path: str | bytes,
     print_summary: bool = False,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[tuple[str, list[ET.Element]]]:

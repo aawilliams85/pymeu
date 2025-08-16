@@ -727,7 +727,7 @@ class decompress_tests(unittest.TestCase):
         elapsed_time = end - start
         print(elapsed_time)        
 
-    def test_prep(self):
+    def test_get_running_mer_shortcuts_prep(self):
         meu = MEUtility('192.168.40.21')
         meu.download(
             file_path_local=os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_FTLinx1.mer'),
@@ -754,6 +754,24 @@ class decompress_tests(unittest.TestCase):
             input_path=running,
             print_summary=True,
             progress=None
+        )
+
+    def test_get_running_mer_shortcuts_in_memory(self):
+        print('')
+        meu = MEUtility('192.168.40.21')
+        info = meu.get_terminal_info()
+        with comms.Driver(comms_path=meu.comms_path) as cip:
+            device = me.validation.get_terminal_info(cip)
+            mer = me.transfer.upload(
+                cip=cip,
+                device=device,
+                file_path_terminal=f'{device.me_paths.runtime}\\{info.device.startup_mer_file}',
+                progress=None
+            )
+            me.application.get_mer_shortcuts(
+                input_path=bytes(mer),
+                print_summary=True,
+                progress=None
         )
 
     def tearDown(self):
