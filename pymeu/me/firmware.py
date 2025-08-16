@@ -338,20 +338,12 @@ def fup_to_otw_folder(
         with open(stream_output_path, 'wb') as f:
             f.write(stream.data)
 
-def flash_fup_to_terminal(
-    cip: comms.Driver, 
+def get_or_download_fuwhelper(
+    cip: comms.Driver,
     device: types.MEDeviceInfo,
-    fup_path_local: str,
     fuwhelper_path_local: str,
-    fuwcover_path_local: str = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ):
-    # Read FUP into memory
-    streams_otw = fup_to_otw(
-        input_path=fup_path_local,
-        progress=progress
-    )
-
     # Determine if firmware upgrade helper already exists in one
     # of the expected locations and use it, or else transfer the
     # helper file specified.
@@ -370,10 +362,29 @@ def flash_fup_to_terminal(
         )
         util.wait(time_sec=5, progress=progress)
 
-    # Check major rev.  v5 process is a bit different than v6/v7A
-    major_rev = int(device.me_identity.me_version.split(".")[0])
+def flash_fup_to_terminal(
+    cip: comms.Driver, 
+    device: types.MEDeviceInfo,
+    fup_path_local: str,
+    fuwhelper_path_local: str,
+    fuwcover_path_local: str = None,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+):
+    # Read FUP into memory
+    streams_otw = fup_to_otw(
+        input_path=fup_path_local,
+        progress=progress
+    )
 
-    if major_rev <= 5:
+    # Ensure firmware upgrade helper is in place
+    get_or_download_fuwhelper(
+        cip=cip,
+        device=device,
+        fuwhelper_path_local=fuwhelper_path_local,
+        progress=progress
+    )
+
+    if util.get_major_rev(cip, device) <= 5:
         mefilelist_inf_data = _get_mefilelist_inf(streams_otw)
 
         fuwhelper.set_screensaver(cip, device.me_paths, False)
@@ -479,7 +490,7 @@ def flash_fup_to_terminal(
         util.wait(time_sec=5, progress=progress)
         fuwhelper.stop_process(cip, device.me_paths, 'FUWCover.exe')
         fuwhelper.start_process(cip, device.me_paths, '\\Storage Card\\upgrade\\autorun.exe')
-    if major_rev > 5:
+    else:
         if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card')):
             fuwhelper.create_folder(cip, device.me_paths, '\\Storage Card')
         if not(fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\vfs')):
@@ -493,7 +504,13 @@ def flash_fup_to_terminal(
         fuwhelper.get_file_exists(cip, device.me_paths, '\\Windows\\useroptions.txt')
 
         for stream in streams_otw:
-            stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
+            if stream.path[0].lower() != 'windows' and stream.path[0].lower() != 'storage card' and stream.path[0].lower() != 'vfs':
+                # Files with relative directories will be redirected to Storage Card
+                stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
+            else:
+                # Files with absolute directories
+                stream_path_terminal = '\\' + '\\'.join(stream.path)
+
             transfer.download(
                 cip=cip,
                 device=device,

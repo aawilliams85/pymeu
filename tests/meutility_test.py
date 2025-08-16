@@ -513,6 +513,29 @@ class reboot_tests(unittest.TestCase):
     def tearDown(self):
         pass    
 
+class stop_tests(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def test_stop(self):
+        print('')
+        for (device, driver, comms_path) in test_combinations:
+            meu = MEUtility(comms_path, driver=driver)
+            result = (
+                    f'Device: {device.name}\n'
+                    f'Driver: {driver}\n'
+                    f'Path: {comms_path}\n'
+                    f'Function: stop({device.local_firmware_helper_path})\n'
+            )
+            print(result)
+            resp = meu.stop(
+                fuwhelper_path_local=device.local_firmware_helper_path,
+                progress=progress_callback
+            )
+            for s in resp.device.log: print(s)
+            print('')
+            self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
+
 class upload_tests(unittest.TestCase):
     def setUp(self):
         pass

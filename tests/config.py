@@ -157,6 +157,7 @@ PVP7B_Device_Paths = types.MEPaths(
     f'\\Application Data\\{RUNTIME_PATH}',
     '\\Storage Card\\FUWhelper.dll'
 )
+PVP7B_Local_Firmware_Helper_Path = os.path.join(LOCAL_INPUT_PATH, 'Helper', 'v15', 'FUWhelper6xX.dll')
 PVP7B_Local_Firmware_Image_Paths = [
     os.path.join(LOCAL_INPUT_PATH, 'DMK', PVP7B, '2711P-PanelView_Plus_7_Performance_15.100.dmk')
 ]
@@ -208,16 +209,16 @@ DEVICE_PVP7B = METestDevice(
     boot_time_sec=75, 
     mer_files=PVP7B_MER_Files,
     local_firmware_cover_path='',
-    local_firmware_helper_path='',
+    local_firmware_helper_path=PVP7B_Local_Firmware_Helper_Path,
     local_firmware_image_paths=PVP7B_Local_Firmware_Image_Paths,
     transfer_firmware_helper=False
 )
 
 DEVICES = [
-    DEVICE_PVP5,
-    #DEVICE_PVP6,
-    #DEVICE_PVP7A,
-    #DEVICE_PVP7B    
+    #DEVICE_PVP5,
+    DEVICE_PVP6,
+    DEVICE_PVP7A,
+    DEVICE_PVP7B    
 ]
 
 DRIVER_PYCOMM3 = 'pycomm3'

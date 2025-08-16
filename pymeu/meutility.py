@@ -5,6 +5,7 @@ from warnings import warn
 
 from . import comms
 from .me import firmware
+from .me import fuwhelper
 from .me import transfer
 from .me import types
 from .me import util
@@ -297,6 +298,57 @@ class MEUtility(object):
                 util.reboot(cip, self.device)
             except Exception as e:
                 self.device.log.append(f'Failed to reboot terminal.')
+                return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
+
+        return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
+
+    def stop(
+        self,
+        fuwhelper_path_local: str,
+        progress: Optional[Callable[[str, int, int], None]] = None
+    ) -> types.MEResponse:
+        """
+        Stops ME Station on the terminal.
+
+        Args:
+            fuwhelper_path_local (str): The local path to the firmware helper file (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWhelper6xX.dll)
+        """
+        with comms.Driver(self.comms_path, self.driver) as cip:
+            self.device = validation.get_terminal_info(cip)
+            if not(validation.is_valid_me_terminal(self.device)) or not(validation.is_native_me_terminal(self.device)):
+                if self.ignore_terminal_valid:
+                    warn('Invalid device selected, but terminal validation is set to IGNORE.')
+                else:
+                    raise Exception('Invalid device selected.  Use ignore_terminal_valid=True when initializing MEUtility object to proceed at your own risk.')
+
+            try:
+                firmware.get_or_download_fuwhelper(
+                    cip=cip,
+                    device=self.device,
+                    fuwhelper_path_local=fuwhelper_path_local,
+                    progress=progress
+                )
+
+                if fuwhelper.get_process_running(
+                    cip=cip,
+                    paths=self.device.me_paths,
+                    process_name='MERuntime.exe'
+                ):
+                    # Check major rev.  v5 lacks dedicated termination function
+                    if util.get_major_rev(cip, self.device) <= 5:
+                        fuwhelper.stop_process(
+                            cip=cip,
+                            paths=self.device.me_paths,
+                            process='MERuntime.exe'
+                        )
+                    else:
+                        fuwhelper.stop_process_me(
+                            cip=cip,
+                            paths=self.device.me_paths
+                        )
+            except Exception as e:
+                self.device.log.append(f'Exception: {str(e)}')
+                self.device.log.append(f'Failed to stop ME Station.')
                 return types.MEResponse(self.device, types.ResponseStatus.FAILURE)
 
         return types.MEResponse(self.device, types.ResponseStatus.SUCCESS)
