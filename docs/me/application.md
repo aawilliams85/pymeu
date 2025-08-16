@@ -9,8 +9,8 @@ Miscellaneous notes concerning ME applications themselves.
 | MED    | Application in directory form.
 | MER    | Application compressed into runtime form.
 
-### MER Files
-## Device Shortcuts
+## MER Files
+### Device Shortcuts
 An ME application may have one or more Device Shortcuts to advise the terminal where to find a particular PLC.  This content is split into two files, ~/RSLinx Enterprise/SCLocal.xml and ~/RSLinx Enterprise/RSLinxNG.xml.<br><br>
 The former contains a Shortcut element for each Device Shortcut.  The shortcut name and device pointer are attributes of that element.  Example:
 ```
