@@ -81,7 +81,12 @@ def mer_to_med_folder(
 def _mer_get_shortcut_names(
     streams: list[types.MEArchive],
 ) -> list[tuple[str, str]]:
-    xml = util._get_stream_by_name(streams, 'RSLinx Enterprise/SCLocal.xml').data.decode('utf-16-le')
+    file = 'RSLinx Enterprise/SCLocal.xml'
+    try:
+        xml = util._get_stream_by_name(streams, file).data.decode('utf-16-le')
+    except Exception as e:
+        raise FileNotFoundError(f'{file} was not found.  Shortcuts may not exist.')
+
     root = ET.fromstring(xml)
     shortcuts = []
     for shortcut in root.findall('shortcut'):
@@ -122,9 +127,13 @@ def _mer_get_shortcut_nodes(
     streams: list[types.MEArchive],
     shortcuts: list[tuple[str, str]]
 ) -> list[tuple[str, list[ET.Element]]]:
-    xml = util._get_stream_by_name(streams, 'RSLinx Enterprise/RSLinxNG.xml').data.decode('utf-16-le')
-    root = ET.fromstring(xml)
+    file = 'RSLinx Enterprise/RSLinxNG.xml'
+    try:
+        xml = util._get_stream_by_name(streams, 'RSLinx Enterprise/RSLinxNG.xml').data.decode('utf-16-le')
+    except Exception as e:
+        raise FileNotFoundError(f'{file} was not found.  Shortcuts may not exist.')
 
+    root = ET.fromstring(xml)
     topology = root.find("Topology")
     result = []
     for shortcut_name, device_string in shortcuts:

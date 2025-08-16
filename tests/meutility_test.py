@@ -727,6 +727,35 @@ class decompress_tests(unittest.TestCase):
         elapsed_time = end - start
         print(elapsed_time)        
 
+    def test_prep(self):
+        meu = MEUtility('192.168.40.21')
+        meu.download(
+            file_path_local=os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_FTLinx1.mer'),
+            file_name_terminal=None,
+            delete_logs=False,
+            overwrite=False,
+            replace_comms=False,
+            run_at_startup=True,
+            progress=progress_callback
+        )
+
+    def test_get_running_mer_shortcuts(self):
+        print('')
+        meu = MEUtility('192.168.40.21')
+        info = meu.get_terminal_info()
+        running = os.path.join(LOCAL_OUTPUT_MER_PATH, info.device.startup_mer_file)
+        mer = meu.upload(
+            file_path_local=running,
+            file_name_terminal=None,
+            overwrite=True,
+            progress=None
+        )
+        me.application.get_mer_shortcuts(
+            input_path=running,
+            print_summary=True,
+            progress=None
+        )
+
     def tearDown(self):
         pass
 
