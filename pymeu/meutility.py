@@ -52,6 +52,7 @@ class MEUtility(object):
         self,
         fup_path_local: str,
         fwc_path_local: str,
+        kep_drivers: list[str] = None,
         progress: Optional[Callable[[str, int, int], None]] = None
     ) -> types.MEResponse:
         """
@@ -73,6 +74,7 @@ class MEUtility(object):
             resp = firmware.fup_to_fwc_folder(
                 input_path=fup_path_local,
                 output_path=fwc_path_local,
+                kep_drivers=kep_drivers,
                 progress=progress
             )
         except Exception as e:
@@ -169,6 +171,7 @@ class MEUtility(object):
         fup_path_local: str, 
         fuwhelper_path_local: str, 
         fuwcover_path_local: str = None,
+        kep_drivers: list[str] = None,
         progress: Optional[Callable[[str, int, int], None]] = None
     ) -> types.MEResponse:
         """
@@ -230,6 +233,7 @@ class MEUtility(object):
                     fup_path_local=fup_path_local,
                     fuwhelper_path_local=fuwhelper_path_local,
                     fuwcover_path_local=fuwcover_path_local,
+                    kep_drivers=kep_drivers,
                     progress=progress
                 )
                 if not(resp):
