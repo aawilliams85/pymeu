@@ -862,6 +862,34 @@ class firmware_tests(unittest.TestCase):
         print('')
         self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
+    def test_flash_pvp5_kepware_direct_pycomm3(self):
+        print('')
+        driver = DRIVER_PYCOMM3
+        device = DEVICE_PVP5
+        comms_path = device.comms_paths[0]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        firmware_helper_path = device.local_firmware_helper_path
+        firmware_cover_path = device.local_firmware_cover_path
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware({firmware_image_path})\n'
+        )
+        print(result)
+        resp = meu.flash_firmware(
+            fup_path_local=firmware_image_path,
+            fuwhelper_path_local=firmware_helper_path,
+            fuwcover_path_local=firmware_cover_path,
+            kep_drivers=['Allen-Bradley Bulletin 1609', 'AutomationDirect ECOM'],
+            progress=progress_callback
+        )
+        for s in resp.device.log: print(s)
+        print('')
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
+
     def test_flash_pvp6_direct_pycomm3(self):
         print('')
         driver = DRIVER_PYCOMM3
