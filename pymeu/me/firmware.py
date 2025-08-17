@@ -37,17 +37,17 @@ def _create_upgrade_dat(
     version: types.MEFupUpgradeInfVersion,
     card: types.MEFupUpgradeInfCard, 
     me_files: types.MEFupMEFileListInf,
-    ce: list[tuple[str, str]] = None
+    ce: list[tuple[str, str]] = None,
+    kep_drivers: list[str] = None,
+    kep_size_bytes: int = None
 ) -> str:
     # Always use windows-style
     crlf = '\r\n'
 
     # There is an upgrade.dat file which needs to be created
     # from the content in the upgrade.inf file.
-    #
-    # TODO: Take Kepware drive selection into account for final size,
-    #       once useroptions are being generated
     isc_size_bytes = card.storage_size_bytes + me_files.info.size_on_disk_bytes
+    if kep_size_bytes: isc_size_bytes += kep_size_bytes
     fields = [
         f'PLAT={version.plat}',
         f'OS={version.os}',
@@ -62,6 +62,11 @@ def _create_upgrade_dat(
     ]
     result = ';'.join(fields) + ';' + crlf
 
+    # If KEP drivers are present
+    if kep_drivers:
+        kep_section = f'{crlf}[KEPdrivers]{crlf}OPTFILE=useroptions.txt;{crlf}'
+        result += kep_section
+
     # If CE components are present
     if ce:
         cefiles = f'{crlf}[PVPCE]{crlf}'
@@ -70,6 +75,16 @@ def _create_upgrade_dat(
         result += cefiles
 
     return result
+
+def _create_user_options(kep_drivers: list[str]) -> types.MEArchive:
+    user_options = 'Installed Drivers: ' + ', '.join(kep_drivers)
+    data = user_options.encode('utf-16-le', errors='ignore')
+    return types.MEArchive(
+        name='useroptions.txt',
+        data=data,
+        path=['useroptions.txt'],
+        size=len(data)
+    )
 
 def _get_upgrade_inf(streams: list[types.MEArchive]) -> types.MEFupUpgradeInf:
     return _deserialize_fup_upgrade_inf(util._get_stream_by_name(streams, 'upgrade.inf').data.decode('utf-8'))
@@ -81,16 +96,27 @@ def _get_mefilelist_inf(streams: list[types.MEArchive]) -> types.MEFupMEFileList
         # v6+ don't use this at all so just enter default values
         return types.MEFupMEFileListInf(info=types.MEFupMEFileListInfInfo(me='', size_on_disk_bytes=0), mefiles=[])
 
-def _get_upgrade_dat(streams: list[types.MEArchive]) -> types.MEArchive:
+def _get_upgrade_dat(
+    streams: list[types.MEArchive],
+    kep_drivers: list[str] = None
+) -> types.MEArchive:
     upgrade_inf_data = _get_upgrade_inf(streams)
     mefilelist_inf_data = _get_mefilelist_inf(streams)
+
+    kep_size_bytes = 0
+    if kep_drivers:
+        for (driver, size) in upgrade_inf_data.drivers:
+            if driver in kep_drivers: kep_size_bytes += size
+            if (driver == 'Overhead'): kep_size_bytes += size
 
     # Should really be the specified mode (FWC or OTW) because they can be different values.
     dat_file = _create_upgrade_dat(
         version=upgrade_inf_data.version,
         card = upgrade_inf_data.otw,
         me_files=mefilelist_inf_data,
-        ce=upgrade_inf_data.ce
+        ce=upgrade_inf_data.ce,
+        kep_drivers=kep_drivers,
+        kep_size_bytes=kep_size_bytes
     )
     
     #data = bytearray(dat_file, encoding='utf-16-le')
@@ -193,6 +219,7 @@ def _deserialize_fup_upgrade_inf(input: str) -> types.MEFupUpgradeInf:
 
 def fup_to_fuc(
     input_path: str,
+    kep_drivers: list[str] = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[types.MEArchive]:
     # Application-specific handling for *.FUP files that
@@ -209,12 +236,17 @@ def fup_to_fuc(
         # In the *.FUP packages specifically, there is some data
         # in the upgrade.inf file that needs to be arranged into
         # an Upgrade.dat file.
-        streams.append(_get_upgrade_dat(streams))
+        streams.insert(0, _get_upgrade_dat(streams=streams, kep_drivers=kep_drivers))
+
+        # If KepDrivers were specified, insert the useroptions.txt
+        # file to enumerate them
+        if kep_drivers: streams.insert(0, _create_user_options(kep_drivers=kep_drivers))
         return streams
 
 def fup_to_fuc_folder(
     input_path: str,
     output_path: str,
+    kep_drivers: list[str] = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None,
 ):
     # Application-specific handling for *.FUP files that
@@ -226,6 +258,7 @@ def fup_to_fuc_folder(
     if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
     streams = fup_to_fuc(
         input_path=input_path,
+        kep_drivers=kep_drivers,
         progress=progress
     )
     for stream in streams:
@@ -239,6 +272,7 @@ def fup_to_fuc_folder(
 
 def fup_to_fwc(
     input_path: str,
+    kep_drivers: list[str] = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None,
 ) -> list[types.MEArchive]:
     # Application-specific handling for *.FUP files that
@@ -248,6 +282,7 @@ def fup_to_fwc(
     # can be used to flash a terminal via removable media.
     streams = fup_to_fuc(
         input_path=input_path,
+        kep_drivers=kep_drivers,
         progress=progress
     )
     upgrade_inf = _get_upgrade_inf(streams)
@@ -264,11 +299,17 @@ def fup_to_fwc(
         stream.path = ['upgrade', 'AddIns', basename]
         streams_fwc.append(stream)
 
+    if kep_drivers:
+        stream = util._get_stream_by_name(streams, 'useroptions.txt')
+        stream.path = ['upgrade', 'useroptions.txt']
+        streams_fwc.insert(0, stream)
+
     return streams_fwc
 
 def fup_to_fwc_folder(
     input_path: str,
     output_path: str,
+    kep_drivers: list[str] = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None,
 ):
     # Application-specific handling for *.FUP files that
@@ -280,6 +321,7 @@ def fup_to_fwc_folder(
     if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
     streams = fup_to_fwc(
         input_path=input_path,
+        kep_drivers=kep_drivers,
         progress=progress
     )
     for stream in streams:
@@ -289,6 +331,7 @@ def fup_to_fwc_folder(
 
 def fup_to_otw(
     input_path: str,
+    kep_drivers: list[str] = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[types.MEArchive]:
     # Application-specific handling for *.FUP files that
@@ -298,6 +341,7 @@ def fup_to_otw(
     # can be sent via a network connection.
     streams = fup_to_fuc(
         input_path=input_path,
+        kep_drivers=kep_drivers,
         progress=progress
     )
     upgrade_inf = _get_upgrade_inf(streams)
@@ -313,11 +357,17 @@ def fup_to_otw(
         stream.path = util._path_to_list(outfile)
         streams_otw.append(stream)
 
+    if kep_drivers:
+        stream = util._get_stream_by_name(streams, 'useroptions.txt')
+        stream.path = ['upgrade', 'useroptions.txt']
+        streams_otw.insert(0, stream)
+
     return streams_otw
 
 def fup_to_otw_folder(
     input_path: str,
     output_path: str,
+    kep_drivers: list[str] = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None,
 ):
     # Application-specific handling for *.FUP files that
@@ -331,6 +381,7 @@ def fup_to_otw_folder(
     if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
     streams = fup_to_otw(
         input_path=input_path,
+        kep_drivers=kep_drivers,
         progress=progress
     )
     for stream in streams:
@@ -368,11 +419,13 @@ def flash_fup_to_terminal(
     fup_path_local: str,
     fuwhelper_path_local: str,
     fuwcover_path_local: str = None,
+    kep_drivers: list[str] = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ):
     # Read FUP into memory
     streams_otw = fup_to_otw(
         input_path=fup_path_local,
+        kep_drivers=kep_drivers,
         progress=progress
     )
 
@@ -442,13 +495,29 @@ def flash_fup_to_terminal(
                     print(e)
 
         # Delete KEPServer
+        if fuwhelper.get_file_exists(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise\\Uninstall KepServerEnterprise.exe'):
+            try:
+                fuwhelper.start_process(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise\\Uninstall KepServerEnterprise.exe:/S')
+            except Exception as e:
+                print(e)
         if fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise'):
-            fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
-            fuwhelper.delete_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
+            # Interesting note on ClearRemDirectory... maybe the ? at the end is a best-effort and suppresses
+            # failures?
+            try:
+                fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise?')
+            except Exception as e:
+                print(e)
+            try:
+                fuwhelper.delete_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
+            except Exception as e:
+                print(e)
 
         for stream in streams_otw:
             # Certain CE files fail to download, still investigating
             if stream.name.lower() in CE_BLACKLIST_FILES: continue
+
+            # No need to transfer Kepware install if no drivers specified
+            if (not kep_drivers) and (stream.path[-1].lower() == 'kepwareceinstall.exe'): continue
 
             if stream.path[0].lower() != 'windows' and stream.path[0].lower() != 'storage card':
                 # The normal files look to all have relative directories.
@@ -501,9 +570,12 @@ def flash_fup_to_terminal(
             fuwhelper.delete_file(cip, device.me_paths, '\\Storage Card\\Step2.dat')
         if fuwhelper.get_process_running(cip, device.me_paths, 'MERuntime.exe'):
             fuwhelper.stop_process_me(cip, device.me_paths)
-        fuwhelper.get_file_exists(cip, device.me_paths, '\\Windows\\useroptions.txt')
+        if not kep_drivers:
+            if fuwhelper.get_file_exists(cip, device.me_paths, '\\Windows\\useroptions.txt'):
+                fuwhelper.delete_file(cip, device.me_paths, '\\Windows\\useroptions.txt')
 
         for stream in streams_otw:
+            if stream.name == 'useroptions.txt': stream.path = ['Windows', 'useroptions.txt']
             if stream.path[0].lower() != 'windows' and stream.path[0].lower() != 'storage card' and stream.path[0].lower() != 'vfs':
                 # Files with relative directories will be redirected to Storage Card
                 stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)

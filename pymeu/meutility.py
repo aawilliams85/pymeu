@@ -52,6 +52,7 @@ class MEUtility(object):
         self,
         fup_path_local: str,
         fwc_path_local: str,
+        kep_drivers: list[str] = None,
         progress: Optional[Callable[[str, int, int], None]] = None
     ) -> types.MEResponse:
         """
@@ -60,6 +61,7 @@ class MEUtility(object):
         Args:
             fup_path_local (str): The path to the *.FUP file to use.
             fwc_path_local (str): The path to the firmware card that will be generated (i.e. USB/CF card).
+            kep_drivers (list[str]): The names of the KepDrivers to enable by default.
             progress: Optional callback for progress indication.
         """
 
@@ -73,6 +75,7 @@ class MEUtility(object):
             resp = firmware.fup_to_fwc_folder(
                 input_path=fup_path_local,
                 output_path=fwc_path_local,
+                kep_drivers=kep_drivers,
                 progress=progress
             )
         except Exception as e:
@@ -169,6 +172,7 @@ class MEUtility(object):
         fup_path_local: str, 
         fuwhelper_path_local: str, 
         fuwcover_path_local: str = None,
+        kep_drivers: list[str] = None,
         progress: Optional[Callable[[str, int, int], None]] = None
     ) -> types.MEResponse:
         """
@@ -178,6 +182,7 @@ class MEUtility(object):
             fup_path_local (str): The local path to the firmware file (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUPs\\ME_PVP6xX_12.00-20200922.fup)
             fuwhelper_path_local (str): The local path to the firmware helper file (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWhelper6xX.dll)
             fuwcover_path_local (str): The local path to the firmware cover file if applicable (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWCover4xX.exe)
+            kep_drivers (list[str]): The names of the KepDrivers to enable by default.
             progress: Optional callback for progress indication.
         """
         # Use default RSView directory if one is not specified
@@ -216,7 +221,7 @@ class MEUtility(object):
 
             # Validate device at this communications path is a terminal of known version.
             self.device = validation.get_terminal_info(cip)
-            if not(validation.is_valid_me_terminal(self.device)):
+            if not(validation.is_valid_me_terminal(self.device)) or not(validation.is_native_me_terminal(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
@@ -230,6 +235,7 @@ class MEUtility(object):
                     fup_path_local=fup_path_local,
                     fuwhelper_path_local=fuwhelper_path_local,
                     fuwcover_path_local=fuwcover_path_local,
+                    kep_drivers=kep_drivers,
                     progress=progress
                 )
                 if not(resp):

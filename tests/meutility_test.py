@@ -809,10 +809,26 @@ class firmware_tests(unittest.TestCase):
         fup_path = os.path.join(LOCAL_INPUT_FUP_PATH, 'ME_PVPCE4xX_5.10.16.09.WithAddins.WithViewPoint.fup')
         fwc_path = os.path.join(LOCAL_OUTPUT_FWC_PATH, 'ME_PVPCE4xX_5.10.16.09.WithAddins.WithViewPoint.fup')
         start = time.time()
-        meu = MEUtility('localhost')
+        meu = MEUtility()
         meu.create_firmware_card(
             fup_path_local=fup_path,
             fwc_path_local=fwc_path,
+            progress=progress_callback
+        )
+        end = time.time()
+        elapsed_time = end - start
+        print(elapsed_time)
+
+    def test_firmware_card_kepware(self):
+        print('')
+        fup_path = os.path.join(LOCAL_INPUT_FUP_PATH, 'ME_PVPCE4xX_5.10.16.09.WithAddins.WithViewPoint.fup')
+        fwc_path = os.path.join(LOCAL_OUTPUT_FWC_PATH, 'ME_PVPCE4xX_5.10.16.09.WithAddins.WithViewPoint.WithKepware.fup')
+        start = time.time()
+        meu = MEUtility()
+        meu.create_firmware_card(
+            fup_path_local=fup_path,
+            fwc_path_local=fwc_path,
+            kep_drivers=['A-B Bulletin 1609', 'Modbus Serial'],
             progress=progress_callback
         )
         end = time.time()
@@ -846,6 +862,34 @@ class firmware_tests(unittest.TestCase):
         print('')
         self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
 
+    def test_flash_pvp5_kepware_direct_pycomm3(self):
+        print('')
+        driver = DRIVER_PYCOMM3
+        device = DEVICE_PVP5
+        comms_path = device.comms_paths[0]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        firmware_helper_path = device.local_firmware_helper_path
+        firmware_cover_path = device.local_firmware_cover_path
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware({firmware_image_path})\n'
+        )
+        print(result)
+        resp = meu.flash_firmware(
+            fup_path_local=firmware_image_path,
+            fuwhelper_path_local=firmware_helper_path,
+            fuwcover_path_local=firmware_cover_path,
+            kep_drivers=['Allen-Bradley Bulletin 1609', 'AutomationDirect ECOM'],
+            progress=progress_callback
+        )
+        for s in resp.device.log: print(s)
+        print('')
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
+
     def test_flash_pvp6_direct_pycomm3(self):
         print('')
         driver = DRIVER_PYCOMM3
@@ -866,6 +910,33 @@ class firmware_tests(unittest.TestCase):
             fup_path_local=firmware_image_path,
             fuwhelper_path_local=firmware_helper_path,
             fuwcover_path_local=None,
+            progress=progress_callback
+        )
+        for s in resp.device.log: print(s)
+        print('')
+        self.assertEqual(resp.status, types.ResponseStatus.SUCCESS)
+
+    def test_flash_pvp6_kepware_direct_pycomm3(self):
+        print('')
+        driver = DRIVER_PYCOMM3
+        device = DEVICE_PVP6
+        comms_path = device.comms_paths[0]
+
+        meu = MEUtility(comms_path, driver=driver)
+        firmware_image_path = device.local_firmware_image_paths[0]   
+        firmware_helper_path = device.local_firmware_helper_path         
+        result = (
+                f'Device: {device.name}\n'
+                f'Driver: {driver}\n'
+                f'Path: {comms_path}\n'
+                f'Function: flash_firmware({firmware_image_path})\n'
+        )
+        print(result)
+        resp = meu.flash_firmware(
+            fup_path_local=firmware_image_path,
+            fuwhelper_path_local=firmware_helper_path,
+            fuwcover_path_local=None,
+            kep_drivers=['Allen-Bradley Bulletin 1609', 'AutomationDirect ECOM'],
             progress=progress_callback
         )
         for s in resp.device.log: print(s)
