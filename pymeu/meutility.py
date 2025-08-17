@@ -61,6 +61,7 @@ class MEUtility(object):
         Args:
             fup_path_local (str): The path to the *.FUP file to use.
             fwc_path_local (str): The path to the firmware card that will be generated (i.e. USB/CF card).
+            kep_drivers (list[str]): The names of the KepDrivers to enable by default.
             progress: Optional callback for progress indication.
         """
 
@@ -181,6 +182,7 @@ class MEUtility(object):
             fup_path_local (str): The local path to the firmware file (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUPs\\ME_PVP6xX_12.00-20200922.fup)
             fuwhelper_path_local (str): The local path to the firmware helper file (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWhelper6xX.dll)
             fuwcover_path_local (str): The local path to the firmware cover file if applicable (ex: C:\\Program Files (x86)\\Rockwell Software\\RSView Enterprise\\FUWCover4xX.exe)
+            kep_drivers (list[str]): The names of the KepDrivers to enable by default.
             progress: Optional callback for progress indication.
         """
         # Use default RSView directory if one is not specified
