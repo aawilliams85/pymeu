@@ -221,7 +221,7 @@ class MEUtility(object):
 
             # Validate device at this communications path is a terminal of known version.
             self.device = validation.get_terminal_info(cip)
-            if not(validation.is_valid_me_terminal(self.device)):
+            if not(validation.is_valid_me_terminal(self.device)) or not(validation.is_native_me_terminal(self.device)):
                 if self.ignore_terminal_valid:
                     warn('Invalid device selected, but terminal validation is set to IGNORE.')
                 else:
