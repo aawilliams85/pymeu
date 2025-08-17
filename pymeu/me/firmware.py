@@ -501,8 +501,16 @@ def flash_fup_to_terminal(
             except Exception as e:
                 print(e)
         if fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise'):
-            fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
-            fuwhelper.delete_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
+            # Interesting note on ClearRemDirectory... maybe the ? at the end is a best-effort and suppresses
+            # failures?
+            try:
+                fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise?')
+            except Exception as e:
+                print(e)
+            try:
+                fuwhelper.delete_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
+            except Exception as e:
+                print(e)
 
         for stream in streams_otw:
             # Certain CE files fail to download, still investigating
