@@ -359,7 +359,7 @@ def fup_to_otw(
 
     if kep_drivers:
         stream = util._get_stream_by_name(streams, 'useroptions.txt')
-        stream.path = ['Windows', 'useroptions.txt']
+        stream.path = ['upgrade', 'useroptions.txt']
         streams_otw.insert(0, stream)
 
     return streams_otw
@@ -495,6 +495,11 @@ def flash_fup_to_terminal(
                     print(e)
 
         # Delete KEPServer
+        if fuwhelper.get_file_exists(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise\\Uninstall KepServerEnterprise.exe'):
+            try:
+                fuwhelper.start_process(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise\\Uninstall KepServerEnterprise.exe:/S')
+            except Exception as e:
+                print(e)
         if fuwhelper.get_folder_exists(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise'):
             fuwhelper.clear_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
             fuwhelper.delete_folder(cip, device.me_paths, '\\Storage Card\\KEPServerEnterprise')
@@ -502,6 +507,9 @@ def flash_fup_to_terminal(
         for stream in streams_otw:
             # Certain CE files fail to download, still investigating
             if stream.name.lower() in CE_BLACKLIST_FILES: continue
+
+            # No need to transfer Kepware install if no drivers specified
+            if (not kep_drivers) and (stream.path[-1].lower() == 'kepwareceinstall.exe'): continue
 
             if stream.path[0].lower() != 'windows' and stream.path[0].lower() != 'storage card':
                 # The normal files look to all have relative directories.
@@ -559,6 +567,7 @@ def flash_fup_to_terminal(
                 fuwhelper.delete_file(cip, device.me_paths, '\\Windows\\useroptions.txt')
 
         for stream in streams_otw:
+            if stream.name == 'useroptions.txt': stream.path = ['Windows', 'useroptions.txt']
             if stream.path[0].lower() != 'windows' and stream.path[0].lower() != 'storage card' and stream.path[0].lower() != 'vfs':
                 # Files with relative directories will be redirected to Storage Card
                 stream_path_terminal = '\\Storage Card\\' + '\\'.join(stream.path)
