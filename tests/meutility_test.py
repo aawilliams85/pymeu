@@ -803,8 +803,20 @@ class decompress_tests(unittest.TestCase):
             start = time.time()
             me.application.mer_unlock(
                 input_path=file,
-                output_path=os.path.join(LOCAL_OUTPUT_MER_PATH, f'{os.path.basename(file)}'),
-                progress=progress_callback
+                output_path=os.path.join(LOCAL_OUTPUT_MER_PATH, f'{os.path.basename(file)}')
+            )
+            end = time.time()
+            elapsed_time = end - start
+            print(elapsed_time)
+
+    def test_apa_unlock(self):
+        print('')
+        for file in STANDALONE_APA_FILES:
+            print(file)
+            start = time.time()
+            me.application.apa_unlock(
+                input_path=file,
+                output_path=os.path.join(LOCAL_OUTPUT_APA_PATH, f'{os.path.basename(file)}')
             )
             end = time.time()
             elapsed_time = end - start

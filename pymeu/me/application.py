@@ -189,7 +189,6 @@ def mer_get_shortcuts(
 def mer_unlock(
     input_path: str,
     output_path: str,
-    progress: Optional[Callable[[str, str, int, int], None]] = None
 ):
     # Create copy of *.MER file to work with
     if not(os.path.exists(os.path.dirname(output_path))): os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -197,27 +196,44 @@ def mer_unlock(
 
     # Edit the contents of FILE_PROTECTION
     with olefile.OleFileIO(output_path, write_mode=True) as ole:
-        fileprotection = bytearray(ole.openstream('FILE_PROTECTION').read())
-        msb = len(fileprotection)
+        stream = bytearray(ole.openstream('FILE_PROTECTION').read())
+        msb = len(stream)
 
         if (msb < 7): raise FileNotFoundError(f'Unexpected file size {msb} for FILE_PROTECTION, cannot proceed.')
-        fileprotection[0] = 0x00 # No Password
-        fileprotection[1] = 0x03 # Length LSW?
-        fileprotection[2] = 0x00 # Length MSW?
-        fileprotection[3] = 0x00 # Allow Convert
+        stream[0] = 0x00 # No Password
+        stream[1] = 0x03 # Length LSW?
+        stream[2] = 0x00 # Length MSW?
+        stream[3] = 0x00 # Allow Convert
         for i in range(4,msb):
-            fileprotection[i] = 0x00 # Remaining content would be password.
+            stream[i] = 0x00 # Remaining content would be password.
 
-        ole.write_stream('FILE_PROTECTION', bytes(fileprotection))
+        ole.write_stream('FILE_PROTECTION', bytes(stream))
 
     # Re-read file and calculate updated checksum
-    mer_data = bytes()
+    file_data = bytes()
     with open(output_path, 'rb') as f:
         raw_data = f.read()
-        mer_data = raw_data[:-4]
-    new_checksum = util.crc32_checksum(mer_data).to_bytes(length=4, byteorder='little', signed=False)
-    mer_data = mer_data + new_checksum
+        file_data = raw_data[:-4]
+    new_checksum = util.crc32_checksum(file_data).to_bytes(length=4, byteorder='little', signed=False)
+    file_data = file_data + new_checksum
 
     # Re-write file with update checksum
     with open(output_path, 'wb') as f:
-        f.write(mer_data)
+        f.write(file_data)
+
+def apa_unlock(
+    input_path: str,
+    output_path: str
+):
+    # Create copy of *.APA file to work with
+    if not(os.path.exists(os.path.dirname(output_path))): os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    shutil.copy(input_path, output_path)
+
+    # Edit the contents of FTSPHasPwd
+    with olefile.OleFileIO(output_path, write_mode=True) as ole:
+        stream = bytearray(ole.openstream('FTSPHasPwd').read())
+        msb = len(stream)
+
+        if (msb < 4): raise FileNotFoundError(f'Unexpected file size {msb} for FTSPHasPwd, cannot proceed.')
+        stream[0] = 0x00 # No Password
+        ole.write_stream('FTSPHasPwd', bytes(stream))
