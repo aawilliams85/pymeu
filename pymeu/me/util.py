@@ -2,12 +2,16 @@ from collections.abc import Callable
 import os
 import time
 from typing import Optional
+import zlib
 
 from .. import comms
 from . import helper
 from . import registry
 from . import transfer
 from . import types
+
+def crc32_checksum(data):
+    return zlib.crc32(data) & 0xFFFFFFFF
 
 def create_log(
     cip: comms.Driver, 

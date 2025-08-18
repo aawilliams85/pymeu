@@ -42,7 +42,7 @@ with comms.Driver(comms_path=meu.comms_path) as cip:
         file_path_terminal=f'{device.me_paths.runtime}\\{info.device.startup_mer_file}',
         progress=None
     )
-    me.application.get_mer_shortcuts(
+    me.application.mer_get_shortcuts(
         input_path=bytes(mer),
         print_summary=True,
         progress=None
