@@ -186,6 +186,24 @@ def mer_get_shortcuts(
 
     return paths
 
+def _mer_rewrite_checksum(
+    input_path: str,
+    output_path: str
+) -> bytes:
+    # Read file and calculate checksum
+    file_data = bytes()
+    with open(input_path, 'rb') as f:
+        raw_data = f.read()
+        file_data = raw_data[:-4]
+    new_checksum = util.crc32_checksum(file_data).to_bytes(length=4, byteorder='little', signed=False)
+    file_data = file_data + new_checksum
+
+    # Re-write file with updated checksum
+    with open(output_path, 'wb') as f:
+        f.write(file_data)
+
+    return new_checksum
+
 def mer_unlock(
     input_path: str,
     output_path: str,
@@ -209,17 +227,8 @@ def mer_unlock(
 
         ole.write_stream('FILE_PROTECTION', bytes(stream))
 
-    # Re-read file and calculate updated checksum
-    file_data = bytes()
-    with open(output_path, 'rb') as f:
-        raw_data = f.read()
-        file_data = raw_data[:-4]
-    new_checksum = util.crc32_checksum(file_data).to_bytes(length=4, byteorder='little', signed=False)
-    file_data = file_data + new_checksum
-
-    # Re-write file with update checksum
-    with open(output_path, 'wb') as f:
-        f.write(file_data)
+    # Re-rewrite the checksum of the *.MER copy in place
+    _mer_rewrite_checksum(input_path=output_path, output_path=output_path)
 
 def apa_unlock(
     input_path: str,
