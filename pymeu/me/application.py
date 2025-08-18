@@ -1,6 +1,7 @@
 from collections.abc import Callable
 import olefile
 import os
+import shutil
 from typing import Optional
 import xml.etree.ElementTree as ET
 
@@ -146,7 +147,7 @@ def _mer_get_shortcut_nodes(
 
     return result
 
-def _print_mer_shortcut_nodes(
+def _mer_print_shortcut_nodes(
     shortcut: str,
     nodes: list[ET.Element]
 ):
@@ -162,7 +163,7 @@ def _print_mer_shortcut_nodes(
         indent = "│   " * i
         print(f"{indent}{connector}{line}")
 
-def get_mer_shortcuts(
+def mer_get_shortcuts(
     input_path: str | bytes,
     print_summary: bool = False,
     progress: Optional[Callable[[str, str, int, int], None]] = None
@@ -181,6 +182,42 @@ def get_mer_shortcuts(
         for node in path:
             filtered_node =_mer_filter_shortcut_attributes(node, MER_FTLINX_ATTRIB_FILTER)
             filtered_nodes.append(ET.tostring(filtered_node, encoding='unicode'))
-        if print_summary:_print_mer_shortcut_nodes(name, filtered_nodes)
+        if print_summary: _mer_print_shortcut_nodes(name, filtered_nodes)
 
     return paths
+
+def mer_unlock(
+    input_path: str,
+    output_path: str,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+):
+    # Create copy of *.MER file to work with
+    if not(os.path.exists(os.path.dirname(output_path))): os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    shutil.copy(input_path, output_path)
+
+    # Edit the contents of FILE_PROTECTION
+    with olefile.OleFileIO(output_path, write_mode=True) as ole:
+        fileprotection = bytearray(ole.openstream('FILE_PROTECTION').read())
+        msb = len(fileprotection)
+
+        if (msb < 7): raise FileNotFoundError(f'Unexpected file size {msb} for FILE_PROTECTION, cannot proceed.')
+        fileprotection[0] = 0x00 # No Password
+        fileprotection[1] = 0x03 # Length LSW?
+        fileprotection[2] = 0x00 # Length MSW?
+        fileprotection[3] = 0x00 # Allow Convert
+        for i in range(4,msb):
+            fileprotection[i] = 0x00 # Remaining content would be password.
+
+        ole.write_stream('FILE_PROTECTION', bytes(fileprotection))
+
+    # Re-read file and calculate updated checksum
+    mer_data = bytes()
+    with open(output_path, 'rb') as f:
+        raw_data = f.read()
+        mer_data = raw_data[:-4]
+    new_checksum = util.crc32_checksum(mer_data).to_bytes(length=4, byteorder='little', signed=False)
+    mer_data = mer_data + new_checksum
+
+    # Re-write file with update checksum
+    with open(output_path, 'wb') as f:
+        f.write(mer_data)

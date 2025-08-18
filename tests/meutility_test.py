@@ -5,7 +5,6 @@ import unittest
 from pymeu import comms
 from pymeu import MEUtility
 from pymeu import me
-from pymeu.me import util
 from pymeu.me import types
 from pymeu.me import validation
 
@@ -741,7 +740,7 @@ class decompress_tests(unittest.TestCase):
         file = os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_FTLinx1.mer')
         print(file)
         start = time.time()
-        me.application.get_mer_shortcuts(
+        me.application.mer_get_shortcuts(
             input_path=file,
             print_summary=True,
             progress=None
@@ -773,7 +772,7 @@ class decompress_tests(unittest.TestCase):
             overwrite=True,
             progress=None
         )
-        me.application.get_mer_shortcuts(
+        me.application.mer_get_shortcuts(
             input_path=running,
             print_summary=True,
             progress=None
@@ -791,11 +790,25 @@ class decompress_tests(unittest.TestCase):
                 file_path_terminal=f'{device.me_paths.runtime}\\{info.device.startup_mer_file}',
                 progress=None
             )
-            me.application.get_mer_shortcuts(
+            me.application.mer_get_shortcuts(
                 input_path=bytes(mer),
                 print_summary=True,
                 progress=None
         )
+
+    def test_mer_unlock(self):
+        print('')
+        for file in STANDALONE_MER_FILES:
+            print(file)
+            start = time.time()
+            me.application.mer_unlock(
+                input_path=file,
+                output_path=os.path.join(LOCAL_OUTPUT_MER_PATH, f'{os.path.basename(file)}'),
+                progress=progress_callback
+            )
+            end = time.time()
+            elapsed_time = end - start
+            print(elapsed_time)
 
     def tearDown(self):
         pass
