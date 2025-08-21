@@ -1,81 +1,63 @@
 # pymeu
 
-PyMEU (Python ME Utility) is a library for interfacing with Rockwell Automation 2711P PanelView Plus terminals.<br>
-See [Compatibility](docs/me/compatibility.md) for more details.  Use at your own risk.<br>
+PyMEU (Python ME Utility) is a Python tool to interface with Rockwell Automation 2711P PanelView Plus terminals.  Use at your own risk.<br>
 
 See dmroeder's [pymeu_gui](https://github.com/dmroeder/pymeu_gui) for a standalone desktop application.<br>
 
-## Installation
+## Capabilities
 
-To install from pip:
+The public classes in pymeu provide the following capabilities:
+
+> ### MEUtility
+>
+> MEUtility provides the following standard functions for ME terminals (i.e. PanelView Plus products):
+> - Get Terminal Info (report info on terminal identity, version, files, etc)
+> - Download (transfer *.MER file from local device to terminal)
+> - Upload (transfer *.MER file from terminal to local device)
+> - Upload All (transfer all *.MER files from terminal to local device)
+> - Reboot
+>
+> It also offers extended functions for native ME terminals (i.e. no PanelView Plus 7 Series B):
+> - Create Firmware Card (transfer *.FUP within local device to specified path) (experimental)
+> - Flash Firmware (transfer *.FUP from local device to terminal) (experimental)
+> - Stop (close ME station) (experimental)
+
+> ### CFUtility
+>
+> CFUtility provides the following standard functions for PanelView Plus 7 Series B terminals only:
+> - Flash Firmware (transfer *.DMK from local device to terminal) (experimental)
+
+Other internal classes and functions in pymeu may provide interesting capabilities, but are subject to more change over time.
+
+## Getting Started
+
+### Installation
+
+To install from pip, run one of the following commands to install pymeu only, pymeu with pylogix as the communications driver, or pymeu with pycomm3 as the communications driver.  At least one communications driver is required.
 ```console
 pip install pymeu
+pip install pymeu[pylogix]
+pip install pymeu[pycomm3]
 ```
 
-To upgrade from pip:
+To upgrade to the latest release:
 ```console
 pip install pymeu --upgrade
 ```
 
-## Basic Examples
+### Examples
 
-Use the download function to transfer a *.MER file to the remote terminal:
-
+A good low-risk example to start with is generating a terminal info report: 
 ```python
 from pymeu import MEUtility
-meu = MEUtility('YourPanelViewIpAddress')
-meu.download('C:\\YourFolder\\YourProgram.mer')
+meu = MEUtility(comms_path='YourPanelViewIpAddress')
+meu.get_terminal_info(print_log=True)
 ```
-
-Use the upload function to transfer a *.MER file from the remote terminal:
-
-```python
-from pymeu import MEUtility
-meu = MEUtility('YourPanelViewIpAddress')
-meu.upload('C:\\YourFolder\\YourProgram.mer')
-```
-
-Use the upload all function to transfer all *.MER files from the remote terminal:
-
-```python
-from pymeu import MEUtility
-meu = MEUtility('YourPanelViewIpAddress')
-meu.upload_all('C:\\YourFolder')
-```
-
-Use the reboot function to restart the remote terminal:
-
-```python
-from pymeu import MEUtility
-meu = MEUtility('YourPanelViewIpAddress')
-meu.reboot()
-```
+See the Examples section for more code samples.
 
 ## Bug Reports
 
-If filing bug reports, please include this terminal info report.
-Output should be generated similar to below:
-
-```python
-from pymeu import MEUtility
-meu = MEUtility('YourPanelViewIpAddress')
-meu.get_terminal_info(print_log=True, redact_log=True)
-
-"""
-Terminal product type: 24.
-Terminal product code: 51.
-Terminal product name: PanelView Plus_6 1500.
-Terminal helper version: 11.00.00.
-Terminal ME version: 11.00.25.230.
-Terminal major version: 11.
-Terminal minor version: 1.
-Terminal has 75040768 free bytes.
-Terminal has MED files: ['Redacted'].
-Terminal has MER files: ['Redacted', 'Redacted', 'Redacted'].
-Terminal startup file: Redacted.
-"""
-
-```
+If filing bug reports, please include a copy of the terminal info report show in the example above.
 
 ## Contributing
 
