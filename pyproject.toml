@@ -1,7 +1,7 @@
 [project]
 name = "pymeu"
 description = "Python ME Utility"
-version = "0.4.4"
+version = "0.4.5"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
