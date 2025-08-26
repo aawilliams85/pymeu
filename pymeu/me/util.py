@@ -46,6 +46,7 @@ def create_log(
             files = transfer.upload_list_mer(cip, device)
             if redact_log: files = ['Redacted' for _ in files]
             line = f'Terminal has MER files: {files}.'
+            device.files = files
         except:
             line = f'Failed to list MER files on terminal.'
         device.log.append(line)
