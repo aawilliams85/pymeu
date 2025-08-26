@@ -439,7 +439,7 @@ class info_tests(unittest.TestCase):
                     f'Function: get_terminal_info\n'
             )
             print(result)
-            meu.get_terminal_info()
+            print(meu.get_terminal_info())
 
     def test_get_terminal_info_print(self):
         print('')
