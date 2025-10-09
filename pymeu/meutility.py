@@ -53,7 +53,7 @@ class MEUtility(object):
         fup_path_local: str,
         fwc_path_local: str,
         kep_drivers: list[str] = None,
-        progress: Optional[Callable[[str, int, int], None]] = None
+        progress: Optional[Callable[[str, str, int, int], None]] = None
     ) -> types.MEResponse:
         """
         Creates a Firmware Card that can be used to update an ME terminal.
@@ -92,7 +92,7 @@ class MEUtility(object):
         overwrite: bool = False,
         replace_comms: bool = False,
         run_at_startup: bool = True,
-        progress: Optional[Callable[[str, int, int], None]] = None, 
+        progress: Optional[Callable[[str, str, int, int], None]] = None, 
     ) -> types.MEResponse:
         """
         Downloads a *.MER file from the local device to the remote terminal.
@@ -173,7 +173,7 @@ class MEUtility(object):
         fuwhelper_path_local: str, 
         fuwcover_path_local: str = None,
         kep_drivers: list[str] = None,
-        progress: Optional[Callable[[str, int, int], None]] = None
+        progress: Optional[Callable[[str, str, int, int], None]] = None
     ) -> types.MEResponse:
         """
         Flashes a firmware image to the remote terminal.
@@ -311,7 +311,7 @@ class MEUtility(object):
     def stop(
         self,
         fuwhelper_path_local: str,
-        progress: Optional[Callable[[str, int, int], None]] = None
+        progress: Optional[Callable[[str, str, int, int], None]] = None
     ) -> types.MEResponse:
         """
         Stops ME Station on the terminal.
@@ -364,7 +364,7 @@ class MEUtility(object):
         file_path_local: str, 
         file_name_terminal: str = None,
         overwrite: bool = False,
-        progress: Optional[Callable[[str, int, int], None]] = None, 
+        progress: Optional[Callable[[str, str, int, int], None]] = None, 
     ) -> types.MEResponse:
         """
         Uploads a *.MER file from the remote terminal to the local device.
@@ -419,7 +419,7 @@ class MEUtility(object):
         self, 
         folder_path_local: str, 
         overwrite: bool = False,
-        progress: Optional[Callable[[str, int, int], None]] = None, 
+        progress: Optional[Callable[[str, str, int, int], None]] = None, 
     ) -> types.MEResponse:
         """
         Uploads all *.MER files from the remote terminal to the local device.
