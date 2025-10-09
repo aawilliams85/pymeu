@@ -88,7 +88,7 @@ STANDALONE_MER_FILES = [
 
 # PanelView Plus configuration
 PVP5 = '2711P_PanelViewPlus_v5'
-PVP5_Comms_Paths = ['192.168.40.20','192.168.40.11,bp,3,enet,192.168.1.20']
+PVP5_Comms_Paths = ['192.168.50.20','192.168.50.11,bp,3,enet,192.168.50.20']
 PVP5_Device_Paths = types.MEPaths(
     f'\\Storage Card\\Rockwell Software\\RSViewME\\{HELPER_FILE_NAME}',
     '\\Storage Card',
@@ -109,7 +109,7 @@ PVP5_MER_Files = [
 
 # PanelView Plus 6 configuration
 PVP6 = '2711P_PanelViewPlus_v6'
-PVP6_Comms_Paths = ['192.168.40.21','192.168.40.11,bp,3,enet,192.168.1.21']
+PVP6_Comms_Paths = ['192.168.50.21','192.168.50.11,bp,3,enet,192.168.50.21']
 PVP6_Device_Paths = types.MEPaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
@@ -129,7 +129,7 @@ PVP6_MER_Files = [
 
 # PanelView Plus 7A configuration
 PVP7A = '2711P_PanelViewPlus_v7A'
-PVP7A_Comms_Paths = ['192.168.40.22','192.168.40.11,bp,3,enet,192.168.1.22']
+PVP7A_Comms_Paths = ['192.168.50.22','192.168.50.11,bp,3,enet,192.168.50.22']
 PVP7A_Device_Paths = types.MEPaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
@@ -149,7 +149,7 @@ PVP7A_MER_Files = [
 
 #PanelView Plus 7B configuration
 PVP7B = '2711P_PanelViewPlus_v7B'
-PVP7B_Comms_Paths = ['192.168.40.23','192.168.40.11,bp,3,enet,192.168.1.23']
+PVP7B_Comms_Paths = ['192.168.50.23','192.168.50.11,bp,3,enet,192.168.50.23']
 PVP7B_Device_Paths = types.MEPaths(
     f'\\Windows\\{HELPER_FILE_NAME}',
     '\\Application Data',
