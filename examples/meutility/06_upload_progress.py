@@ -6,7 +6,7 @@ class ProgressTracker:
     def __init__(self, desc: str, total_bytes: int = 1):
         self.progress_bar = tqdm(total=total_bytes, desc=desc)
 
-    def update(self, description: str, total_bytes: int, current_bytes: int):
+    def update(self, description: str, units: str, total_bytes: int, current_bytes: int):
         self.progress_bar.desc = description
         self.progress_bar.total = total_bytes
         self.progress_bar.n = current_bytes
