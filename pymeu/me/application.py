@@ -84,7 +84,7 @@ def _mer_get_shortcut_names(
 ) -> list[tuple[str, str]]:
     file = 'RSLinx Enterprise/SCLocal.xml'
     try:
-        xml = util._get_stream_by_name(streams, file).data.decode('utf-16-le')
+        xml = util._get_stream_by_name_exact(streams, file).data.decode('utf-16-le')
     except Exception as e:
         raise FileNotFoundError(f'{file} was not found.  Shortcuts may not exist.')
 
@@ -124,13 +124,40 @@ def _mer_get_device_nodes(topology: ET.Element, node1: str, node2: str) -> list[
             return path_nodes
     return []
 
+def mer_get_recipeplus_folder(
+    input_path: str | bytes,
+    output_path: str,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+):
+    # Application-specific function for *.MER files to
+    # get RecipePlus data
+    streams = mer_to_med(
+        input_path=input_path,
+        progress=progress
+    )
+    recipes = util._get_streams_by_name_prefix(streams, 'RecipePlus/')
+    for recipe in recipes:
+        with olefile.OleFileIO(bytes(recipe.data)) as ole:
+            streams = decompress.decompress_archive(
+                ole=ole,
+                progress=progress
+            )
+            for stream in streams:
+                recipe_path = []
+                recipe_path.append(os.path.splitext(recipe.path[-1])[0])
+                for path in stream.path: recipe_path.append(path)
+                stream_output_path = decompress._create_subfolders(output_path, recipe_path)
+                with open(stream_output_path, 'wb') as f:
+                    f.write(stream.data)
+
+
 def _mer_get_shortcut_nodes(
     streams: list[types.MEArchive],
     shortcuts: list[tuple[str, str]]
 ) -> list[tuple[str, list[ET.Element]]]:
     file = 'RSLinx Enterprise/RSLinxNG.xml'
     try:
-        xml = util._get_stream_by_name(streams, 'RSLinx Enterprise/RSLinxNG.xml').data.decode('utf-16-le')
+        xml = util._get_stream_by_name_exact(streams, 'RSLinx Enterprise/RSLinxNG.xml').data.decode('utf-16-le')
     except Exception as e:
         raise FileNotFoundError(f'{file} was not found.  Shortcuts may not exist.')
 

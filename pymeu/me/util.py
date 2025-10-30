@@ -74,12 +74,21 @@ def get_major_rev(
     major_rev = int(device.me_identity.me_version.split(".")[0])
     return major_rev
 
-def _get_stream_by_name(streams: list[types.MEArchive], name: str, case_insensitive=True) -> types.MEArchive:
+def _get_stream_by_name_exact(streams: list[types.MEArchive], name: str, case_insensitive: bool = True) -> types.MEArchive:
     if case_insensitive:
         return next(x for x in streams if x.name.lower() == name.lower())
     else:
         return next(x for x in streams if x.name == name)
-    
+
+def _get_streams_by_name_prefix(streams: list[types.MEArchive], name: str, case_insensitive: bool = True) -> list[types.MEArchive]:
+    results = []
+    for x in streams:
+        if case_insensitive:
+            if x.name.lower().startswith(name.lower()): results.append(x)
+        else:
+            if x.name.startswith(name): results.append(x)
+    return results
+
 def _path_to_list(path: str) -> list[str]:
     path = path.replace('\\', '/').lower()
     components = [comp for comp in path.split('/') if comp]
