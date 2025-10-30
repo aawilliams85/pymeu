@@ -58,6 +58,21 @@ ME_VERSIONS = {
     '15.00.00.201'
 }
 
+FIRMWARE_COVERS = {
+    'FUWCover3xX.exe': [],
+    'FUWCover4xM.exe': [],
+    'FUWCover4xX.exe': []
+}
+
+FIRMWARE_HELPERS = {
+    'FUWhelper3xX.dll': [],
+    'FUWhelper4xA.dll': [],
+    'FUWhelper4xM.dll': [],
+    'FUWhelper4xX.dll': [],
+    'FUWhelper6xA.dll': [74, 75, 77, 78, 79],
+    'FUWhelper6xX.dll': []
+}
+
 # Known terminal product codes, used to help check that device is a valid terminal.
 PRODUCT_CODES = {
     13,   #PanelView Plus 700 CE
