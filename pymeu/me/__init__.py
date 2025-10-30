@@ -1,5 +1,6 @@
 from . import application
 from . import decompress
+from . import enums
 from . import firmware
 from . import fuwhelper
 from . import helper
