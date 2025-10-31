@@ -39,8 +39,8 @@ def _seek_double(input: types.MEBinStream) -> float:
     input.offset += length
     return value
 
-def _seek_int(input: types.MEBinStream, length: int = 4) -> int:
-    value = int.from_bytes(input.data[input.offset:input.offset + length], 'little')
+def _seek_int(input: types.MEBinStream, length: int = 4, signed: bool = True) -> int:
+    value = int.from_bytes(input.data[input.offset:input.offset + length], byteorder='little', signed=signed)
     input.offset += length
     return value
 

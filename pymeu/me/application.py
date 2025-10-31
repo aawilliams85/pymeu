@@ -232,9 +232,9 @@ def _recipeplus_get_data_value(input: types.MEBinStream):
         case enums.MERecipePlusDataType.Fp64:
             value = primitives._seek_double(input=input)
         case enums.MERecipePlusDataType.UInt16:
-            value = primitives._seek_int(input=input, length=2)
+            value = primitives._seek_int(input=input, length=2, signed=False)
         case enums.MERecipePlusDataType.UInt32:
-            value = primitives._seek_int(input=input)
+            value = primitives._seek_int(input=input, signed=False)
         case _:
             raise NotImplementedError(f'Data type {datatype} not implemented at offset {input.offset:0X}.')
 
@@ -263,6 +263,18 @@ def _recipeplus_get_ingredients(
             max=max,
             precision=None
         ))
+
+    raw = util._get_stream_by_name_exact(streams, 'Decimals')
+    bin = types.MEBinStream(
+        data=raw.data,
+        offset=0
+    )
+    header_len = primitives._lookahead_int(input=bin)
+    primitives._seek_forward(input=bin, length=header_len)
+    i = 0
+    while (bin.offset < len(bin.data)):
+        result[i].precision = _recipeplus_get_data_value(input=bin)
+        i += 1
 
     print(result)
     return result
