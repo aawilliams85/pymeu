@@ -5,6 +5,7 @@ from . import firmware
 from . import fuwhelper
 from . import helper
 from . import messages
+from . import primitives
 from . import registry
 from . import transfer
 from . import types

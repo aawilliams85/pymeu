@@ -102,6 +102,7 @@ class MERecipePlusTagSet:
 @dataclass
 class MERecipePlusUnit:
     name: str
+    id: str
     data_set: str
     tag_set: str
 

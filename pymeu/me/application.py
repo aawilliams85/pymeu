@@ -6,6 +6,7 @@ from typing import Optional
 import xml.etree.ElementTree as ET
 
 from . import decompress
+from . import primitives
 from . import types
 from . import util
 
@@ -209,7 +210,24 @@ def _recipeplus_get_units(
     streams: list[types.MEArchive],
 ) -> list[types.MERecipePlusUnit]:
     result = []
-    raw_unit = util._get_stream_by_name_exact(streams, 'Units')
+    raw = util._get_stream_by_name_exact(streams, 'Units')
+    bin = types.MEBinStream(
+        data=raw.data,
+        offset=0
+    )
+    header_len = primitives._lookahead_int(input=bin)
+    primitives._seek_forward(input=bin, length=header_len)
+    while(bin.offset < len(bin.data)):
+        name = primitives._seek_string_var_len(input=bin)
+        id = primitives._seek_string_var_len(input=bin)
+        data_set = primitives._seek_string_var_len(input=bin)
+        tag_set = primitives._seek_string_var_len(input=bin)
+        result.append(types.MERecipePlusUnit(
+            name=name,
+            id=id,
+            data_set=data_set,
+            tag_set=tag_set
+        ))
     print(result)
     return result
 
