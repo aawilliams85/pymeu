@@ -6,6 +6,7 @@ from typing import Optional
 import xml.etree.ElementTree as ET
 
 from . import decompress
+from . import enums
 from . import primitives
 from . import types
 from . import util
@@ -216,6 +217,56 @@ def _recipeplus_get_data_sets(
     print(result)
     return result
 
+def _recipeplus_get_data_value(input: types.MEBinStream):
+    datatype = enums.MERecipePlusDataType(primitives._seek_int(input=input, length=2))
+    value = None
+    match datatype:
+        case enums.MERecipePlusDataType.NoType:
+            pass
+        case enums.MERecipePlusDataType.Int16:
+            value = primitives._seek_int(input=input, length=2)
+        case enums.MERecipePlusDataType.Int32:
+            value = primitives._seek_int(input=input)
+        case enums.MERecipePlusDataType.Fp32:
+            value = primitives._seek_float(input=input)
+        case enums.MERecipePlusDataType.Fp64:
+            value = primitives._seek_double(input=input)
+        case enums.MERecipePlusDataType.UInt16:
+            value = primitives._seek_int(input=input, length=2)
+        case enums.MERecipePlusDataType.UInt32:
+            value = primitives._seek_int(input=input)
+        case _:
+            raise NotImplementedError(f'Data type {datatype} not implemented at offset {input.offset:0X}.')
+
+    return value
+
+def _recipeplus_get_ingredients(
+    streams: list[types.MEArchive],
+) -> list[types.MERecipePlusIngredient]:
+    result = []
+    raw = util._get_stream_by_name_exact(streams, 'Ingredients')
+    bin = types.MEBinStream(
+        data=raw.data,
+        offset=0
+    )
+    header_len = primitives._lookahead_int(input=bin)
+    primitives._seek_forward(input=bin, length=header_len)
+    while (bin.offset < len(bin.data)):
+        ingredient_type = primitives._seek_int(input=bin)
+        min = _recipeplus_get_data_value(input=bin)
+        max = _recipeplus_get_data_value(input=bin)
+        name = primitives._seek_string_var_len(input=bin)
+        result.append(types.MERecipePlusIngredient(
+            name=name,
+            type=enums.MERecipePlusIngredientType(ingredient_type),
+            min=min,
+            max=max,
+            precision=None
+        ))
+
+    print(result)
+    return result
+
 def _recipeplus_get_tag_sets(
     streams: list[types.MEArchive],
 ) -> list[types.MERecipePlusTagSet]:
@@ -264,6 +315,7 @@ def _recipeplus_deserialize_stream(
             progress=progress
         )
         config = _recipeplus_get_config(streams=recipe_streams)
+        ingredients = _recipeplus_get_ingredients(streams=recipe_streams)
         tag_sets = _recipeplus_get_tag_sets(streams=recipe_streams)
         data_sets = _recipeplus_get_data_sets(streams=recipe_streams)
         units = _recipeplus_get_units(streams=recipe_streams)

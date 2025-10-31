@@ -97,8 +97,8 @@ class MERecipePlusConfig:
 class MERecipePlusIngredient:
     name: str
     type: str
-    min: float
-    max: float
+    min: int | float
+    max: int | float
     precision: int
 
 @dataclass
