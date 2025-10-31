@@ -844,7 +844,6 @@ class decompress_tests(unittest.TestCase):
         start = time.time()
         result = me.application.recipeplus_deserialize(
             input_path=file,
-            output_path=os.path.join(LOCAL_OUTPUT_RECIPEPLUS_PATH, f'{os.path.basename(file)}'),
             progress=None
         )
         pprint.pprint(result)

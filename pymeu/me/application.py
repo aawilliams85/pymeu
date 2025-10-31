@@ -336,7 +336,6 @@ def _recipeplus_deserialize_stream(
 
 def recipeplus_deserialize(
     input_path: str | bytes,
-    output_path: str,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[types.MERecipePlusFile]:
     # Application-specific function for *.MER files to
@@ -349,6 +348,7 @@ def recipeplus_deserialize(
     result = []
     for recipe_stream in recipe_streams:
         result.append(_recipeplus_deserialize_stream(stream=recipe_stream, progress=progress))
+
     return result
 
 def _recipeplus_deserialize_value_list(
@@ -380,7 +380,6 @@ def _recipeplus_deserialize_string_list(
         result.append(primitives._seek_string_var_len(input=bin))
 
     return result
-
 
 def recipeplus_to_folder(
     input_path: str | bytes,
