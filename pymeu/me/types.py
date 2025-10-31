@@ -87,6 +87,13 @@ class MERecipePlusDataSet:
     value: list[float | str]
 
 @dataclass
+class MERecipePlusConfig:
+    runtime_recipe_name: str
+    status_tag: str
+    percent_complete_tag: str
+    runtime_recipe_name_tag: str
+
+@dataclass
 class MERecipePlusIngredient:
     name: str
     type: str
@@ -108,10 +115,7 @@ class MERecipePlusUnit:
 
 @dataclass
 class MERecipePlusFile:
-    runtime_recipe_name: str
-    status_tag: str
-    percent_complete_tag: str
-    runtime_recipe_name_tag: str
+    config: MERecipePlusConfig
     ingredients: list[MERecipePlusIngredient]
     data_sets: list[MERecipePlusDataSet]
     tag_sets: list[MERecipePlusTagSet]

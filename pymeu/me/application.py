@@ -180,6 +180,29 @@ def mer_unlock(
     # Re-rewrite the checksum of the *.MER copy in place
     _mer_rewrite_checksum(input_path=output_path, output_path=output_path)
 
+def _recipeplus_get_config(
+    streams: list[types.MEArchive],
+) -> types.MERecipePlusConfig:
+    raw = util._get_stream_by_name_exact(streams, 'Config')
+    bin = types.MEBinStream(
+        data=raw.data,
+        offset=0
+    )
+    primitives._seek_forward(input=bin, length=12)
+    runtime_recipe_name = primitives._seek_string_var_len(input=bin)
+    status_tag = primitives._seek_string_var_len(input=bin)
+    percent_complete_tag = primitives._seek_string_var_len(input=bin)
+    primitives._seek_forward(input=bin, length=4)
+    runtime_recipe_name_tag = primitives._seek_string_var_len(input=bin)
+    result = types.MERecipePlusConfig(
+        runtime_recipe_name=runtime_recipe_name,
+        status_tag=status_tag,
+        percent_complete_tag=percent_complete_tag,
+        runtime_recipe_name_tag=runtime_recipe_name_tag
+    )
+    print(result)
+    return result
+
 def _recipeplus_get_data_sets(
     streams: list[types.MEArchive],
 ) -> list[types.MERecipePlusTagSet]:
@@ -240,6 +263,7 @@ def _recipeplus_deserialize_stream(
             ole=ole,
             progress=progress
         )
+        config = _recipeplus_get_config(streams=recipe_streams)
         tag_sets = _recipeplus_get_tag_sets(streams=recipe_streams)
         data_sets = _recipeplus_get_data_sets(streams=recipe_streams)
         units = _recipeplus_get_units(streams=recipe_streams)
