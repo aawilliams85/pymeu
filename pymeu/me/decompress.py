@@ -193,16 +193,28 @@ def decompress_archive(
             streams.append(stream_info)
     return streams
 
-def archive_to_disk(file_path: str, output_path: str):
-    # Directly dump archive with no application-specific
-    # handling (ex: for *.FUP or *.MER)
+def archive_to_stream(
+    input_path: str | bytes,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+) -> list[types.MEArchive]:
+    with olefile.OleFileIO(input_path) as ole:
+        streams = decompress_archive(
+            ole=ole,
+            progress=progress
+        )
+        return streams
 
-    # Create output folder if it doesn't exist yet
+def archive_to_folder(
+    input_path: str | bytes, 
+    output_path: str,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+):
     if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
-
-    with olefile.OleFileIO(file_path) as ole:
-        streams = decompress_archive(ole)
-        for stream in streams:
-            stream_output_path = _create_subfolders(output_path, stream.path)
-            with open(stream_output_path, 'wb') as f:
-                f.write(stream.data)
+    streams = archive_to_stream(
+        input_path=input_path,
+        progress=progress
+    )
+    for stream in streams:
+        stream_output_path = _create_subfolders(output_path, stream.path)
+        with open(stream_output_path, 'wb') as f:
+            f.write(stream.data)

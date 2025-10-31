@@ -11,73 +11,22 @@ from . import util
 
 MER_FTLINX_ATTRIB_FILTER = {'name', 'address', 'portNumber', 'NATPrivateAddress'}
 
-def apa_to_med(
-    input_path: str | bytes,
-    progress: Optional[Callable[[str, str, int, int], None]] = None
-) -> list[types.MEArchive]:
-    # Application-specific handling for *.APA files that
-    # keeps streams in memory.
-    #
-    # Just a placeholder function for exploration for now
-    with olefile.OleFileIO(input_path) as ole:
-        streams = decompress.decompress_archive(
-            ole=ole,
-            progress=progress
-        )
-        return streams
-    
-def apa_to_med_folder(
-    input_path: str | bytes, 
-    output_path: str,
-    progress: Optional[Callable[[str, str, int, int], None]] = None
+def apa_unlock(
+    input_path: str,
+    output_path: str
 ):
-    # Application-specific handling for *.APA files that
-    # writes streams to a folder.
-    #
-    # Just a placeholder function for exploration for now
-    if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
-    streams = apa_to_med(
-        input_path=input_path,
-        progress=progress
-    )
-    for stream in streams:
-        stream_output_path = decompress._create_subfolders(output_path, stream.path)
-        with open(stream_output_path, 'wb') as f:
-            f.write(stream.data)
+    # Create copy of *.APA file to work with
+    if not(os.path.exists(os.path.dirname(output_path))): os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    shutil.copy(input_path, output_path)
 
-def mer_to_med(
-    input_path: str | bytes,
-    progress: Optional[Callable[[str, str, int, int], None]] = None
-) -> list[types.MEArchive]:
-    # Application-specific handling for *.MER files that
-    # keeps streams in memory.
-    #
-    # Just a placeholder function for exploration for now
-    with olefile.OleFileIO(input_path) as ole:
-        streams = decompress.decompress_archive(
-            ole=ole,
-            progress=progress
-        )
-        return streams
-    
-def mer_to_med_folder(
-    input_path: str | bytes,
-    output_path: str,
-    progress: Optional[Callable[[str, str, int, int], None]] = None
-):
-    # Application-specific handling for *.MER files that
-    # writes streams to a folder.
-    #
-    # Just a placeholder function for exploration for now
-    if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
-    streams = mer_to_med(
-        input_path=input_path,
-        progress=progress
-    )
-    for stream in streams:
-        stream_output_path = decompress._create_subfolders(output_path, stream.path)
-        with open(stream_output_path, 'wb') as f:
-            f.write(stream.data)
+    # Edit the contents of FTSPHasPwd
+    with olefile.OleFileIO(output_path, write_mode=True) as ole:
+        stream = bytearray(ole.openstream('FTSPHasPwd').read())
+        msb = len(stream)
+
+        if (msb < 4): raise FileNotFoundError(f'Unexpected file size {msb} for FTSPHasPwd, cannot proceed.')
+        stream[0] = 0x00 # No Password
+        ole.write_stream('FTSPHasPwd', bytes(stream))
 
 def _mer_get_shortcut_names(
     streams: list[types.MEArchive],
@@ -123,33 +72,6 @@ def _mer_get_device_nodes(topology: ET.Element, node1: str, node2: str) -> list[
         if found_node1:
             return path_nodes
     return []
-
-def mer_get_recipeplus_folder(
-    input_path: str | bytes,
-    output_path: str,
-    progress: Optional[Callable[[str, str, int, int], None]] = None
-):
-    # Application-specific function for *.MER files to
-    # get RecipePlus data
-    streams = mer_to_med(
-        input_path=input_path,
-        progress=progress
-    )
-    recipes = util._get_streams_by_name_prefix(streams, 'RecipePlus/')
-    for recipe in recipes:
-        with olefile.OleFileIO(bytes(recipe.data)) as ole:
-            streams = decompress.decompress_archive(
-                ole=ole,
-                progress=progress
-            )
-            for stream in streams:
-                recipe_path = []
-                recipe_path.append(os.path.splitext(recipe.path[-1])[0])
-                for path in stream.path: recipe_path.append(path)
-                stream_output_path = decompress._create_subfolders(output_path, recipe_path)
-                with open(stream_output_path, 'wb') as f:
-                    f.write(stream.data)
-
 
 def _mer_get_shortcut_nodes(
     streams: list[types.MEArchive],
@@ -198,7 +120,7 @@ def mer_get_shortcuts(
     
     # Application-specific function for *.MER files to
     # get the list of communications shortcuts    
-    streams = mer_to_med(
+    streams = decompress.archive_to_stream(
         input_path=input_path,
         progress=progress
     )
@@ -257,19 +179,92 @@ def mer_unlock(
     # Re-rewrite the checksum of the *.MER copy in place
     _mer_rewrite_checksum(input_path=output_path, output_path=output_path)
 
-def apa_unlock(
-    input_path: str,
-    output_path: str
+def _recipeplus_get_data_sets(
+    streams: list[types.MEArchive],
+) -> list[types.MERecipePlusTagSet]:
+    result = []
+    raw_data_sets = util._get_streams_by_name_prefix(streams, 'DataSets/')
+    for data_set in raw_data_sets:
+        result.append(types.MERecipePlusDataSet(
+            name=data_set.path[-1],
+            value=[]
+        ))
+    print(result)
+    return result
+
+def _recipeplus_get_tag_sets(
+    streams: list[types.MEArchive],
+) -> list[types.MERecipePlusTagSet]:
+    result = []
+    raw_tag_sets = util._get_streams_by_name_prefix(streams, 'TagSets/')
+    for tag_set in raw_tag_sets:
+        result.append(types.MERecipePlusTagSet(
+            name=tag_set.path[-1],
+            value=[]
+        ))
+    print(result)
+    return result
+
+def _recipeplus_get_units(
+    streams: list[types.MEArchive],
+) -> list[types.MERecipePlusUnit]:
+    result = []
+    raw_unit = util._get_stream_by_name_exact(streams, 'Units')
+    print(result)
+    return result
+
+def _recipeplus_deserialize_stream(
+    stream: types.MEArchive,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+) -> types.MERecipePlusFile:
+    with olefile.OleFileIO(bytes(stream.data)) as ole:
+        recipe_streams = decompress.decompress_archive(
+            ole=ole,
+            progress=progress
+        )
+        tag_sets = _recipeplus_get_tag_sets(streams=recipe_streams)
+        data_sets = _recipeplus_get_data_sets(streams=recipe_streams)
+        units = _recipeplus_get_units(streams=recipe_streams)
+
+def recipeplus_deserialize(
+    input_path: str | bytes,
+    output_path: str,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+) -> list[types.MERecipePlusFile]:
+    # Application-specific function for *.MER files to
+    # get RecipePlus data
+    streams = decompress.archive_to_stream(
+        input_path=input_path,
+        progress=progress
+    )
+    recipe_streams = util._get_streams_by_name_prefix(streams, 'RecipePlus/')
+    result = []
+    for recipe_stream in recipe_streams:
+        result.append(_recipeplus_deserialize_stream(stream=recipe_stream, progress=progress))
+    return result
+
+def recipeplus_to_folder(
+    input_path: str | bytes,
+    output_path: str,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
 ):
-    # Create copy of *.APA file to work with
-    if not(os.path.exists(os.path.dirname(output_path))): os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    shutil.copy(input_path, output_path)
-
-    # Edit the contents of FTSPHasPwd
-    with olefile.OleFileIO(output_path, write_mode=True) as ole:
-        stream = bytearray(ole.openstream('FTSPHasPwd').read())
-        msb = len(stream)
-
-        if (msb < 4): raise FileNotFoundError(f'Unexpected file size {msb} for FTSPHasPwd, cannot proceed.')
-        stream[0] = 0x00 # No Password
-        ole.write_stream('FTSPHasPwd', bytes(stream))
+    # Application-specific function to get raw
+    # RecipePlus files extracted from *.MER/*.APA files
+    streams = decompress.archive_to_stream(
+        input_path=input_path,
+        progress=progress
+    )
+    recipes = util._get_streams_by_name_prefix(streams, 'RecipePlus/')
+    for recipe in recipes:
+        with olefile.OleFileIO(bytes(recipe.data)) as ole:
+            streams = decompress.decompress_archive(
+                ole=ole,
+                progress=progress
+            )
+            for stream in streams:
+                recipe_path = []
+                recipe_path.append(os.path.splitext(recipe.path[-1])[0])
+                for path in stream.path: recipe_path.append(path)
+                stream_output_path = decompress._create_subfolders(output_path, recipe_path)
+                with open(stream_output_path, 'wb') as f:
+                    f.write(stream.data)

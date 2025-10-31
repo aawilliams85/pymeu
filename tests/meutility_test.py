@@ -712,7 +712,7 @@ class decompress_tests(unittest.TestCase):
         for file in STANDALONE_APA_FILES:
             print(file)
             start = time.time()
-            me.application.apa_to_med_folder(
+            me.decompress.archive_to_folder(
                 input_path=file,
                 output_path=os.path.join(LOCAL_OUTPUT_APA_PATH, f'{os.path.basename(file)}'),
                 progress=progress_callback
@@ -726,7 +726,7 @@ class decompress_tests(unittest.TestCase):
         for file in STANDALONE_MER_FILES:
             print(file)
             start = time.time()
-            me.application.mer_to_med_folder(
+            me.decompress.archive_to_folder(
                 input_path=file,
                 output_path=os.path.join(LOCAL_OUTPUT_MER_PATH, f'{os.path.basename(file)}'),
                 progress=progress_callback
@@ -822,12 +822,12 @@ class decompress_tests(unittest.TestCase):
             elapsed_time = end - start
             print(elapsed_time)
 
-    def test_mer_get_recipes(self):
+    def test_mer_recipeplus_to_folder(self):
         print('')
         file = os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_Recipe.mer')
         print(file)
         start = time.time()
-        me.application.mer_get_recipeplus_folder(
+        me.application.recipeplus_to_folder(
             input_path=file,
             output_path=os.path.join(LOCAL_OUTPUT_RECIPEPLUS_PATH, f'{os.path.basename(file)}'),
             progress=None
