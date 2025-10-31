@@ -58,6 +58,7 @@ LOCAL_OUTPUT_FUP_PATH = os.path.join(LOCAL_OUTPUT_PATH, 'FUP')
 LOCAL_OUTPUT_FWC_PATH = os.path.join(LOCAL_OUTPUT_PATH, 'FWC')
 LOCAL_OUTPUT_MER_PATH = os.path.join(LOCAL_OUTPUT_PATH, 'MER')
 LOCAL_OUTPUT_OTW_PATH = os.path.join(LOCAL_OUTPUT_PATH, 'OTW')
+LOCAL_OUTPUT_RECIPEPLUS_PATH = os.path.join(LOCAL_OUTPUT_PATH, 'RecipePlus')
 
 # Shared paths - terminal
 HELPER_FILE_NAME = 'RemoteHelper.DLL'
@@ -84,6 +85,7 @@ STANDALONE_MER_FILES = [
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A_NoConvert.mer'),
     os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A_Password.mer'),
+    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_Recipe.mer')
 ]
 
 # PanelView Plus configuration

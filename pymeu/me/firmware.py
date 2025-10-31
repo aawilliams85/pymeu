@@ -87,11 +87,11 @@ def _create_user_options(kep_drivers: list[str]) -> types.MEArchive:
     )
 
 def _get_upgrade_inf(streams: list[types.MEArchive]) -> types.MEFupUpgradeInf:
-    return _deserialize_fup_upgrade_inf(util._get_stream_by_name(streams, 'upgrade.inf').data.decode('utf-8'))
+    return _deserialize_fup_upgrade_inf(util._get_stream_by_name_exact(streams, 'upgrade.inf').data.decode('utf-8'))
 
 def _get_mefilelist_inf(streams: list[types.MEArchive]) -> types.MEFupMEFileListInf:
     try:
-        return _deserialize_fup_mefilelist_inf(util._get_stream_by_name(streams, 'MEFileList.inf').data.decode('utf-8'))
+        return _deserialize_fup_mefilelist_inf(util._get_stream_by_name_exact(streams, 'MEFileList.inf').data.decode('utf-8'))
     except Exception as e:
         # v6+ don't use this at all so just enter default values
         return types.MEFupMEFileListInf(info=types.MEFupMEFileListInfInfo(me='', size_on_disk_bytes=0), mefiles=[])
@@ -289,18 +289,18 @@ def fup_to_fwc(
     
     streams_fwc = []
     for (file, outfile) in upgrade_inf.fwc.files:
-        stream = util._get_stream_by_name(streams, file)
+        stream = util._get_stream_by_name_exact(streams, file)
         stream.path = util._path_to_list(outfile)
         streams_fwc.append(stream)
 
     for (file, outfile) in upgrade_inf.ce:
         dirname, basename = util.split_file_path(outfile)
-        stream = util._get_stream_by_name(streams, file)
+        stream = util._get_stream_by_name_exact(streams, file)
         stream.path = ['upgrade', 'AddIns', basename]
         streams_fwc.append(stream)
 
     if kep_drivers:
-        stream = util._get_stream_by_name(streams, 'useroptions.txt')
+        stream = util._get_stream_by_name_exact(streams, 'useroptions.txt')
         stream.path = ['upgrade', 'useroptions.txt']
         streams_fwc.insert(0, stream)
 
@@ -348,17 +348,17 @@ def fup_to_otw(
 
     streams_otw = []
     for (file, outfile) in upgrade_inf.otw.files:
-        stream = util._get_stream_by_name(streams, file)
+        stream = util._get_stream_by_name_exact(streams, file)
         stream.path = util._path_to_list(outfile)
         streams_otw.append(stream)
 
     for (file, outfile) in upgrade_inf.ce:
-        stream = util._get_stream_by_name(streams, file)
+        stream = util._get_stream_by_name_exact(streams, file)
         stream.path = util._path_to_list(outfile)
         streams_otw.append(stream)
 
     if kep_drivers:
-        stream = util._get_stream_by_name(streams, 'useroptions.txt')
+        stream = util._get_stream_by_name_exact(streams, 'useroptions.txt')
         stream.path = ['upgrade', 'useroptions.txt']
         streams_otw.insert(0, stream)
 

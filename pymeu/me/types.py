@@ -11,6 +11,11 @@ class MEArchive:
     size: int
 
 @dataclass
+class MEBinStream:
+    data: bytes
+    offset: int
+
+@dataclass
 class MEFupUpgradeInfVersion:
     plat: int
     os: str
@@ -75,6 +80,46 @@ class MEDeviceInfo:
     running_med_file: str
     startup_mer_file: str
     me_paths: MEPaths
+
+@dataclass
+class MERecipePlusDataSet:
+    name: str
+    value: list[float | str]
+
+@dataclass
+class MERecipePlusConfig:
+    runtime_recipe_name: str
+    status_tag: str
+    percent_complete_tag: str
+    runtime_recipe_name_tag: str
+
+@dataclass
+class MERecipePlusIngredient:
+    name: str
+    type: str
+    min: int | float
+    max: int | float
+
+@dataclass
+class MERecipePlusTagSet:
+    name: str
+    value: list[str]
+
+@dataclass
+class MERecipePlusUnit:
+    name: str
+    id: str
+    data_set: str
+    tag_set: str
+
+@dataclass
+class MERecipePlusFile:
+    config: MERecipePlusConfig
+    ingredients: list[MERecipePlusIngredient]
+    decimal_places: list[int]
+    data_sets: list[MERecipePlusDataSet]
+    tag_sets: list[MERecipePlusTagSet]
+    units: list[MERecipePlusUnit]
 
 @dataclass
 class MEResponse(object):
