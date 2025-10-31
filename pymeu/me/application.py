@@ -201,20 +201,26 @@ def _recipeplus_get_config(
         percent_complete_tag=percent_complete_tag,
         runtime_recipe_name_tag=runtime_recipe_name_tag
     )
-    print(result)
     return result
 
 def _recipeplus_get_data_sets(
     streams: list[types.MEArchive],
 ) -> list[types.MERecipePlusTagSet]:
     result = []
-    raw_data_sets = util._get_streams_by_name_prefix(streams, 'DataSets/')
-    for data_set in raw_data_sets:
+    data_sets_raw = util._get_streams_by_name_prefix(streams, 'DataSets/')
+    for data_set in data_sets_raw:
+        data_set_values = _recipeplus_deserialize_value_list(data_set)
         result.append(types.MERecipePlusDataSet(
             name=data_set.path[-1],
-            value=[]
+            value=data_set_values
         ))
-    print(result)
+    return result
+
+def _recipeplus_get_decimal_places(
+    streams: list[types.MEArchive],
+) -> list[int]:
+    decimals_raw = util._get_stream_by_name_exact(streams, 'Decimals')
+    result = _recipeplus_deserialize_value_list(decimals_raw)
     return result
 
 def _recipeplus_get_data_value(input: types.MEBinStream):
@@ -231,6 +237,8 @@ def _recipeplus_get_data_value(input: types.MEBinStream):
             value = primitives._seek_float(input=input)
         case enums.MERecipePlusDataType.Fp64:
             value = primitives._seek_double(input=input)
+        case enums.MERecipePlusDataType.String:
+            value = primitives._seek_string_var_len(input=input)
         case enums.MERecipePlusDataType.UInt16:
             value = primitives._seek_int(input=input, length=2, signed=False)
         case enums.MERecipePlusDataType.UInt32:
@@ -260,36 +268,21 @@ def _recipeplus_get_ingredients(
             name=name,
             type=enums.MERecipePlusIngredientType(ingredient_type),
             min=min,
-            max=max,
-            precision=None
+            max=max
         ))
-
-    raw = util._get_stream_by_name_exact(streams, 'Decimals')
-    bin = types.MEBinStream(
-        data=raw.data,
-        offset=0
-    )
-    header_len = primitives._lookahead_int(input=bin)
-    primitives._seek_forward(input=bin, length=header_len)
-    i = 0
-    while (bin.offset < len(bin.data)):
-        result[i].precision = _recipeplus_get_data_value(input=bin)
-        i += 1
-
-    print(result)
     return result
 
 def _recipeplus_get_tag_sets(
     streams: list[types.MEArchive],
 ) -> list[types.MERecipePlusTagSet]:
     result = []
-    raw_tag_sets = util._get_streams_by_name_prefix(streams, 'TagSets/')
-    for tag_set in raw_tag_sets:
+    tag_sets_raw = util._get_streams_by_name_prefix(streams, 'TagSets/')
+    for tag_set in tag_sets_raw:
+        tag_set_values = _recipeplus_deserialize_string_list(tag_set)
         result.append(types.MERecipePlusTagSet(
             name=tag_set.path[-1],
-            value=[]
+            value=tag_set_values
         ))
-    print(result)
     return result
 
 def _recipeplus_get_units(
@@ -314,7 +307,6 @@ def _recipeplus_get_units(
             data_set=data_set,
             tag_set=tag_set
         ))
-    print(result)
     return result
 
 def _recipeplus_deserialize_stream(
@@ -328,9 +320,19 @@ def _recipeplus_deserialize_stream(
         )
         config = _recipeplus_get_config(streams=recipe_streams)
         ingredients = _recipeplus_get_ingredients(streams=recipe_streams)
-        tag_sets = _recipeplus_get_tag_sets(streams=recipe_streams)
+        decimal_places = _recipeplus_get_decimal_places(streams=recipe_streams)
         data_sets = _recipeplus_get_data_sets(streams=recipe_streams)
+        tag_sets = _recipeplus_get_tag_sets(streams=recipe_streams)
         units = _recipeplus_get_units(streams=recipe_streams)
+
+        return types.MERecipePlusFile(
+            config=config,
+            ingredients=ingredients,
+            decimal_places=decimal_places,
+            data_sets=data_sets,
+            tag_sets=tag_sets,
+            units=units
+        )
 
 def recipeplus_deserialize(
     input_path: str | bytes,
@@ -348,6 +350,37 @@ def recipeplus_deserialize(
     for recipe_stream in recipe_streams:
         result.append(_recipeplus_deserialize_stream(stream=recipe_stream, progress=progress))
     return result
+
+def _recipeplus_deserialize_value_list(
+    stream: types.MEArchive        
+) -> list:
+    result = []
+    bin = types.MEBinStream(
+        data=stream.data,
+        offset=0
+    )
+    header_len = primitives._lookahead_int(input=bin)
+    primitives._seek_forward(input=bin, length=header_len)
+    while (bin.offset < len(bin.data)):
+        result.append(_recipeplus_get_data_value(input=bin))
+
+    return result
+
+def _recipeplus_deserialize_string_list(
+    stream: types.MEArchive        
+) -> list:
+    result = []
+    bin = types.MEBinStream(
+        data=stream.data,
+        offset=0
+    )
+    header_len = primitives._lookahead_int(input=bin)
+    primitives._seek_forward(input=bin, length=header_len)
+    while (bin.offset < len(bin.data)):
+        result.append(primitives._seek_string_var_len(input=bin))
+
+    return result
+
 
 def recipeplus_to_folder(
     input_path: str | bytes,

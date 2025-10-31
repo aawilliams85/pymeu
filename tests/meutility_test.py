@@ -1,4 +1,5 @@
 import glob
+import pprint
 import time
 import unittest
 
@@ -841,11 +842,12 @@ class decompress_tests(unittest.TestCase):
         file = os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_Recipe.mer')
         print(file)
         start = time.time()
-        me.application.recipeplus_deserialize(
+        result = me.application.recipeplus_deserialize(
             input_path=file,
             output_path=os.path.join(LOCAL_OUTPUT_RECIPEPLUS_PATH, f'{os.path.basename(file)}'),
             progress=None
         )
+        pprint.pprint(result)
         end = time.time()
         elapsed_time = end - start
         print(elapsed_time)        

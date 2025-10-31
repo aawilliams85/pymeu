@@ -29,6 +29,7 @@ class MERecipePlusDataType(IntEnum):
     Int32 = 3
     Fp32 = 4
     Fp64 = 5
+    String = 8
     UInt16 = 18
     UInt32 = 19
 

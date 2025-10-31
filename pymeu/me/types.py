@@ -99,7 +99,6 @@ class MERecipePlusIngredient:
     type: str
     min: int | float
     max: int | float
-    precision: int
 
 @dataclass
 class MERecipePlusTagSet:
@@ -117,6 +116,7 @@ class MERecipePlusUnit:
 class MERecipePlusFile:
     config: MERecipePlusConfig
     ingredients: list[MERecipePlusIngredient]
+    decimal_places: list[int]
     data_sets: list[MERecipePlusDataSet]
     tag_sets: list[MERecipePlusTagSet]
     units: list[MERecipePlusUnit]
