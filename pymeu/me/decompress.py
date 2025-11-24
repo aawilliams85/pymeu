@@ -1,14 +1,14 @@
 from collections.abc import Callable
 import olefile
 import os
+import struct
 from typing import Optional
 
 from . import types
 
+
 CHUNK_CONTROL_SIZE_BYTES = 2
 CHUNK_DATA_SIZE_TOKENS = 16
-PAGE_CONTEXT_SIZE_BYTES = 4095
-PAGE_CONTROL_SIZE_BYTES = 4
 PAGE_HEADER_SIZE_BYTES = 4
 TOKEN_LITERAL_SIZE_BYTES = 1
 TOKEN_POINTER_SIZE_BYTES = 2
@@ -16,28 +16,31 @@ TOKEN_POINTER_SIZE_BYTES = 2
 STREAM_NAME_MAPPEE = '__MAPPEE'
 STREAM_NAME_MAPPER = '__MAPPER'
 
-def _get_int8_nibbles(value: int):
+def _get_int8_nibbles(value: int) -> tuple[int, int]:
     high_nibble = (value >> 4) & 0x0F
     low_nibble = value & 0x0F
-    return (low_nibble, high_nibble)
+    return low_nibble, high_nibble
 
-def _get_pointer_values(bytes: bytearray):
-    (length, offset_msb) = _get_int8_nibbles(bytes[0])
-    offset_lsb = bytes[1]
-    offset = (offset_msb << 8) + offset_lsb
+def _get_pointer_values(input: memoryview) -> tuple[int, int]:
+    if len(input) != 2: raise ValueError("Input must be exactly 2 bytes long")
+    (length, offset_msb) = _get_int8_nibbles(input[0])
+    offset_lsb = input[1]
+    offset = (offset_msb << 8) | offset_lsb
     length += 1
-    return (length, offset)
+    return length, offset
 
-def _get_expected_chunk_length(bytes) -> int:
-    tokens = int.from_bytes(bytes, byteorder='little').bit_count()
-    literals = CHUNK_DATA_SIZE_TOKENS - tokens
-    length = (tokens * 2) + literals
+def _get_expected_chunk_length(input: int) -> int:
+    # Each chunk is made up of a fixed number of tokens.
+    # Some are pointers (2 bytes), the rest are literals (1 byte).
+    pointers = int.from_bytes(input, byteorder='little').bit_count()
+    literals = CHUNK_DATA_SIZE_TOKENS - pointers
+    length = (pointers * TOKEN_POINTER_SIZE_BYTES) + (literals * TOKEN_LITERAL_SIZE_BYTES)
     return length
 
 def _is_pointer(control: int, index: int) -> bool:
     return bool((control >> index) & 1)
-
-def _decompress_chunk(input: bytearray, control: int, data: bytearray, length: int) -> bytearray:
+'''
+def _decompress_chunk(input: bytearray, control: int, data: memoryview, length: int) -> bytearray:
     output = bytearray(input)
 
     # Each chunk is comprised of a fixed number of tokens (some literal, some pointers)
@@ -45,7 +48,7 @@ def _decompress_chunk(input: bytearray, control: int, data: bytearray, length: i
     for data_index in range(CHUNK_DATA_SIZE_TOKENS):
         if _is_pointer(control, data_index):
             token_bytes = data[byte_index:byte_index+TOKEN_POINTER_SIZE_BYTES]
-            (token_length, token_offset) = _get_pointer_values(token_bytes)
+            (token_length, token_offset) = _get_pointer_values(memoryview(token_bytes))
 
             head = len(output)
             token_index = 0
@@ -70,59 +73,97 @@ def _decompress_chunk(input: bytearray, control: int, data: bytearray, length: i
         if byte_index >= length: break
 
     return output[len(input):]
+'''
 
-def _decompress_page(input: bytearray) -> bytearray:
+def _decompress_chunk(
+    context: memoryview,
+    control: int,
+    data: memoryview,
+    length: int
+) -> bytearray:
     output = bytearray()
-    length = len(input)
-    offset = 0
-    page_control_bytes = input[offset:offset + PAGE_CONTROL_SIZE_BYTES]
-    offset += PAGE_CONTROL_SIZE_BYTES
 
-    # If page is not compressed, return the rest of the page as-is
-    if (page_control_bytes[0] == 0x01):
-        output = input[offset:]
-        return output
+    chunk_offset = 0
+    for token_index in range(CHUNK_DATA_SIZE_TOKENS):
+        if _is_pointer(control, token_index):
+            (token_length, token_offset) = _get_pointer_values(data[chunk_offset:chunk_offset + TOKEN_POINTER_SIZE_BYTES])
+            head = len(output)
+            print(f'{token_offset} {token_length}')
 
-    # Then parse through the rest of the page
-    while offset < length:
-        # At the start of each chunk is a pair of control bytes
-        chunk_control_bytes = input[offset:offset + CHUNK_CONTROL_SIZE_BYTES]
-        chunk_control_int = int.from_bytes(chunk_control_bytes, 'little')
-        if not chunk_control_bytes: break
-        chunk_expected_length = _get_expected_chunk_length(chunk_control_bytes)
+            '''
+            look_back_length = token_length - head
+            if (look_back_length > 0):
+                output.append(context[-look_back_length:])
+                token_length -= look_back_length
 
-        offset += CHUNK_CONTROL_SIZE_BYTES
-        chunk_data_bytes = input[offset:offset + chunk_expected_length]
-        chunk_actual_length = len(chunk_data_bytes)
-        offset += chunk_expected_length
+            output.append(output[])
+            '''
+        else:
+            output.append(data[token_index])
+    return output
 
-        context = output[-PAGE_CONTEXT_SIZE_BYTES:]
-        output += _decompress_chunk(context, chunk_control_int, chunk_data_bytes, chunk_actual_length)
+def _decompress_page(
+    input: memoryview
+) -> bytearray:
+    page_offset = 0
+    page_length = len(input)
+    output = bytearray()
 
-    # Return decompressed page bytes
+    # If this page is uncompressed, return the data portion as-is
+    page_control_bytes = memoryview(input[page_offset:page_offset + PAGE_HEADER_SIZE_BYTES])
+    page_offset += PAGE_HEADER_SIZE_BYTES
+    if (page_control_bytes[0] == 0x01): return memoryview(input[page_offset:])
+
+    # Otherwise decompress each chunk and append them
+    while (page_offset < page_length):
+        chunk_control_int = struct.unpack_from('H', input, page_offset)[0]
+        page_offset += 2
+        chunk_length = _get_expected_chunk_length(chunk_control_int)
+        chunk_data_bytes = input[page_offset:page_offset + chunk_length]
+        page_offset += chunk_length
+
+        output.append(_decompress_chunk(context=memoryview(output), 
+                                        control=chunk_control_int, 
+                                        data=chunk_data_bytes, 
+                                        length=chunk_length))
+
     return output
 
 def _decompress_stream(
-    input: bytearray,
+    input: memoryview,
     progress_desc: str = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bytearray:
-    output = bytearray()
-    length = len(input)
-    offset = 0
-    while offset < length:
-        # At the start of each page there is an 4 byte header to signify page length
-        page_size = int.from_bytes(input[offset:offset + PAGE_HEADER_SIZE_BYTES], byteorder='little')
-        offset += PAGE_HEADER_SIZE_BYTES
-        page_bytes = input[offset:offset + page_size]
-        offset += page_size
 
-        output += _decompress_page(page_bytes)
+    # Break the stream into a set of pages
+    stream_offset = 0
+    stream_length = len(input)
+    stream_pages_compressed = []
+    stream_pages_length = []
+    while (stream_offset < stream_length):
+        page_length = struct.unpack_from('I', input, stream_offset)[0]
+        stream_offset += 4
+        page_mv = memoryview(input[stream_offset:stream_offset + page_length])
+        stream_offset += page_length
+        stream_pages_compressed.append(page_mv)
+        stream_pages_length.append(page_length + 4)
+
+    # Decompress each page separately
+    # No context is shared across pages
+    stream_pages_decompressed = []
+    stream_pages_progress = 0
+    print(len(stream_pages_length))
+    for (page, length) in zip(stream_pages_compressed, stream_pages_length):
+        stream_pages_decompressed.append(_decompress_page(page))
         if progress:
+            stream_pages_progress += length
             desc = f'Decompressing'
             if progress_desc: desc += f' {progress_desc}'
-            progress(desc, 'bytes', length, offset)
+            progress(desc, 'bytes', stream_length, stream_pages_progress)
 
+    # Concatenate output
+    output = bytearray()
+    for page in stream_pages_decompressed: output.extend(page)
     return output
 
 def _create_subfolders(output_path: str, archive_paths: list[str]):
@@ -170,6 +211,7 @@ def decompress_archive(
             
             stream_data = ole.openstream(original_name).read()
             try:
+                print(stream_name)
                 stream_data = _decompress_stream(
                     input=stream_data,
                     progress_desc=stream_name,
