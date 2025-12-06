@@ -97,6 +97,11 @@ def decompress_stream(
     progress_desc: str = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bytearray:
+    # If the stream is too short it can't contain
+    # a compressed stream and will be returned directly.
+    if (len(input) < 4): return input.tobytes()
+
+    # Split compressed stream into pages
     stream_offset = 0
     stream_length = len(input)
     stream_page_compressed: list[memoryview] = []
@@ -107,15 +112,17 @@ def decompress_stream(
         stream_offset += page_length
         stream_page_compressed.append(page_mv)
 
+    # If the offsets don't add up this stream doesn't follow
+    # the expected format and will be returned directly.
+    if (stream_offset != len(input)): return input.tobytes()
+
+    # Decompress each page separately
     workers = os.cpu_count() or 1
     page_bytes_list = [mv.tobytes() for mv in stream_page_compressed]
-    try:
-        with ProcessPoolExecutor(max_workers=workers) as pool:
-            stream_page_decompressed: list[bytearray] = list(pool.map(decompress_page, page_bytes_list))
-    except Exception as ex:
-        print(ex)
-        raise(Exception(ex))
+    with ProcessPoolExecutor(max_workers=workers) as pool:
+        stream_page_decompressed: list[bytearray] = list(pool.map(decompress_page, page_bytes_list))
 
+    # Concatenate pages into decompressed stream
     output_length = sum(len(x) for x in stream_page_decompressed)
     output = bytearray(output_length)
     output_offset = 0
@@ -182,7 +189,7 @@ def decompress_archive(
                 #
                 # Is there a better way to retain them and still
                 # print exceptions for failed decompressions?
-                #print(e)
+                print(e)
                 pass
 
             stream_info = types.MEArchive(
