@@ -6,6 +6,7 @@ from typing import Optional
 
 from . import types
 
+PAGE_HEADER_SIZE_BYTES = 4
 PAGE_SIZE_BYTES = 32768
 CHUNK_SIZE_TOKENS = 16
 
@@ -65,8 +66,8 @@ def decompress_page(input: memoryview) -> bytearray:
     page_length = len(input)
 
     # If the page is uncompressed already, return as-is
-    page_control = input[page_offset:page_offset + 4]
-    page_offset += 4
+    page_control = input[page_offset:page_offset + PAGE_HEADER_SIZE_BYTES]
+    page_offset += PAGE_HEADER_SIZE_BYTES
     if (page_control[0] == 0x01): return bytearray(input[page_offset:])
 
     # Split the page into chunks
@@ -90,7 +91,11 @@ def decompress_page(input: memoryview) -> bytearray:
     if (page_decompressed_offset < PAGE_SIZE_BYTES): page_decompressed = page_decompressed[:page_decompressed_offset]
     return page_decompressed
 
-def decompress_stream(input: memoryview) -> bytearray:
+def decompress_stream(
+    input: bytearray,
+    progress_desc: str = None,
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+) -> bytearray:
     stream_offset = 0
     stream_length = len(input)
     stream_page_compressed: list[memoryview] = []
@@ -163,8 +168,8 @@ def decompress_archive(
             stream_data = ole.openstream(original_name).read()
             try:
                 print(stream_name)
-                stream_data = _decompress_stream(
-                    input=stream_data,
+                stream_data = decompress_stream(
+                    input=memoryview(stream_data),
                     progress_desc=stream_name,
                     progress=progress
                 )
