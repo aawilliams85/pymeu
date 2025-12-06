@@ -97,22 +97,23 @@ def decompress_page(input: memoryview) -> bytearray:
 
 def decompress_stream(
     input: memoryview,
-    progress_desc: str = None,
+    progress_desc: str | None = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bytearray:
-    # If the stream is too short it can't contain
-    # a compressed stream and will be returned directly.
-    if (len(input) < 4): return input.tobytes()
-
-    # Split compressed stream into pages
     stream_offset = 0
     stream_length = len(input)
+
+    # If the stream is too short it can't contain
+    # a compressed stream and will be returned directly.
+    if (stream_length < 4): return bytearray(input.tobytes())
+
+    # Split compressed stream into pages
     stream_page_compressed: list[memoryview] = []
     while (stream_offset < stream_length):
         # If the stream is too short it can't contain
         # another page definition, the stream doesn't follow
         # the expected format and will be returned directly.
-        if (stream_length - stream_offset) < 4: return input.tobytes()
+        if (stream_length - stream_offset) < 4: return bytearray(input.tobytes())
 
         page_length = struct.unpack_from('I', input, stream_offset)[0]
         stream_offset += 4
@@ -122,7 +123,7 @@ def decompress_stream(
 
     # If the offsets don't add up this stream doesn't follow
     # the expected format and will be returned directly.
-    if (stream_offset != len(input)): return input.tobytes()
+    if (stream_offset != stream_length): return bytearray(input.tobytes())
 
     # Decompress each page separately
     workers = os.cpu_count() or 1
