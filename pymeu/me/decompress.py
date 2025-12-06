@@ -6,164 +6,115 @@ from typing import Optional
 
 from . import types
 
-
-CHUNK_CONTROL_SIZE_BYTES = 2
-CHUNK_DATA_SIZE_TOKENS = 16
-PAGE_HEADER_SIZE_BYTES = 4
-TOKEN_LITERAL_SIZE_BYTES = 1
-TOKEN_POINTER_SIZE_BYTES = 2
+PAGE_SIZE_BYTES = 32768
+CHUNK_SIZE_TOKENS = 16
 
 STREAM_NAME_MAPPEE = '__MAPPEE'
 STREAM_NAME_MAPPER = '__MAPPER'
 
-def _get_int8_nibbles(value: int) -> tuple[int, int]:
-    high_nibble = (value >> 4) & 0x0F
-    low_nibble = value & 0x0F
-    return low_nibble, high_nibble
-
-def _get_pointer_values(input: memoryview) -> tuple[int, int]:
+def get_pointer_values(input: memoryview) -> tuple[int, int]:
     if len(input) != 2: raise ValueError("Input must be exactly 2 bytes long")
-    (length, offset_msb) = _get_int8_nibbles(input[0])
-    offset_lsb = input[1]
-    offset = (offset_msb << 8) | offset_lsb
-    length += 1
+    length = (input[0] & 0x0F) + 1
+    offset = ((input[0] >> 4) << 8) | input[1]
     return length, offset
 
-def _get_expected_chunk_length(input: int) -> int:
-    # Each chunk is made up of a fixed number of tokens.
-    # Some are pointers (2 bytes), the rest are literals (1 byte).
-    pointers = int.from_bytes(input, byteorder='little').bit_count()
-    literals = CHUNK_DATA_SIZE_TOKENS - pointers
-    length = (pointers * TOKEN_POINTER_SIZE_BYTES) + (literals * TOKEN_LITERAL_SIZE_BYTES)
-    return length
+def is_pointer(input: int, bit: int) -> bool:
+    return bool((input >> bit) & 1)
 
-def _is_pointer(control: int, index: int) -> bool:
-    return bool((control >> index) & 1)
-'''
-def _decompress_chunk(input: bytearray, control: int, data: memoryview, length: int) -> bytearray:
-    output = bytearray(input)
-
-    # Each chunk is comprised of a fixed number of tokens (some literal, some pointers)
-    byte_index = 0
-    for data_index in range(CHUNK_DATA_SIZE_TOKENS):
-        if _is_pointer(control, data_index):
-            token_bytes = data[byte_index:byte_index+TOKEN_POINTER_SIZE_BYTES]
-            (token_length, token_offset) = _get_pointer_values(memoryview(token_bytes))
-
-            head = len(output)
-            token_index = 0
-            while (token_index < token_length):
-                if (token_offset > 0):
-                    # Normally look back and slide forward.
-                    # This allows for the case where the length is
-                    # greater than the offset, so part of the new bytes
-                    # ends up used again within the same substitution.
-                    output.append(output[head - token_offset + token_index])
-                else:
-                    # Offset zero is a special case where the last char
-                    # is just repeated.
-                    output.append(output[head - 1])
-                token_index += 1
-
-            byte_index += TOKEN_POINTER_SIZE_BYTES
+def decompress_token(page_decompressed: bytearray, page_offset: int, token_length: int, token_offset: int):
+    # This is a slower but functional decompression that slides byte by byte across
+    # the array.
+    token_index = 0
+    while (token_index < token_length):
+        if (token_offset > 0):
+            page_decompressed[page_offset + token_index] = page_decompressed[page_offset - token_offset + token_index]
         else:
-            output.append(data[byte_index])
-            byte_index += TOKEN_LITERAL_SIZE_BYTES
-        
-        if byte_index >= length: break
+            page_decompressed[page_offset + token_index] = page_decompressed[page_offset - 1]
+        token_index += 1
 
-    return output[len(input):]
-'''
+def decompress_token_fast(page_decompressed: bytearray, page_offset: int, token_length: int, token_offset: int):
+    # This is a faster but broken decompression since it copies the data all at once.
+    # If the token extends beyond where page_offset started, it is inacurrate.
+    if token_offset > 0:
+        page_decompressed[page_offset:page_offset + token_length] = page_decompressed[page_offset - token_offset:page_offset - token_offset + token_length]
+    else:
+        page_decompressed[page_offset:page_offset + token_length] = [page_decompressed[page_offset - 1]] * token_length
 
-def _decompress_chunk(
-    context: memoryview,
-    control: int,
-    data: memoryview,
-    length: int
-) -> bytearray:
-    output = bytearray()
-
+def decompress_chunk(page_decompressed: bytearray, chunk_data: memoryview, chunk_control: int, page_offset: int) -> int:
     chunk_offset = 0
-    for token_index in range(CHUNK_DATA_SIZE_TOKENS):
-        if _is_pointer(control, token_index):
-            (token_length, token_offset) = _get_pointer_values(data[chunk_offset:chunk_offset + TOKEN_POINTER_SIZE_BYTES])
-            head = len(output)
-            print(f'{token_offset} {token_length}')
+    chunk_token_count = len(chunk_data) - chunk_control.bit_count()
+    for x in range(chunk_token_count):
+        if is_pointer(chunk_control, x):
+            token_length, token_offset = get_pointer_values(chunk_data[chunk_offset:chunk_offset + 2])
+            chunk_offset += 2
 
-            '''
-            look_back_length = token_length - head
-            if (look_back_length > 0):
-                output.append(context[-look_back_length:])
-                token_length -= look_back_length
+            if (token_length > token_offset):
+                decompress_token(page_decompressed=page_decompressed, page_offset=page_offset, token_length=token_length, token_offset=token_offset)
+            else:
+                decompress_token_fast(page_decompressed=page_decompressed, page_offset=page_offset, token_length=token_length, token_offset=token_offset)
+            page_offset += token_length
 
-            output.append(output[])
-            '''
         else:
-            output.append(data[token_index])
-    return output
+            page_decompressed[page_offset] = chunk_data[chunk_offset]
+            chunk_offset += 1
+            page_offset += 1
+    return page_offset
 
-def _decompress_page(
-    input: memoryview
-) -> bytearray:
+def decompress_page(input: memoryview) -> bytearray:
     page_offset = 0
     page_length = len(input)
-    output = bytearray()
 
-    # If this page is uncompressed, return the data portion as-is
-    page_control_bytes = memoryview(input[page_offset:page_offset + PAGE_HEADER_SIZE_BYTES])
-    page_offset += PAGE_HEADER_SIZE_BYTES
-    if (page_control_bytes[0] == 0x01): return memoryview(input[page_offset:])
+    # If the page is uncompressed already, return as-is
+    page_control = input[page_offset:page_offset + 4]
+    page_offset += 4
+    if (page_control[0] == 0x01): return bytearray(input[page_offset:])
 
-    # Otherwise decompress each chunk and append them
+    # Split the page into chunks
+    page_decompressed = bytearray(PAGE_SIZE_BYTES)
+    page_decompressed_offset = 0
     while (page_offset < page_length):
-        chunk_control_int = struct.unpack_from('H', input, page_offset)[0]
+        # Two bytes for control bits
+        chunk_control: int = struct.unpack_from('H', input, page_offset)[0]
         page_offset += 2
-        chunk_length = _get_expected_chunk_length(chunk_control_int)
-        chunk_data_bytes = input[page_offset:page_offset + chunk_length]
-        page_offset += chunk_length
 
-        output.append(_decompress_chunk(context=memoryview(output), 
-                                        control=chunk_control_int, 
-                                        data=chunk_data_bytes, 
-                                        length=chunk_length))
+        # One byte for each token, plus one byte for each of the pointers
+        # since they are two bytes each.
+        chunk_length_expected = chunk_control.bit_count() + CHUNK_SIZE_TOKENS
+        chunk_data = input[page_offset:page_offset + chunk_length_expected]
+        page_offset += len(chunk_data)
 
-    return output
+        # Decompressed offset is cumulative
+        page_decompressed_offset = decompress_chunk(page_decompressed=page_decompressed, chunk_data=chunk_data, chunk_control=chunk_control, page_offset=page_decompressed_offset)
 
-def _decompress_stream(
-    input: memoryview,
-    progress_desc: str = None,
-    progress: Optional[Callable[[str, str, int, int], None]] = None
-) -> bytearray:
+    # Typically the last page of the stream could be less than the preallocated size
+    if (page_decompressed_offset < PAGE_SIZE_BYTES): page_decompressed = page_decompressed[:page_decompressed_offset]
+    return page_decompressed
 
-    # Break the stream into a set of pages
+def decompress_stream(input: memoryview) -> bytearray:
     stream_offset = 0
     stream_length = len(input)
-    stream_pages_compressed = []
-    stream_pages_length = []
+    stream_page_compressed: list[memoryview] = []
     while (stream_offset < stream_length):
         page_length = struct.unpack_from('I', input, stream_offset)[0]
         stream_offset += 4
-        page_mv = memoryview(input[stream_offset:stream_offset + page_length])
+        page_mv = input[stream_offset:stream_offset + page_length]
         stream_offset += page_length
-        stream_pages_compressed.append(page_mv)
-        stream_pages_length.append(page_length + 4)
+        stream_page_compressed.append(page_mv)
 
-    # Decompress each page separately
-    # No context is shared across pages
-    stream_pages_decompressed = []
-    stream_pages_progress = 0
-    print(len(stream_pages_length))
-    for (page, length) in zip(stream_pages_compressed, stream_pages_length):
-        stream_pages_decompressed.append(_decompress_page(page))
-        if progress:
-            stream_pages_progress += length
-            desc = f'Decompressing'
-            if progress_desc: desc += f' {progress_desc}'
-            progress(desc, 'bytes', stream_length, stream_pages_progress)
+    stream_page_decompressed: list[bytearray] = []
+    stream_length_decompressed = 0
+    for page in stream_page_compressed:
+        page_decompressed = decompress_page(page)
+        stream_length_decompressed += len(page_decompressed)
+        stream_page_decompressed.append(page_decompressed)
 
-    # Concatenate output
-    output = bytearray()
-    for page in stream_pages_decompressed: output.extend(page)
+    output = bytearray(stream_length_decompressed)
+    output_offset = 0
+    for page in stream_page_decompressed:
+        page_len = len(page)
+        output[output_offset:output_offset + page_len] = page
+        output_offset += page_len
+
     return output
 
 def _create_subfolders(output_path: str, archive_paths: list[str]):
