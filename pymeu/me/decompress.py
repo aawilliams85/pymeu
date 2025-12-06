@@ -14,6 +14,24 @@ CHUNK_SIZE_TOKENS = 16
 STREAM_NAME_MAPPEE = '__MAPPEE'
 STREAM_NAME_MAPPER = '__MAPPER'
 
+_decompression_pool: ProcessPoolExecutor | None = None
+_DECOMPRESSION_WORKERS: int = os.cpu_count() or 1
+
+def get_process_pool() -> ProcessPoolExecutor:
+    global _decompression_pool
+    if _decompression_pool is None: _decompression_pool = ProcessPoolExecutor(max_workers=_DECOMPRESSION_WORKERS)
+    return _decompression_pool
+
+def startup_process_pool():
+    global _decompression_pool
+    if _decompression_pool is None: _decompression_pool = ProcessPoolExecutor(max_workers=_DECOMPRESSION_WORKERS)
+
+def shutdown_process_pool():
+    global _decompression_pool
+    if _decompression_pool is not None:
+        _decompression_pool.shutdown(wait=True)
+        _decompression_pool = None
+
 def get_pointer_values(input: memoryview) -> tuple[int, int]:
     if len(input) != 2: raise ValueError("Input must be exactly 2 bytes long")
     length = (input[0] & 0x0F) + 1
@@ -126,19 +144,17 @@ def decompress_stream(
     if (stream_offset != stream_length): return bytearray(input.tobytes())
 
     # Decompress each page separately
-    workers = os.cpu_count() or 1
     page_bytes_list = [mv.tobytes() for mv in stream_page_compressed]
     completed_bytes = 0
     stream_page_decompressed: list[bytearray] = []
-    with ProcessPoolExecutor(max_workers=workers) as pool:
-        decompressed_iterator = pool.map(decompress_page, page_bytes_list)
-        for i, decompressed_page in enumerate(decompressed_iterator):
-            stream_page_decompressed.append(decompressed_page)
+    decompressed_iterator = get_process_pool().map(decompress_page, page_bytes_list)
+    for i, decompressed_page in enumerate(decompressed_iterator):
+        stream_page_decompressed.append(decompressed_page)
 
-            # Optional progress indication
-            if progress:
-                completed_bytes += len(page_bytes_list[i])
-                progress(f'Decompressing {progress_desc or 'stream'}', 'bytes', stream_length, completed_bytes)
+        # Optional progress indication
+        if progress:
+            completed_bytes += len(page_bytes_list[i])
+            progress(f'Decompressing {progress_desc or 'stream'}', 'bytes', stream_length, completed_bytes)
 
     # Optional progress indication
     if progress: progress(f'Decompressing {progress_desc or 'stream'}', 'bytes', stream_length, stream_length)
@@ -181,6 +197,7 @@ def decompress_archive(
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[types.MEArchive]:
     streams = []
+    startup_process_pool()
     for stream_path in ole.listdir():
         stream_name = '/'.join(stream_path)
         if (ole.exists(stream_name) and not ole.get_type(stream_name) == olefile.STGTY_STORAGE):
@@ -212,6 +229,7 @@ def decompress_archive(
             )
                 
             streams.append(stream_info)
+    shutdown_process_pool()
     return streams
 
 def archive_to_stream(
