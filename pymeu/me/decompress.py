@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from concurrent.futures import ProcessPoolExecutor
 import olefile
 import os
 import struct
@@ -92,7 +93,7 @@ def decompress_page(input: memoryview) -> bytearray:
     return page_decompressed
 
 def decompress_stream(
-    input: bytearray,
+    input: memoryview,
     progress_desc: str = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bytearray:
@@ -106,14 +107,17 @@ def decompress_stream(
         stream_offset += page_length
         stream_page_compressed.append(page_mv)
 
-    stream_page_decompressed: list[bytearray] = []
-    stream_length_decompressed = 0
-    for page in stream_page_compressed:
-        page_decompressed = decompress_page(page)
-        stream_length_decompressed += len(page_decompressed)
-        stream_page_decompressed.append(page_decompressed)
+    workers = os.cpu_count() or 1
+    page_bytes_list = [mv.tobytes() for mv in stream_page_compressed]
+    try:
+        with ProcessPoolExecutor(max_workers=workers) as pool:
+            stream_page_decompressed: list[bytearray] = list(pool.map(decompress_page, page_bytes_list))
+    except Exception as ex:
+        print(ex)
+        raise(Exception(ex))
 
-    output = bytearray(stream_length_decompressed)
+    output_length = sum(len(x) for x in stream_page_decompressed)
+    output = bytearray(output_length)
     output_offset = 0
     for page in stream_page_decompressed:
         page_len = len(page)
