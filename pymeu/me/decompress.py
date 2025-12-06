@@ -128,8 +128,18 @@ def decompress_stream(
     # Decompress each page separately
     workers = os.cpu_count() or 1
     page_bytes_list = [mv.tobytes() for mv in stream_page_compressed]
+    completed_bytes = 0
     with ProcessPoolExecutor(max_workers=workers) as pool:
         stream_page_decompressed: list[bytearray] = list(pool.map(decompress_page, page_bytes_list))
+
+        # Optional progress indication
+        if progress:
+            for i, _ in enumerate(stream_page_decompressed):
+                completed_bytes += len(page_bytes_list[i])
+                progress(f'Decompressing {progress_desc or 'stream'}', 'bytes', stream_length, completed_bytes)
+
+    # Optional progress indication
+    if progress: progress(f'Decompressing {progress_desc or 'stream'}', 'bytes', stream_length, stream_length)
 
     # Concatenate pages into decompressed stream
     output_length = sum(len(x) for x in stream_page_decompressed)
