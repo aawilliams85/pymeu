@@ -66,6 +66,9 @@ def decompress_page(input: memoryview) -> bytearray:
     page_offset = 0
     page_length = len(input)
 
+    # If the page is too short, return as-is
+    if (page_length < 4): return bytearray(input[page_offset:])
+
     # If the page is uncompressed already, return as-is
     page_control = input[page_offset:page_offset + PAGE_HEADER_SIZE_BYTES]
     page_offset += PAGE_HEADER_SIZE_BYTES
@@ -106,6 +109,11 @@ def decompress_stream(
     stream_length = len(input)
     stream_page_compressed: list[memoryview] = []
     while (stream_offset < stream_length):
+        # If the stream is too short it can't contain
+        # another page definition, the stream doesn't follow
+        # the expected format and will be returned directly.
+        if (stream_length - stream_offset) < 4: return input.tobytes()
+
         page_length = struct.unpack_from('I', input, stream_offset)[0]
         stream_offset += 4
         page_mv = input[stream_offset:stream_offset + page_length]
@@ -177,21 +185,12 @@ def decompress_archive(
                 continue
             
             stream_data = ole.openstream(original_name).read()
-            try:
-                print(stream_name)
-                stream_data = decompress_stream(
-                    input=memoryview(stream_data),
-                    progress_desc=stream_name,
-                    progress=progress
-                )
-            except Exception as e:
-                # Some streams aren't compressed.
-                #
-                # Is there a better way to retain them and still
-                # print exceptions for failed decompressions?
-                print(e)
-                pass
-
+            print(stream_name)
+            stream_data = decompress_stream(
+                input=memoryview(stream_data),
+                progress_desc=stream_name,
+                progress=progress
+            )
             stream_info = types.MEArchive(
                 name=stream_name,
                 data=stream_data,
