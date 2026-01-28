@@ -1,7 +1,6 @@
 from collections.abc import Callable
 import configparser
 import struct
-import time
 from typing import Optional
 from warnings import warn
 import zipfile

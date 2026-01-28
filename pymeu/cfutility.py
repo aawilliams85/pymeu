@@ -14,10 +14,10 @@ class CFUtility(object):
     def __init__(
         self,
         comms_path: str, 
-        driver: str = None, 
+        driver: str | None = None, 
         ignore_terminal_valid: bool = False, 
         ignore_driver_valid: bool = False,
-        local_dmk_path: str = None,
+        local_dmk_path: str | None = None,
     ):
         """
         Initializes an instance of the MEUtility class.
