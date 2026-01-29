@@ -662,9 +662,27 @@ class upload_tests(unittest.TestCase):
     def tearDown(self):
         pass
 
-class decompress_tests(unittest.TestCase):
+class compression_tests(unittest.TestCase):
     def setUp(self):
         pass
+
+    def test_single_file_compression(self):
+        print('')
+        file = os.path.join(LOCAL_INPUT_PATH, 'FWC', 'ME_PVP4xX_5.10.16.09', 'upgrade', 'MEFileList.inf')
+        print(file)
+        with open(file, 'rb') as f1:
+            start = time.time()
+            resp = me.compression.compress_stream(
+                input=memoryview(f1.read()),
+                progress_desc=None,
+                progress=None
+            )
+            file2 = os.path.join(LOCAL_OUTPUT_PATH, 'test.inf')
+            with open(file2, 'wb') as f2:
+                f2.write(resp)
+            end = time.time()
+            elapsed_time = end - start
+            print(elapsed_time)
 
     def test_fup_to_fuc_folder(self):
         print('')
@@ -713,7 +731,7 @@ class decompress_tests(unittest.TestCase):
         for file in STANDALONE_APA_FILES:
             print(file)
             start = time.time()
-            me.decompress.archive_to_folder(
+            me.compression.archive_to_folder(
                 input_path=file,
                 output_path=os.path.join(LOCAL_OUTPUT_APA_PATH, f'{os.path.basename(file)}'),
                 progress=progress_callback
@@ -727,7 +745,7 @@ class decompress_tests(unittest.TestCase):
         for file in STANDALONE_MER_FILES:
             print(file)
             start = time.time()
-            me.decompress.archive_to_folder(
+            me.compression.archive_to_folder(
                 input_path=file,
                 output_path=os.path.join(LOCAL_OUTPUT_MER_PATH, f'{os.path.basename(file)}'),
                 progress=progress_callback

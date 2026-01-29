@@ -7,7 +7,7 @@ from typing import Optional
 from warnings import warn
 
 from .. import comms
-from . import decompress
+from . import compression
 from . import fuwhelper
 from . import helper
 from . import transfer
@@ -228,7 +228,7 @@ def fup_to_fuc(
     # This results in an intermediate form that can be used to
     # form the firmware upgrade card or over-the-wire format.
     with olefile.OleFileIO(input_path) as ole:
-        streams = decompress.decompress_archive(
+        streams = compression.decompress_archive(
             ole=ole,
             progress=progress
         )
@@ -266,7 +266,7 @@ def fup_to_fuc_folder(
         # that don't need to be exported
         if stream.name.endswith(INFORMATION_NAME): continue
 
-        stream_output_path = decompress._create_subfolders(output_path, stream.path)
+        stream_output_path = compression._create_subfolders(output_path, stream.path)
         with open(stream_output_path, 'wb') as f:
             f.write(stream.data)
 
@@ -325,7 +325,7 @@ def fup_to_fwc_folder(
         progress=progress
     )
     for stream in streams:
-        stream_output_path = decompress._create_subfolders(output_path, stream.path)
+        stream_output_path = compression._create_subfolders(output_path, stream.path)
         with open(stream_output_path, 'wb') as f:
             f.write(stream.data)
 
@@ -385,7 +385,7 @@ def fup_to_otw_folder(
         progress=progress
     )
     for stream in streams:
-        stream_output_path = decompress._create_subfolders(output_path, stream.path)
+        stream_output_path = compression._create_subfolders(output_path, stream.path)
         with open(stream_output_path, 'wb') as f:
             f.write(stream.data)
 

@@ -5,7 +5,7 @@ import shutil
 from typing import Optional
 import xml.etree.ElementTree as ET
 
-from . import decompress
+from . import compression
 from . import enums
 from . import primitives
 from . import types
@@ -122,7 +122,7 @@ def mer_get_shortcuts(
     
     # Application-specific function for *.MER files to
     # get the list of communications shortcuts    
-    streams = decompress.archive_to_stream(
+    streams = compression.archive_to_stream(
         input_path=input_path,
         progress=progress
     )
@@ -314,7 +314,7 @@ def _recipeplus_deserialize_stream(
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> types.MERecipePlusFile:
     with olefile.OleFileIO(bytes(stream.data)) as ole:
-        recipe_streams = decompress.decompress_archive(
+        recipe_streams = compression.decompress_archive(
             ole=ole,
             progress=progress
         )
@@ -340,7 +340,7 @@ def recipeplus_deserialize(
 ) -> list[types.MERecipePlusFile]:
     # Application-specific function for *.MER files to
     # get RecipePlus data
-    streams = decompress.archive_to_stream(
+    streams = compression.archive_to_stream(
         input_path=input_path,
         progress=progress
     )
@@ -388,14 +388,14 @@ def recipeplus_to_folder(
 ):
     # Application-specific function to get raw
     # RecipePlus files extracted from *.MER/*.APA files
-    streams = decompress.archive_to_stream(
+    streams = compression.archive_to_stream(
         input_path=input_path,
         progress=progress
     )
     recipes = util._get_streams_by_name_prefix(streams, 'RecipePlus/')
     for recipe in recipes:
         with olefile.OleFileIO(bytes(recipe.data)) as ole:
-            streams = decompress.decompress_archive(
+            streams = compression.decompress_archive(
                 ole=ole,
                 progress=progress
             )
@@ -403,6 +403,6 @@ def recipeplus_to_folder(
                 recipe_path = []
                 recipe_path.append(os.path.splitext(recipe.path[-1])[0])
                 for path in stream.path: recipe_path.append(path)
-                stream_output_path = decompress._create_subfolders(output_path, recipe_path)
+                stream_output_path = compression._create_subfolders(output_path, recipe_path)
                 with open(stream_output_path, 'wb') as f:
                     f.write(stream.data)
