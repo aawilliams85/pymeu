@@ -9,7 +9,7 @@ authors = [
 ]
 dependencies = [
     "olefile>=0.47",
-    "pycfb>=0.0.2"
+    "pycfb>=0.0.3"
 ]
 
 [project.optional-dependencies]
