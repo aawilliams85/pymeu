@@ -675,6 +675,8 @@ class compression_tests(unittest.TestCase):
                 input_path=f1.read(),
                 progress=None
             )
+            for x in resp:
+                print(x.path)
             resp2 = me.compression.stream_to_archive(
                 streams=resp,
                 checksum=True,

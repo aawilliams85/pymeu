@@ -9,6 +9,7 @@ class MEArchive:
     data: bytearray
     path: list[str]
     size: int
+    is_file: bool = True
 
 @dataclass
 class MEBinStream:

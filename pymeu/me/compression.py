@@ -204,7 +204,7 @@ def decompress_archive(
 ) -> list[types.MEArchive]:
     streams = []
     _startup_process_pool()
-    for stream_path in ole.listdir():
+    for stream_path in ole.listdir(storages=True):
         stream_name = '/'.join(stream_path)
         if (ole.exists(stream_name) and not ole.get_type(stream_name) == olefile.STGTY_STORAGE):
             original_name = stream_name
@@ -232,9 +232,18 @@ def decompress_archive(
                 name=stream_name,
                 data=stream_data,
                 path=stream_path,
-                size=len(stream_data)
+                size=len(stream_data),
+                is_file=True
             )
-                
+            streams.append(stream_info)
+        if (ole.exists(stream_name) and ole.get_type(stream_name) == olefile.STGTY_STORAGE):
+            stream_info = types.MEArchive(
+                name=stream_name,
+                data=None,
+                path=stream_path,
+                size=0,
+                is_file=False
+            )
             streams.append(stream_info)
     _shutdown_process_pool()
     return streams
@@ -262,8 +271,11 @@ def archive_to_folder(
     )
     for stream in streams:
         stream_output_path = _create_subfolders(output_path, stream.path)
-        with open(stream_output_path, 'wb') as f:
-            f.write(stream.data)
+        if stream.is_file:
+            with open(stream_output_path, 'wb') as f:
+                f.write(stream.data)
+        else:
+            os.makedirs(stream_output_path, exist_ok=True)
 
 def _compress_page(input: memoryview) -> bytearray:
     # Initialize page with header values
@@ -349,13 +361,18 @@ def stream_to_archive(
     stream_data: list[bytes] = []
     for stream in streams:
         # Filter some of the special files like VERSION_INFORMATION
-        if ('/' not in stream.name) and ('.' not in stream.name):
-            stream_compressed = stream.data
+        if stream.is_file:
+            if ('/' not in stream.name) and ('.' not in stream.name):
+                stream_compressed = stream.data
+            else:
+                stream_compressed = compress_stream(input=stream.data, progress_desc=stream.name, progress=progress)
+            stream_paths.append('/'.join(stream.path))
+            stream_data.append(stream_compressed)
+            print(f'{stream.name} {len(stream_compressed)}')
         else:
-            stream_compressed = compress_stream(input=stream.data, progress_desc=stream.name, progress=progress)
-        stream_paths.append('/'.join(stream.path))
-        stream_data.append(stream_compressed)
-        print(f'{stream.name} {len(stream_compressed)}')
+            stream_paths.append('/'.join(stream.path))
+            stream_data.append(None)
+            print(f'{stream.name}')
 
     cfb = CFBWriter(stream_paths=stream_paths, stream_data=stream_data, root_clsid=root_clsid)
     if checksum:
