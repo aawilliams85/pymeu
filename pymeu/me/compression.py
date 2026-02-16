@@ -2,10 +2,15 @@ from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
 import olefile
 import os
+from pycfb import CFBWriter
 import struct
 from typing import Optional
+from uuid import UUID
 
 from . import types
+from . import util
+
+DEFAULT_CLSID = 'BE87C5E3-E3CB-4BAB-8427-578ECCE263F7'
 
 PAGE_HEADER_SIZE_BYTES = 4
 PAGE_SIZE_BYTES = 32768
@@ -278,27 +283,37 @@ def _compress_page(input: memoryview) -> bytearray:
     return page_compressed
 
 def compress_stream(
-    input: memoryview,
+    input: bytes | bytearray | memoryview,
     progress_desc: str | None = None,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> bytearray:
     stream_offset = 0
     stream_length = len(input)
 
+    # Null file check
+    if stream_length == 0: return bytearray()
+
+    if isinstance(input, memoryview):
+        input_data = bytearray(input)
+    elif isinstance(input, bytes):
+        input_data = bytearray(input)
+    else:
+        input_data = input
+
     # Split uncompressed stream into pages
     stream_page_uncompressed: list[memoryview] = []
     while (stream_offset < stream_length):
-        page_mv = input[stream_offset:stream_offset + PAGE_SIZE_BYTES]
+        page_mv = input_data[stream_offset:stream_offset + PAGE_SIZE_BYTES]
         page_length = len(page_mv)
         stream_offset += page_length
         stream_page_uncompressed.append(page_mv)
 
     # If the offsets don't add up this stream doesn't follow
     # the expected format and will be returned directly.
-    if (stream_offset != stream_length): return bytearray(input.tobytes())
+    if (stream_offset != stream_length): return bytearray(input_data)
 
     # Compress each page separately
-    page_bytes_list = [mv.tobytes() for mv in stream_page_uncompressed] # MemoryView converted to bytes here for pooling
+    page_bytes_list = [mv for mv in stream_page_uncompressed] # MemoryView converted to bytes here for pooling
     completed_bytes = 0
     stream_page_compressed: list[bytearray] = []
     compressed_iterator = _get_process_pool().map(_compress_page, page_bytes_list)
@@ -323,3 +338,28 @@ def compress_stream(
         output_offset += page_len
 
     return output
+
+def stream_to_archive(
+    streams: list[types.MEArchive],
+    checksum: bool = False,
+    root_clsid: UUID = UUID(DEFAULT_CLSID),
+    progress: Optional[Callable[[str, str, int, int], None]] = None
+) -> bytes:
+    stream_paths: list[str] = []
+    stream_data: list[bytes] = []
+    for stream in streams:
+        # Filter some of the special files like VERSION_INFORMATION
+        if ('/' not in stream.name) and ('.' not in stream.name):
+            stream_compressed = stream.data
+        else:
+            stream_compressed = compress_stream(input=stream.data, progress_desc=stream.name, progress=progress)
+        stream_paths.append('/'.join(stream.path))
+        stream_data.append(stream_compressed)
+        print(f'{stream.name} {len(stream_compressed)}')
+
+    cfb = CFBWriter(stream_paths=stream_paths, stream_data=stream_data, root_clsid=root_clsid)
+    if checksum:
+        new_checksum = bytearray(util.crc32_checksum(cfb.data).to_bytes(length=4, byteorder='little', signed=False))
+        return bytes(cfb.data + new_checksum)
+
+    return bytes(cfb.data)

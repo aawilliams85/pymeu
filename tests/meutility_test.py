@@ -2,6 +2,7 @@ import glob
 import pprint
 import time
 import unittest
+from uuid import UUID
 
 from pymeu import comms
 from pymeu import MEUtility
@@ -665,6 +666,23 @@ class upload_tests(unittest.TestCase):
 class compression_tests(unittest.TestCase):
     def setUp(self):
         pass
+
+    def test_there_and_back_again(self):
+        file_in = os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_FTLinx1.mer')
+        file_out = os.path.join(LOCAL_OUTPUT_MER_PATH, 'Test_v11_FTLinx1_Re.mer')
+        with open(file_in, 'rb') as f1:
+            resp = me.compression.archive_to_stream(
+                input_path=f1.read(),
+                progress=None
+            )
+            resp2 = me.compression.stream_to_archive(
+                streams=resp,
+                checksum=True,
+                root_clsid=UUID('BE87C5E3-E3CB-4BAB-8427-578ECCE263F7'),
+                progress=None
+            )
+            with open(file_out, 'wb') as f2:
+                f2.write(resp2)
 
     def test_single_file_compression(self):
         print('')
