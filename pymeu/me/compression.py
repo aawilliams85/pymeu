@@ -280,8 +280,8 @@ def archive_to_folder(
 def _compress_page(input: memoryview) -> bytearray:
     # Initialize page with header values
     page_offset = 0
-    page_compressed = bytearray(4 + PAGE_HEADER_SIZE_BYTES)
-    struct.pack_into('<i',page_compressed, 0, len(input))
+    page_compressed = bytearray(8) # 4 bytes page length, 4 bytes page control
+    struct.pack_into('<i',page_compressed, 0, len(input) + 4)
     page_compressed[4] = 1 # Only support the trivial case to "compress" page with no compression initially
     page_compressed[5] = 0 # Unknown purpose - not related to page data or stream size
     page_compressed[6] = 0 # Unknown purpose - not related to page data or stream size
