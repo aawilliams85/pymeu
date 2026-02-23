@@ -69,25 +69,6 @@ NONEXISTENT_FOLDER = '\\NonexistentPath'
 MERUNTIME_PROCESS = 'MERuntime.exe'
 NONEXISTENT_PROCESS = 'NonexistentProcess.exe'
 
-# *.APA configuration for standalone tests
-STANDALONE_APA_FILES = [
-    os.path.join(LOCAL_INPUT_APA_PATH, 'Test_v15_640x480_A.apa'),
-    os.path.join(LOCAL_INPUT_APA_PATH, 'Test_v15_640x480_A_Password.apa')
-]
-
-# *.MER configuration for standalone tests
-STANDALONE_MER_FILES = [
-    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_FTLinx1.mer'),
-    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_640x480_A.mer'),
-    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_640x480_A_NoConvert.mer'),
-    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v11_640x480_A_Password.mer'),
-    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_FTLinx1.mer'),
-    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A.mer'),
-    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A_NoConvert.mer'),
-    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_A_Password.mer'),
-    os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_640x480_Recipe.mer')
-]
-
 # PanelView Plus configuration
 PVP5 = '2711P_PanelViewPlus_v5'
 PVP5_Comms_Paths = ['192.168.50.20','192.168.50.11,bp,3,enet,192.168.50.20']

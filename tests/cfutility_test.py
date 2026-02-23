@@ -3,7 +3,7 @@ import unittest
 from pymeu import CFUtility
 from pymeu.cf import types
 
-from config import *
+from tests.config import *
 
 # Turn off sort so that tests run in line order
 unittest.TestLoader.sortTestMethodsUsing = None

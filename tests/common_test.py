@@ -4,7 +4,7 @@ from pymeu import comms
 from pymeu import me
 from pymeu.common import validation
 
-from config import *
+from tests.config import *
 
 # Turn off sort so that tests run in line order
 unittest.TestLoader.sortTestMethodsUsing = None

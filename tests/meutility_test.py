@@ -10,7 +10,7 @@ from pymeu import me
 from pymeu.me import types
 from pymeu.me import validation
 
-from config import *
+from tests.config import *
 
 # Turn off sort so that tests run in line order
 unittest.TestLoader.sortTestMethodsUsing = None
@@ -746,12 +746,12 @@ class compression_tests(unittest.TestCase):
 
     def test_apa_to_med_folder(self):
         print('')
-        for file in STANDALONE_APA_FILES:
+        for file in glob.glob(os.path.join(LOCAL_INPUT_APA_PATH, '*.apa')):
             print(file)
             start = time.time()
             me.compression.archive_to_folder(
                 input_path=file,
-                output_path=os.path.join(LOCAL_OUTPUT_APA_PATH, f'{os.path.basename(file)}'),
+                output_path=os.path.join(LOCAL_OUTPUT_APA_PATH, f'{os.path.splitext(os.path.basename(file))[0]}'),
                 progress=progress_callback
             )
             end = time.time()
@@ -760,12 +760,12 @@ class compression_tests(unittest.TestCase):
 
     def test_mer_to_med_folder(self):
         print('')
-        for file in STANDALONE_MER_FILES:
+        for file in glob.glob(os.path.join(LOCAL_INPUT_MER_PATH, '*.mer')):
             print(file)
             start = time.time()
             me.compression.archive_to_folder(
                 input_path=file,
-                output_path=os.path.join(LOCAL_OUTPUT_MER_PATH, f'{os.path.basename(file)}'),
+                output_path=os.path.join(LOCAL_OUTPUT_MER_PATH, f'{os.path.splitext(os.path.basename(file))[0]}'),
                 progress=progress_callback
             )
             end = time.time()
@@ -835,7 +835,7 @@ class compression_tests(unittest.TestCase):
 
     def test_mer_unlock(self):
         print('')
-        for file in STANDALONE_MER_FILES:
+        for file in glob.glob(os.path.join(LOCAL_INPUT_MER_PATH, '*.mer')):
             print(file)
             start = time.time()
             me.application.mer_unlock(
@@ -848,7 +848,7 @@ class compression_tests(unittest.TestCase):
 
     def test_apa_unlock(self):
         print('')
-        for file in STANDALONE_APA_FILES:
+        for file in glob.glob(os.path.join(LOCAL_INPUT_APA_PATH, '*.apa')):
             print(file)
             start = time.time()
             me.application.apa_unlock(
