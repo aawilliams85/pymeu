@@ -212,12 +212,12 @@ def decompress_archive(
             # If a stream name starts with __MAPPER it has the name of the file.
             #
             # This logic restores the name from the MAPPER to the MAPPEE and
-            # excludes the MAPPER from the stream list.
-            if stream_name.startswith(STREAM_NAME_MAPPEE):
+            # excludes the MAPPER from the stream list./'
+            if STREAM_NAME_MAPPEE in stream_name:
                 actual_name = _get_mapper_for_mappee(ole, original_name)
                 stream_name = actual_name
                 stream_path[-1] = actual_name
-            if stream_name.startswith(STREAM_NAME_MAPPER):
+            if STREAM_NAME_MAPPER in stream_name:
                 continue
             
             stream_data = ole.openstream(original_name).read()
