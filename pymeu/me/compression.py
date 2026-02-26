@@ -117,7 +117,7 @@ def _decompress_page(input: memoryview) -> bytearray:
 
     # Typically the last page of the stream could be less than the preallocated size
     if (page_decompressed_offset < PAGE_SIZE_BYTES): page_decompressed = page_decompressed[:page_decompressed_offset]
-    print(f'{page_length} {len(page_decompressed)} {page_control[0]:02X} {page_control[1]:02X} {page_control[2]:02X} {page_control[3]:02X}')
+    #print(f'{page_length} {len(page_decompressed)} {page_control[0]:02X} {page_control[1]:02X} {page_control[2]:02X} {page_control[3]:02X}')
     return page_decompressed
 
 def decompress_stream(
@@ -233,6 +233,7 @@ def decompress_archive(
             
             full_path = path_prefix + current_path            
             stream_data = ole.openstream(original_ole_path).read()
+            print(full_path)
             stream_data = decompress_stream(
                 input=memoryview(stream_data),
                 progress_desc=display_name,

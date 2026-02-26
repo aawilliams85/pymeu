@@ -780,7 +780,7 @@ class compression_tests(unittest.TestCase):
             me.compression.archive_to_folder(
                 input_path=file,
                 output_path=os.path.join(LOCAL_OUTPUT_MER_PATH, f'{os.path.splitext(os.path.basename(file))[0]}-recursive'),
-                progress=progress_callback,
+                progress=None,
                 recursive=True
             )
             end = time.time()
