@@ -96,7 +96,7 @@ def _decompress_page(input: memoryview) -> bytearray:
     # If the page is uncompressed already, return as-is
     page_control = input[page_offset:page_offset + PAGE_HEADER_SIZE_BYTES]
     page_offset += PAGE_HEADER_SIZE_BYTES
-    if (page_control[0] == 0x01): return bytearray(input[page_offset:])
+    if (page_control[0] >= 0x01): return bytearray(input[page_offset:])
 
     # Split the page into chunks
     page_decompressed = bytearray(PAGE_SIZE_BYTES)
