@@ -210,61 +210,65 @@ def decompress_archive(
 
     _startup_process_pool()
     for stream_path in ole.listdir(storages=True):
-        abs_stream_path = path_prefix + stream_path
-        stream_name = '/'.join(stream_path)
-        if (ole.exists(stream_name) and not ole.get_type(stream_name) == olefile.STGTY_STORAGE):
-            original_name = stream_name
+        current_path = list(stream_path)
+        ole_internal_path = '/'.join(current_path)
+        is_storage = ole.get_type(ole_internal_path) == olefile.STGTY_STORAGE
+
+        if not is_storage:
+            original_ole_path = ole_internal_path
+            display_name = current_path[-1]
+
             # If a stream name starts with __MAPPEE it has the content of the file.
             # If a stream name starts with __MAPPER it has the name of the file.
             #
             # This logic restores the name from the MAPPER to the MAPPEE and
-            # excludes the MAPPER from the stream list./'
-            if STREAM_NAME_MAPPEE in stream_name:
-                actual_name = _get_mapper_for_mappee(ole, original_name)
-                stream_name = actual_name
-                stream_path[-1] = actual_name
-                abs_stream_path[-1] = actual_name
-            if STREAM_NAME_MAPPER in stream_name:
+            # excludes the MAPPER from the stream list.
+            if STREAM_NAME_MAPPEE in display_name:
+                actual_name = _get_mapper_for_mappee(ole, original_ole_path)
+                display_name = actual_name
+                current_path[-1] = actual_name
+            
+            if STREAM_NAME_MAPPER in display_name:
                 continue
             
-            stream_data = ole.openstream(original_name).read()
-            print(f'{stream_name} {len(stream_data)}')
+            full_path = path_prefix + current_path            
+            stream_data = ole.openstream(original_ole_path).read()
             stream_data = decompress_stream(
                 input=memoryview(stream_data),
-                progress_desc=stream_name,
+                progress_desc=display_name,
                 progress=progress
             )
 
-            parent_data = io.BytesIO(stream_data)
-            if recursive and olefile.isOleFile(parent_data):
-                with olefile.OleFileIO(parent_data) as nested_ole:
+            if recursive and olefile.isOleFile(io.BytesIO(stream_data)):
+                with olefile.OleFileIO(io.BytesIO(stream_data)) as nested_ole:
                     nested_results = decompress_archive(
                         ole=nested_ole,
                         recursive=recursive,
                         progress=progress,
-                        path_prefix=abs_stream_path
+                        path_prefix=full_path
                     )
                     streams.extend(nested_results)
             else:
-                print(f'{stream_name} {len(stream_data)}')
                 stream_info = types.MEArchive(
-                    name=stream_name,
+                    name=display_name,
                     data=stream_data,
-                    path=stream_path,
+                    path=full_path,
                     size=len(stream_data),
                     is_file=True
                 )
                 streams.append(stream_info)
 
-        if (ole.exists(stream_name) and ole.get_type(stream_name) == olefile.STGTY_STORAGE):
+        else:
+            full_path = path_prefix + current_path
             stream_info = types.MEArchive(
-                name=stream_name,
+                name=current_path[-1],
                 data=None,
-                path=stream_path,
+                path=full_path,
                 size=0,
                 is_file=False
             )
             streams.append(stream_info)
+            
     _shutdown_process_pool()
     return streams
 
