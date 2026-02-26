@@ -227,18 +227,26 @@ def decompress_archive(
                 actual_name = _get_mapper_for_mappee(ole, original_ole_path)
                 display_name = actual_name
                 current_path[-1] = actual_name
-            
+
             if STREAM_NAME_MAPPER in display_name:
                 continue
-            
+
             full_path = path_prefix + current_path            
             stream_data = ole.openstream(original_ole_path).read()
             print(full_path)
-            stream_data = decompress_stream(
-                input=memoryview(stream_data),
-                progress_desc=display_name,
-                progress=progress
-            )
+            
+            # If there is a prefix, this is recursive decompression
+            # beyond the first level.  The inner archive should have
+            # streams that are not themselves compressed and can be
+            # used directly.
+            if path_prefix:
+                stream_data = bytearray(stream_data)
+            else:
+                stream_data = decompress_stream(
+                    input=memoryview(stream_data),
+                    progress_desc=display_name,
+                    progress=progress
+                )
 
             if recursive and olefile.isOleFile(io.BytesIO(stream_data)):
                 with olefile.OleFileIO(io.BytesIO(stream_data)) as nested_ole:
