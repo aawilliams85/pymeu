@@ -772,6 +772,21 @@ class compression_tests(unittest.TestCase):
             elapsed_time = end - start
             print(elapsed_time)
 
+    def test_mer_to_folder_recursive(self):
+        print('')
+        for file in glob.glob(os.path.join(LOCAL_INPUT_MER_PATH, '*.mer')):
+            print(file)
+            start = time.time()
+            me.compression.archive_to_folder(
+                input_path=file,
+                output_path=os.path.join(LOCAL_OUTPUT_MER_PATH, f'{os.path.splitext(os.path.basename(file))[0]}-recursive'),
+                progress=progress_callback,
+                recursive=True
+            )
+            end = time.time()
+            elapsed_time = end - start
+            print(elapsed_time)
+
     def test_mer_get_shortcuts(self):
         print('')
         file = os.path.join(LOCAL_INPUT_MER_PATH, 'Test_v15_FTLinx1.mer')

@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
+import io
 import olefile
 import os
 from pycfb import CFBWriter
@@ -200,11 +201,16 @@ def _get_mapper_for_mappee(ole: olefile.OleFileIO, mappee_name: str) -> str:
 
 def decompress_archive(
     ole: olefile.OleFileIO,
-    progress: Optional[Callable[[str, str, int, int], None]] = None
+    recursive: bool = False,
+    progress: Optional[Callable[[str, str, int, int], None]] = None,
+    path_prefix: list[str] = None
 ) -> list[types.MEArchive]:
     streams = []
+    path_prefix = path_prefix or []
+
     _startup_process_pool()
     for stream_path in ole.listdir(storages=True):
+        abs_stream_path = path_prefix + stream_path
         stream_name = '/'.join(stream_path)
         if (ole.exists(stream_name) and not ole.get_type(stream_name) == olefile.STGTY_STORAGE):
             original_name = stream_name
@@ -217,6 +223,7 @@ def decompress_archive(
                 actual_name = _get_mapper_for_mappee(ole, original_name)
                 stream_name = actual_name
                 stream_path[-1] = actual_name
+                abs_stream_path[-1] = actual_name
             if STREAM_NAME_MAPPER in stream_name:
                 continue
             
@@ -227,15 +234,28 @@ def decompress_archive(
                 progress_desc=stream_name,
                 progress=progress
             )
-            print(f'{stream_name} {len(stream_data)}')
-            stream_info = types.MEArchive(
-                name=stream_name,
-                data=stream_data,
-                path=stream_path,
-                size=len(stream_data),
-                is_file=True
-            )
-            streams.append(stream_info)
+
+            parent_data = io.BytesIO(stream_data)
+            if recursive and olefile.isOleFile(parent_data):
+                with olefile.OleFileIO(parent_data) as nested_ole:
+                    nested_results = decompress_archive(
+                        ole=nested_ole,
+                        recursive=recursive,
+                        progress=progress,
+                        path_prefix=abs_stream_path
+                    )
+                    streams.extend(nested_results)
+            else:
+                print(f'{stream_name} {len(stream_data)}')
+                stream_info = types.MEArchive(
+                    name=stream_name,
+                    data=stream_data,
+                    path=stream_path,
+                    size=len(stream_data),
+                    is_file=True
+                )
+                streams.append(stream_info)
+
         if (ole.exists(stream_name) and ole.get_type(stream_name) == olefile.STGTY_STORAGE):
             stream_info = types.MEArchive(
                 name=stream_name,
@@ -250,11 +270,13 @@ def decompress_archive(
 
 def archive_to_stream(
     input_path: str | bytes,
+    recursive: bool = False,
     progress: Optional[Callable[[str, str, int, int], None]] = None
 ) -> list[types.MEArchive]:
     with olefile.OleFileIO(input_path) as ole:
         streams = decompress_archive(
             ole=ole,
+            recursive=recursive,
             progress=progress
         )
         return streams
@@ -262,12 +284,14 @@ def archive_to_stream(
 def archive_to_folder(
     input_path: str | bytes, 
     output_path: str,
-    progress: Optional[Callable[[str, str, int, int], None]] = None
+    progress: Optional[Callable[[str, str, int, int], None]] = None,
+    recursive: bool = False
 ):
     if not(os.path.exists(output_path)): os.makedirs(output_path, exist_ok=True)
     streams = archive_to_stream(
         input_path=input_path,
-        progress=progress
+        progress=progress,
+        recursive=recursive
     )
     for stream in streams:
         stream_output_path = _create_subfolders(output_path, stream.path)
