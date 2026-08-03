@@ -28,7 +28,8 @@ HELPER_VERSIONS = {
     '12.00.00.414.106',
     '13.00.00',
     '14.00.00',
-    '15.00.00'
+    '15.00.00',
+    '16.00.00'
 }
 
 # Known terminal MEVersion numbers, used to help check that device is a valid terminal.
@@ -55,7 +56,8 @@ ME_VERSIONS = {
     '12.00.78.414',
     '13.00.11.413',
     '14.00.00.394',
-    '15.00.00.201'
+    '15.00.00.201',
+    '16.00.00.234.3.234'
 }
 
 FIRMWARE_COVERS = {
